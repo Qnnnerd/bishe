@@ -8,12 +8,10 @@
 
 \begin{figure}[htbp]
   \centering
-  \subfloat[工业机械臂]{\includegraphics[height=4.5cm]{figures/content/robot_industrial}}
-  \quad
-  \subfloat[协作机械臂]{\includegraphics[height=4.5cm]{figures/content/robot_cobot}}
-  \quad
-  \subfloat[家庭服务机械臂]{\includegraphics[height=4.5cm]{figures/content/robot_service}}
-  \caption{机械臂在不同应用场景中的典型形态：(a)用于汽车制造等工业流水线的工业机械臂；(b)与操作员协同作业的协作机器人；(c)执行家庭操作任务的服务机械臂}
+  \subfloat[工业机械臂]{\includegraphics[width=.30\linewidth]{figures/content/robot_industrial}}\hfill
+  \subfloat[协作机械臂]{\includegraphics[width=.30\linewidth]{figures/content/robot_cobot}}\hfill
+  \subfloat[家庭服务机械臂]{\includegraphics[width=.30\linewidth]{figures/content/robot_service}}
+  \caption{机械臂在不同应用场景中的典型形态}
   \label{fig:robot_types}
 \end{figure}
 
@@ -26,7 +24,7 @@
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.92\linewidth]{figures/content/openvla_architecture}
-  \caption{OpenVLA视觉语言动作模型整体架构：以视觉图像与自然语言指令为输入，经DINOv2与SigLIP双视觉编码器提取特征后，通过MLP投影层与Llama~2语言模型联合建模，最终经动作反标记化器输出机器人七维末端执行器动作\cite{kim2024openvla}}
+  \caption{OpenVLA视觉语言动作模型的整体架构\cite{kim2024openvla}}
   \label{fig:openvla_arch}
 \end{figure}
 
@@ -51,7 +49,7 @@
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.72\linewidth]{figures/content/dmp_simulation}
-  \caption{基于动态运动基元的机械臂抓取与放置仿真实验：Sarcos仿人机械臂在仿真环境中执行抓取（上行）与放置（下行）动作序列，验证了DMP框架在不同目标位置下的技能泛化能力\cite{pastor2009learning}}
+  \caption{基于动态运动基元的机械臂抓取与放置仿真实验\cite{pastor2009learning}}
   \label{fig:dmp_sim}
 \end{figure}
 
@@ -77,7 +75,7 @@
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.88\linewidth]{figures/content/act_architecture}
-  \caption{ACT动作分块Transformer架构：左侧为训练阶段的条件变分自编码器（CVAE）编码器，将关节状态与动作序列压缩为风格变量$z$；右侧为推理阶段的Transformer编码器-解码器，融合多视角图像特征与关节状态，输出未来动作序列\cite{zhao2023learning}}
+  \caption{ACT动作分块Transformer的整体架构\cite{zhao2023learning}}
   \label{fig:act_arch}
 \end{figure}
 
@@ -86,7 +84,7 @@
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.90\linewidth]{figures/content/diffusion_policy_overview}
-  \caption{扩散策略整体框架：以图像观测序列与机器人位姿为条件输入，通过迭代去噪过程在动作空间中生成多步动作序列，支持CNN与Transformer两种网络骨干结构\cite{chi2023diffusion}}
+  \caption{扩散策略的整体框架\cite{chi2023diffusion}}
   \label{fig:diffusion_policy}
 \end{figure}
 
@@ -108,7 +106,7 @@
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.90\linewidth]{figures/content/rt2_overview}
-  \caption{RT-2视觉语言动作模型框架：将机器人动作表示为文本标记，与互联网规模的视觉问答数据联合微调，使视觉语言模型直接输出机器人控制指令，实现了语义理解能力向机器人操作的迁移\cite{brohan2023rt2}}
+  \caption{RT-2视觉语言动作模型的整体框架\cite{brohan2023rt2}}
   \label{fig:rt2_overview}
 \end{figure}
 
@@ -117,7 +115,7 @@
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.90\linewidth]{figures/content/pi0_framework}
-  \caption{$\pi_0$视觉语言动作模型框架：以预训练视觉语言模型（SigLIP+Gemma）为骨干，附加专用动作专家模块，通过流匹配生成连续动作序列，支持多种自由度的机器人平台控制\cite{black2024pi}}
+  \caption{$\pi_0$视觉语言动作模型的整体框架\cite{black2024pi}}
   \label{fig:pi0_framework}
 \end{figure}
 
