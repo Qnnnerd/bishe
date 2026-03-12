@@ -11,7 +11,7 @@
   \subfloat[工业机械臂]{\includegraphics[width=.30\linewidth]{figures/content/robot_industrial}}\hfill
   \subfloat[协作机械臂]{\includegraphics[width=.30\linewidth]{figures/content/robot_cobot_cropped}}\hfill
   \subfloat[家庭服务机械臂]{\includegraphics[width=.30\linewidth]{figures/content/robot_service}}
-  \caption{机械臂在不同应用场景中的典型形态：(a)工业流水线中的工业机械臂；(b)与操作员协同作业的协作机械臂；(c)执行家庭操作任务的服务机械臂}
+  \caption{机械臂在不同应用场景中的典型形态：(a)工业机械臂；(b)协作机械臂；(c)家庭服务机械臂}
   \label{fig:robot_types}
 \end{figure}
 
@@ -28,9 +28,9 @@
   \label{fig:openvla_arch}
 \end{figure}
 
-如图\ref{fig:openvla_arch}所示，视觉语言动作模型将视觉编码器、语言模型与动作解码器整合为统一的端到端框架，通过将机器人动作表示为离散文本标记，实现了对互联网规模预训练知识的充分利用。随着大语言模型与模仿学习技术的发展，机械臂自主操作算法在语义理解与复杂动作生成方面展现出应用潜力，这些研究证明了构建视觉语言动作模型以实现通用机器人控制的可行性\cite{padalkar2023open, team2024octo, duan2024manipulate}。受上述研究启发，本文围绕基于扩散模型与时序缓存的视觉语言动作机械臂自主操作技术展开深入研究，旨在解决长视野任务中的时序依赖与多模态动作生成难题，主要包括以下三个方面的内容：
+如图\ref{fig:openvla_arch}所示，视觉语言动作模型将视觉编码器、语言模型与动作解码器整合为统一的端到端框架，通过将机器人动作表示为离散文本标记，实现了对互联网规模预训练知识的充分利用。随着大语言模型与模仿学习技术的发展，机械臂自主操作算法在语义理解与复杂动作生成方面展现出应用潜力，这些研究证明了构建视觉语言动作模型以实现通用机器人控制的可行性\cite{padalkar2023open, team2024octo, duan2024manipulate}。受上述研究启发，本文围绕基于扩散模型与时序缓存的视觉语言动作机械臂自主操作技术展开深入研究，旨在解决长视野任务中的时序依赖与多模态动作生成难题，主要包括以下四个方面的内容：
 
-首先，利用运动学理论构建机械臂运动学模型，明确各关节角度与末端空间位姿的映射关系，为后续的动作生成与轨迹规划提供理论支撑与物理约束；其次，研究基于扩散模型的模仿学习运动算法，利用扩散模型对多模态动作分布的建模能力，提升动作策略的鲁棒性和泛化能力；随后，研究了一种基于大语言模型视觉语言特征的时序缓存机制，通过感知语义双通道存储与动态融合策略，维护长时序上下文并克服单帧决策的局限；最后，通过搭建真实的机械臂操作平台进行实物实验，验证本文所提算法在真实非结构化环境中的有效性。
+首先，利用运动学理论构建机械臂运动学模型，明确各关节角度与末端空间位姿的映射关系，为后续的动作生成与轨迹规划提供理论支撑与物理约束；其次，研究基于扩散模型的模仿学习运动算法，利用扩散模型对多模态动作分布的分析能力，提升动作策略的鲁棒性和泛化能力；随后，研究了一种基于大语言模型视觉语言特征的时序缓存机制，通过感知语义双通道存储与动态融合策略，维护长时序上下文并克服单帧决策的局限；最后，通过搭建真实的机械臂操作平台进行实物实验，验证本文所提算法在真实非结构化环境中的有效性。
 
 综上，本文旨在通过机械臂运动学建模、动作生成算法及视觉语言特征缓存机制的系统研究，为机械臂自主操作技术的发展提供理论依据与技术支撑，推动具身智能技术在理论研究与实际应用中的发展。
 
@@ -61,7 +61,7 @@
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.68\linewidth]{figures/content/qtopt_system}
+  \includegraphics[width=0.60\linewidth]{figures/content/qtopt_system}
   \caption{分布式强化学习系统架构\cite{kalashnikov2018qt}}
   \label{fig:qtopt_system}
 \end{figure}
@@ -81,7 +81,7 @@
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.88\linewidth]{figures/content/act_architecture}
+  \includegraphics[width=0.92\linewidth]{figures/content/act_architecture}
   \caption{ACT动作分块算法的整体架构\cite{zhao2023learning}}
   \label{fig:act_arch}
 \end{figure}
@@ -90,7 +90,7 @@
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.90\linewidth]{figures/content/diffusion_policy_overview}
+  \includegraphics[width=0.92\linewidth]{figures/content/diffusion_policy_overview}
   \caption{扩散策略的整体框架\cite{chi2023diffusion}}
   \label{fig:diffusion_policy}
 \end{figure}
@@ -108,7 +108,7 @@
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.75\linewidth]{figures/content/cap_framework}
+  \includegraphics[width=0.68\linewidth]{figures/content/cap_framework}
   \caption{利用大型语言模型生成策略代码的整体框架\cite{liang2023code}}
   \label{fig:cap_framework}
 \end{figure}
@@ -124,13 +124,6 @@
   \label{fig:rt2_overview}
 \end{figure}
 
-如图\ref{fig:rt2_overview}所示，RT-2通过将机器人动作编码为文本标记，直接复用视觉语言模型的预训练参数，实现了互联网知识向机器人操作的端到端迁移。近年来，国内外研究机构在视觉语言动作模型领域持续取得进展。2024年，字节跳动的研究团队提出了GR-1，通过在大规模视频数据上进行生成式预训练，增强了模型对视觉动态的理解，并将其应用于多任务语言条件下的机械臂操作\cite{wu2023unleashing}。同年，Physical Intelligence公司提出了基于流匹配的视觉语言动作模型$\pi_0$，通过将视觉语言模型与连续动作生成相结合，提升了模型在灵巧操作任务中的表现\cite{black2024pi}。
+如图\ref{fig:rt2_overview}所示，RT-2通过将机器人动作编码为文本标记，直接复用视觉语言模型的预训练参数，实现了互联网知识向机器人操作的端到端迁移。近年来，国内外研究机构在视觉语言动作模型领域持续取得进展。2024年，字节跳动的研究团队提出了GR-1，通过在大规模视频数据上进行生成式预训练，增强了模型对视觉动态的理解，并将其应用于多任务语言条件下的机械臂操作\cite{wu2023unleashing}。同年，Physical Intelligence公司提出了基于流匹配的视觉语言动作模型$\pi$0，通过将视觉语言模型与连续动作生成相结合，提升了模型在灵巧操作任务中的表现\cite{black2024pi}。
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.90\linewidth]{figures/content/pi0_framework}
-  \caption{$\pi_0$视觉语言动作模型的整体框架\cite{black2024pi}}
-  \label{fig:pi0_framework}
-\end{figure}
-
-如图\ref{fig:pi0_framework}所示，$\pi_0$模型通过引入独立的动作专家模块，将预训练视觉语言模型的语义理解能力与高频连续动作生成能力有效结合，在折叠衣物等灵巧操作任务上展现了通用机器人基础模型的潜力。2025年，微软亚洲研究院与清华大学等机构合作提出了CogACT模型，通过解耦的认知与行动模块，利用扩散Transformer专门处理动作生成，在多种仿真与真实机器人平台上均取得了性能提升\cite{liang2024cogact}。同年，Figure AI公司发布了专为人形机器人设计的视觉语言动作模型Helix，实现了对人形机器人上半身的连续控制\cite{figure2025helix}。为了提升模型对三维空间的理解能力，清华大学的研究团队于2025年提出了SpatialVLA，通过引入显式的三维空间表征，增强了模型对时空动态的感知与推理能力\cite{qu2025spatialvla}。
+2025年，微软亚洲研究院与清华大学等机构合作提出了CogACT模型，通过解耦的认知与行动模块，利用扩散Transformer专门处理动作生成，在多种仿真与真实机器人平台上均取得了性能提升\cite{liang2024cogact}。同年，Figure AI公司发布了专为人形机器人设计的视觉语言动作模型Helix，实现了对人形机器人上半身的连续控制\cite{figure2025helix}。为了提升模型对三维空间的理解能力，清华大学的研究团队于2025年提出了SpatialVLA，通过引入显式的三维空间表征，增强了模型对时空动态的感知与推理能力\cite{qu2025spatialvla}。
