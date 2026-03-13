@@ -1,0 +1,14 @@
+本次提交对 seumasterthesis.bib 文件进行了回退与核查，主要改动记录如下：
+
+1.  **文件回退**：
+    *   将 seumasterthesis.bib 文件内容整体回退至 commit `1bdeaa0` 之前的版本，恢复了在该次提交中被错误删除的大量文献条目。
+
+2.  **条目修正**：
+    *   `calinon2016tutorial`: 根据 Google Scholar 核查结果，将标题从 `A tutorial on task-parameterized movement primitives` 修正回正确的 `A tutorial on task-parameterized movement learning and retrieval`。
+    *   `liang2024cogact`: 根据 Google Scholar 核查结果，确认存在两个同名但作者、出处不同的工作。原 bib 文件中 `1bdeaa0` 提交将其错误地修改为 CVPR 2024 的一篇。本次已修正回正确的 arXiv 版本（`2411.19650`），作者为 `Liang, Yaobo and Wang, Zeyu and Luo, Lin` 等。
+    *   `qu2025spatialvla`: 根据 Google Scholar 核查结果，修正了作者、标题等信息，确保与 arXiv 版本（`2501.15830`）一致。
+    *   `figure2025helix`: 修正了 `howpublished` 字段的 URL，使其指向正确的官方博客文章。
+
+3.  **条目新增**：
+    *   `mandlekar2021robomimic`: 根据用户要求，从 Google Scholar 检索并添加了 RobotMimic 论文的 BibTeX 条目。
+    *   `liu2023libero`: 根据用户要求，从 Google Scholar 检索并添加了 LIBERO 论文的 BibTeX 条目。
