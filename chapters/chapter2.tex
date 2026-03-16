@@ -64,7 +64,7 @@ Denavit-Hartenberg (D-H) 参数法是一种建立机械臂各连杆坐标系并�
   \end{aligned}
 \end{equation}
 
-对于一个由 $n$ 个关节组成的串联机械臂，通过为每个连杆建立D-H参数表，即可得到从 $i=1$ 到 $n$ 的所有变换矩阵 $A_i$。
+对于一个由 $n$ 个关节组成的串联机械臂，通过为每个连杆建立D-H参数表，即可得到从 $i=1$ 到 $n$ 的所有变换矩阵 $A_i$。本研究后续的仿真与实物实验将分别采用 Franka Emika Panda 七自由度机械臂与 Universal Robots UR5 六自由度机械臂，下文将分别对这两款机械臂进行运动学建模。
 
 \subsection{正向运动学}
 \label{subsec:forward_kinematics}
@@ -78,12 +78,61 @@ Denavit-Hartenberg (D-H) 参数法是一种建立机械臂各连杆坐标系并�
 
 最终得到的 $T_n^0$ 矩阵中的旋转部分和平移部分即分别对应末端执行器的姿态和位置。正向运动学模型是唯一的，即一组给定的关节变量只能对应一个确定的末端位姿。
 
+\subsubsection{Franka Panda 运动学模型}
+
+Franka Emika Panda 是一款七自由度的冗余机械臂，其结构紧凑、灵活性高，广泛应用于学术研究。本研究的仿真实验将基于该款机械臂展开。根据其官方文档及相关研究 \cite{gaz2019dynamic}，其改进D-H参数（Modified DH）如表\ref{tab:panda_dh_parameters}所示。
+
+\begin{table}[htbp]
+  \centering
+  \caption{Franka Panda 机械臂改进D-H参数}
+  \label{tab:panda_dh_parameters}
+  \begin{tabular}{ccccc}
+    \toprule
+    关节 $i$ & 连杆扭转角 $\alpha_{i-1}$ (rad) & 连杆长度 $a_{i-1}$ (m) & 连杆偏距 $d_i$ (m) & 关节角 $\theta_i$ (rad) \\
+    \midrule
+    1 & 0 & 0 & 0.333 & $\theta_1$ \\
+    2 & $-\pi/2$ & 0 & 0 & $\theta_2$ \\
+    3 & $\pi/2$ & 0 & 0.316 & $\theta_3$ \\
+    4 & $\pi/2$ & 0.0825 & 0 & $\theta_4$ \\
+    5 & $-\pi/2$ & -0.0825 & 0.384 & $\theta_5$ \\
+    6 & $\pi/2$ & 0 & 0 & $\theta_6$ \\
+    7 & $\pi/2$ & 0.088 & 0.107 & $\theta_7$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+将表\ref{tab:panda_dh_parameters}中的参数代入式\ref{eq:dh_transform}，即可得到各关节的变换矩阵 $A_i$，进而通过式\ref{eq:forward_kinematics}连乘得到其正向运动学解 $T_7^0$。由于 Franka Panda 是冗余机械臂，其逆运动学求解通常采用基于雅可比矩阵的数值法。
+
+\subsubsection{UR5 运动学模型}
+
+Universal Robots UR5 是一款经典的六自由度协作机械臂，凭借其高可靠性与易用性成为工业界与学术界实物实验平台的常用选择。本研究的实物实验平台将采用该款机械臂。根据其官方文档，其标准D-H参数如表\ref{tab:ur5_dh_parameters}所示。
+
+\begin{table}[htbp]
+  \centering
+  \caption{UR5 机械臂标准D-H参数}
+  \label{tab:ur5_dh_parameters}
+  \begin{tabular}{ccccc}
+    \toprule
+    关节 $i$ & 连杆扭转角 $\alpha_{i-1}$ (rad) & 连杆长度 $a_{i-1}$ (m) & 连杆偏距 $d_i$ (m) & 关节角 $\theta_i$ (rad) \\
+    \midrule
+    1 & $\pi/2$ & 0 & 0.089159 & $\theta_1$ \\
+    2 & 0 & -0.42500 & 0 & $\theta_2$ \\
+    3 & 0 & -0.39225 & 0 & $\theta_3$ \\
+    4 & $\pi/2$ & 0 & 0.10915 & $\theta_4$ \\
+    5 & $-\pi/2$ & 0 & 0.09465 & $\theta_5$ \\
+    6 & 0 & 0 & 0.08230 & $\theta_6$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+同样地，将表\ref{tab:ur5_dh_parameters}中的参数代入式\ref{eq:dh_transform}并连乘，即可得到 UR5 的正向运动学解 $T_6^0$。UR5 机械臂的腕部三轴（关节4、5、6）交于一点，满足 Pieper 准则，因此其逆运动学存在封闭的解析解，能够快速精确地计算出所有八组可能的关节角配置，这对于需要实时轨迹规划的遥操作与实物控制至关重要。
+
 \subsection{逆向运动学}
 \label{subsec:inverse_kinematics}
 
 逆向运动学是正向运动学的逆问题，即根据给定的末端执行器在笛卡尔空间中的期望位姿，反向求解出满足该位姿的一组或多组关节变量。与正向运动学不同，逆向运动学的求解过程更为复杂，其解可能不唯一、存在多组解，或者在机械臂工作空间之外无解。逆向运动学的求解方法主要分为解析法和数值法两类。
 
-解析法，也称代数法或几何法，通过对方程组 $T_n^0$ 进行代数运算或利用机械臂的几何关系来直接求解关节变量的封闭解。该方法计算速度快、能够求出所有可能的解，但仅适用于结构相对简单的机械臂，例如具有球形腕关节的六自由度机械臂。对于结构复杂的冗余机械臂，解析法通常难以适用。
+解析法，也称代数法或几何法，通过对方程组 $T_n^0$ 进行代数运算或利用机械臂的几何关系来直接求解关节变量的封闭解。该方法计算速度快、能够求出所有可能的解，但仅适用于结构相对简单的机械臂，例如具有球形腕关节的六自由度机械臂。对于结构复杂的冗余机械臂（如 Franka Panda），解析法通常难以适用。
 
 数值法是一种迭代求解方法，它将逆运动学问题转化为一个非线性优化问题。该方法从一个初始的关节角配置出发，通过迭代计算来逐步减小当前末端位姿与期望位姿之间的误差，直至误差小于预设阈值。基于雅可比矩阵的迭代法是其中最常用的一种，其核心思想如式\ref{eq:jacobian_inverse}所示。
 
@@ -92,4 +141,4 @@ Denavit-Hartenberg (D-H) 参数法是一种建立机械臂各连杆坐标系并�
   \Delta\theta = J^{-1} \Delta x
 \end{equation}
 
-其中，$\Delta x$ 是末端位姿误差，$\Delta\theta$ 是关节角度的修正量，$J$ 是描述末端执行器速度与关节速度之间线性关系的雅可比矩阵。数值法通用性强，适用于任意结构的机械臂，但其计算量较大，可能陷入局部最优，且解的精度和收敛速度依赖于初始值的选取和迭代算法的设计。
+其中，$\Delta x$ 是末端位姿误差，$\Delta\theta$ 是关节角度的修正量，$J$ 是描述末端执行器速度与关节速度之间线性关系的雅可比矩阵。数值法通用性强，适用于任意结构的机械臂（包括冗余机械臂），但其计算量较大，可能陷入局部最优，且解的精度和收敛速度依赖于初始值的选取和迭代算法的设计。
