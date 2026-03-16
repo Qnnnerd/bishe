@@ -1,247 +1,95 @@
-\chapter{论文的初始化}
-\label{chp:initialization}
+\chapter{相关理论与技术基础}
+\label{chp:foundations}
 
-在开始撰写学位论文之前，我们建议你首先对你论文的基本信息进行初始化。这部分的工作在main.tex文件中完成。接下来我们将详细介绍各部分的填写方法。注意，下列所有源代码中尖括号{\codefont <...>}里的内容代表你需要填写的文本。
+本章旨在为后文提出的机器人自主操作算法提供必要的理论支撑与技术背景。内容将围绕机器人模仿学习这一核心技术路线展开，系统性地介绍其研究所需的前置知识。首先，将对机械臂运动学与控制的基本原理进行阐述，重点介绍 Denavit-Hartenberg (D-H) 参数法在运动学建模中的应用，为后续的动作生成与轨迹规划提供物理约束与数学基础。随后，将梳理机器人模仿学习的主流范式，为本文算法的选择与设计提供理论依据。最后，将分别介绍视觉语言模型与扩散概率模型的核心思想与结构原理，它们共同构成了本文所提算法的基石。
 
-\section{元数据}
+\section{机械臂运动学建模}
+\label{sec:kinematics}
 
-元数据部分控制你论文A3封面和中文彩色封面左上角的论文元信息的显示，除固定的学校代码外分为4个部分。下面我们将逐一解释每个部分的填写规则。
+机械臂运动学是研究机械臂在空间中的运动特性而不考虑其受力的学科，其核心任务是建立机械臂各关节变量与末端执行器在笛卡尔空间中位姿之间的数学关系。这种关系是实现机械臂轨迹规划、运动控制以及与环境交互的基础。运动学分析通常分为正向运动学与逆向运动学两个部分。正向运动学根据给定的关节角度计算末端执行器的位姿，而逆向运动学则根据期望的末端执行器位姿反解出对应的关节角度。本节将对运动学建模中涉及的坐标系变换、D-H参数法、正向运动学和逆向运动学进行介绍。
 
-\subsection{分类号}
+\subsection{坐标系建立与变换}
+\label{subsec:coord_transform}
 
-分类号指代中国图书馆分类法 (CLC, Chinese Library Classification)对图书资料的分类编码，请根据你学术论文的内容与分类酌情填写。
+为精确描述机械臂上各个连杆的位置和姿态，需要在机械臂的关键位置上固连一系列的坐标系，例如基坐标系 \{B\}、工具坐标系 \{T\} 以及每个连杆的连杆坐标系 \{i\}。不同坐标系之间的相对位姿关系可以通过齐次变换矩阵进行描述。一个通用的齐次变换矩阵 $T$ 是一个 $4 \times 4$ 的矩阵，其形式如式\ref{eq:homogeneous_transform}所示。
 
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-\categorynumber{<CLC Code>}
-\end{lstlisting}
-\end{tcolorbox}
+\begin{equation}
+  \label{eq:homogeneous_transform}
+  T = \begin{bmatrix}
+    R & p \\
+    0 & 1
+  \end{bmatrix} = \begin{bmatrix}
+    n_x & o_x & a_x & p_x \\
+    n_y & o_y & a_y & p_y \\
+    n_z & o_z & a_z & p_z \\
+    0 & 0 & 0 & 1
+  \end{bmatrix}
+\end{equation}
 
-\noindent 举例来说，\textbf{网络安全}的中图法分类号为TN915.08，而\textbf{建筑水利工程}的分类号为F407.9。如对自己研究内容的具体分类不甚确定，可以参阅\href{https://www.clcindex.com/}{相关网站}。
+其中，$R \in SO(3)$ 是一个 $3 \times 3$ 的旋转矩阵，用于描述坐标系之间的相对姿态；$p \in \mathbb{R}^3$ 是一个 $3 \times 1$ 的平移向量，用于描述坐标系原点之间的相对位置。旋转矩阵 $R$ 由三个相互正交的单位向量 $n$、$o$、$a$ 构成，分别代表目标坐标系的x, y, z轴在参考坐标系下的表示。通过齐次变换矩阵，可以方便地实现坐标点在不同坐标系下的表示转换以及多级坐标变换的复合运算。
 
-\subsection{UDC}
+\subsection{Denavit-Hartenberg 参数法}
+\label{subsec:dh_method}
 
-UDC(Universal Decimal Classification)指通用十进制分类法，是国际上规模最大影响最广泛的文献资料分类法。在此部分你需要填写学术论文所属的十进制分类编码。
+Denavit-Hartenberg (D-H) 参数法是一种建立机械臂各连杆坐标系并描述其相对位姿的标准方法，它仅用四个参数即可唯一确定两个相邻连杆坐标系之间的几何关系。这四个参数，即连杆长度 $a_{i-1}$、连杆扭转角 $\alpha_{i-1}$、连杆偏距 $d_i$ 和关节角 $\theta_i$，其定义如表\ref{tab:dh_parameters}所示。
 
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-\UDC{<UDC Code>}
-\end{lstlisting}
-\end{tcolorbox}
-
-\noindent 举例来说，\textbf{人工智能}的UDC分类号为004.8，而\textbf{凝聚态固态物理学}的分类号为538.9。如对自己研究内容的具体分类不甚确定，可以参阅\href{http://www.udcsummary.info/php/index.php?lang=chi}{相关网站}。
-
-\subsection{保密级别}
-
-在此部分你需要指定你的学术论文所属的保密级别。
-
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-\secretlevel{<Secret Level>}
-\end{lstlisting}
-\end{tcolorbox}
-
-\noindent 一般的，学位论文的保密级别分为公开、内部、秘密和机密四级。具体区别在于：
-
-\begin{itemize}
-  \item \textbf{公开}：未涉及国家保密范围以及未准备申请专利权或技术转让的一般学术研究；
-  \item \textbf{内部}：未涉及国家保密范围但准备申请专利权或技术转让的在一段时间内不适宜公开的学术研究；
-  \item \textbf{秘密与机密}：涉及国家保密特定密级的科研项目或课题及其衍生的学术研究。
-\end{itemize}
-
-\noindent 请根据你的论文的具体情况酌情填写。
-
-\subsection{学号}
-
-在此部分你需要填写你的研究生学号。
-
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-\studentid{<Student ID>}
-\end{lstlisting}
-\end{tcolorbox}
-
-\noindent 东南大学的研究生学号一般为6位数字，请注意不要与9位的一卡通号混淆。也请学号为8位数字的本科生同学关闭本文档，出门左转GitHub寻找适合本科生的论文模板。
-
-\section{论文标题与书脊}
-
-\subsection{中英文标题}
-
-论文标题部分控制你论文的A3封面、中文彩色封面、中文内页封面和英文封面上的标题显示。
-
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-\title
-    {弯扭耦合下土木工程复合材料梁的变分渐近模型}
-    {}
-    {Variational Asymptotic Model of Composite Beams Used in Civil Engineering under Bending and Torsion Coupling}
-    {}
-\end{lstlisting}
-\end{tcolorbox}
-
-\noindent 对论文标题的指定分为4个部分，自上而下分别是中文主标题，中文副标题，英文主标题和英文副标题。对于大多数没有副标题的学位论文，中英文副标题部分可以留空，但请务必不要删去相应的括号。有些论文的中英文标题可能过长，这时你也可以使用副标题位置来实现更加灵活自主的换行。比如上面的示例可以改写成：
-
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-\title
-    {弯扭耦合下土木工程复合材料梁}
-    {的变分渐近模型}
-    {Variational Asymptotic Model of Composite Beams Used in Civil}
-    {Engineering under Bending and Torsion Coupling}
-\end{lstlisting}
-\end{tcolorbox}
-
-\noindent 当你把主标题的后半部分拆分并写到副标题中时，\LaTeX 编译引擎会尝试在你拆分的位置换行。但想要做到这一点需要耐心调整拆分位置，否则如果你的上半部分仍然过长，编译时会被拆分成三行。
-
-\subsection{论文书脊}
-
-论文书脊指出现在A3封面垂直中间部分的文章标题及作者姓名，在论文装订时将被作为书册的书脊。对于大多数学术论文，作者不需要特地显式地声明书脊部分，本模板将会直接利用你的中文标题生成书脊。但如果你的中文标题中出现了英文或其他语言的拉丁字母，直接使用标题生成书脊将会出现图 \ref{fig:2_1} 所显示的问题：
-
-\begin{figure}[!h]
+\begin{table}[htbp]
   \centering
-    \begin{minipage}[t]{0.3\textwidth}
-    \centering
-    \includegraphics[width=.3\linewidth]{figures/content/2_1}
-    \caption{错误的书脊渲染}
-    \label{fig:2_1}
-    \end{minipage}
-    \begin{minipage}[t]{0.3\textwidth}
-    \centering
-    \includegraphics[width=.3\linewidth]{figures/content/2_2}
-    \caption{西文旋转后的书脊渲染}
-    \label{fig:2_2}
-    \end{minipage}
-    \begin{minipage}[t]{0.3\textwidth}
-    \centering
-    \includegraphics[width=.3\linewidth]{figures/content/2_3}
-    \caption{提升基线后的书脊渲染}
-    \label{fig:2_3}
-    \end{minipage}
-\end{figure}
+  \caption{标准D-H参数定义}
+  \label{tab:dh_parameters}
+  \begin{tabular}{cl}
+    \toprule
+    参数 & 定义 \\
+    \midrule
+    $a_{i-1}$ & 沿 $x_{i-1}$ 轴，从 $z_{i-1}$ 移动到 $z_i$ 的距离 \\
+    $\alpha_{i-1}$ & 绕 $x_{i-1}$ 轴，从 $z_{i-1}$ 旋转到 $z_i$ 的角度 \\
+    $d_i$ & 沿 $z_i$ 轴，从 $x_{i-1}$ 移动到 $x_i$ 的距离 \\
+    $\theta_i$ & 绕 $z_i$ 轴，从 $x_{i-1}$ 旋转到 $x_i$ 的角度 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
-\noindent 这时你必须显式地指定书脊的渲染方式。指定的方式很简单，你只需告知编译引擎对标题中的西文字母进行逆时针270$^{\circ}$（即顺时针90$^{\circ}$）旋转即可：
+根据D-H参数的定义，从坐标系\{i-1\}到坐标系\{i\}的变换可以分解为四次基本变换的乘积，其对应的齐次变换矩阵 $A_i$ 如式\ref{eq:dh_transform}所示。
 
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-\spine
-    {面向种群的 \rotatebox{270}{Android} 安全风险评估和恶意应用检测}
-    {}
-\end{lstlisting}
-\end{tcolorbox}
+\begin{equation}
+  \label{eq:dh_transform}
+  \begin{aligned}
+    A_i &= \text{Rot}_{z, \theta_i} \text{Trans}_{z, d_i} \text{Trans}_{x, a_{i-1}} \text{Rot}_{x, \alpha_{i-1}} \\
+        &= \begin{bmatrix}
+          \cos\theta_i & -\sin\theta_i\cos\alpha_{i-1} & \sin\theta_i\sin\alpha_{i-1} & a_{i-1}\cos\theta_i \\
+          \sin\theta_i & \cos\theta_i\cos\alpha_{i-1} & -\cos\theta_i\sin\alpha_{i-1} & a_{i-1}\sin\theta_i \\
+          0 & \sin\alpha_{i-1} & \cos\alpha_{i-1} & d_i \\
+          0 & 0 & 0 & 1
+        \end{bmatrix}
+  \end{aligned}
+\end{equation}
 
-\noindent 请注意，{\codefont $\backslash$rotatebox\{270\}\{\}}前后应该各留一个空格，否则会导致编译错误。和论文标题类似，没有副标题时上述第2个字段可以留空。这样修正后的书脊渲染如图 \ref{fig:2_2} 所示。尽管如此，你仍然能从图 \ref{fig:2_2} 中注意到一些异常。拉丁字母在旋转之后的基线高度比汉字基线高度略低，因此导致书脊中的西文部分看起来总是偏左。解决这一问题，你可以在旋转命令中嵌套基线提升命令，就像这样：
+对于一个由 $n$ 个关节组成的串联机械臂，通过为每个连杆建立D-H参数表，即可得到从 $i=1$ 到 $n$ 的所有变换矩阵 $A_i$。
 
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-\spine
-  {面向种群的 \rotatebox{270}{\raisebox{2.5pt}{Android}} 安全风险评估和恶意应用检测}
-  {}
-\end{lstlisting}
-\end{tcolorbox}
+\subsection{正向运动学}
+\label{subsec:forward_kinematics}
 
-再次修正后的书脊渲染如图 \ref{fig:2_3} 所示，这时你就得到了完美的中西文混排书脊。再次强调，如果你的论文标题中没有中西文混排，请直接删去{\codefont $\backslash$spine}字段。
+正向运动学旨在根据已知的机械臂各关节变量（对于旋转关节是 $\theta_i$，对于移动关节是 $d_i$），计算出末端执行器相对于基坐标系的位姿。通过D-H参数法建立的各连杆变换矩阵，这一过程可以通过将从基座到末端的连续变换矩阵 $A_i$ 依次相乘得到。对于一个 $n$ 自由度的机械臂，其末端执行器坐标系 \{n\} 相对于基坐标系 \{0\} 的总变换矩阵 $T_n^0$ 可由式\ref{eq:forward_kinematics}计算得出。
 
-\section{作者与导师}
+\begin{equation}
+  \label{eq:forward_kinematics}
+  T_n^0 = A_1(\theta_1) A_2(\theta_2) \cdots A_n(\theta_n)
+\end{equation}
 
-该部分用于指定论文的作者与导师姓名。作者字段分为2个部分，分别是作者的中文名及其拉丁文转写：
+最终得到的 $T_n^0$ 矩阵中的旋转部分和平移部分即分别对应末端执行器的姿态和位置。正向运动学模型是唯一的，即一组给定的关节变量只能对应一个确定的末端位姿。
 
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-\author
-    {陈仁营}
-    {CHEN Ren-ying}
-\end{lstlisting}
-\end{tcolorbox}
+\subsection{逆向运动学}
+\label{subsec:inverse_kinematics}
 
-\noindent 关于中文姓名转写为英文时的拼写规则，根据《东南大学研究生学位论文格式规定》\cite{seugs2023rule}第一条第二款之要求，有如下规定：
+逆向运动学是正向运动学的逆问题，即根据给定的末端执行器在笛卡尔空间中的期望位姿，反向求解出满足该位姿的一组或多组关节变量。与正向运动学不同，逆向运动学的求解过程更为复杂，其解可能不唯一、存在多组解，或者在机械臂工作空间之外无解。逆向运动学的求解方法主要分为解析法和数值法两类。
 
-~
+解析法，也称代数法或几何法，通过对方程组 $T_n^0$ 进行代数运算或利用机械臂的几何关系来直接求解关节变量的封闭解。该方法计算速度快、能够求出所有可能的解，但仅适用于结构相对简单的机械臂，例如具有球形腕关节的六自由度机械臂。对于结构复杂的冗余机械臂，解析法通常难以适用。
 
-\noindent{\color{black!45}
-中国姓名译为英文时用汉语拼音，按照姓前名后的原则，姓、名均用全名，不宜用缩写。姓全用大写，名的第一个字母大写，名为双中文字时两个字的拼音之间可以不用短划线，但容易引起歧义时必须用短划线。例如“冯长根”译为“FENG Changgen”或“FENG Chang-gen”，而“冯长安”则必须译为“FENG Chang-an”。论文英文封面上的署名也遵守此规定。}
+数值法是一种迭代求解方法，它将逆运动学问题转化为一个非线性优化问题。该方法从一个初始的关节角配置出发，通过迭代计算来逐步减小当前末端位姿与期望位姿之间的误差，直至误差小于预设阈值。基于雅可比矩阵的迭代法是其中最常用的一种，其核心思想如式\ref{eq:jacobian_inverse}所示。
 
-~
+\begin{equation}
+  \label{eq:jacobian_inverse}
+  \Delta\theta = J^{-1} \Delta x
+\end{equation}
 
-导师字段分为3个部分，分别是导师的中文名、姓名的拉丁文转写以及导师的英文职称，用于显示在英文封面上：
-
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-\advisor
-    {张广军}
-    {ZHANG Guang-Jun}
-    {Prof.}
-\end{lstlisting}
-\end{tcolorbox}
-
-\noindent 对于硕士研究生和博士研究生，导师的职称一般为副教授级及以上。导师为副教授的，职称可以写全称 Associate Professor，也可以写简称 A. Prof.；导师为教授的，可以写全称 Professor或简称Prof.，注意上述简称中的~.不可省略。对于导师职称未达副教授级的特殊情况，比如导师职称为讲师时，请勿在职称处填写Lecturer，此时宜填写Doctor或Dr.以示尊重。
-
-一些硕士研究生可能会有副导师，此时可以显式指定副导师的相关信息，具体方法和导师相同：
-
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-\coadvisor
-    {程光}
-    {CHENG Guang}
-    {Prof.}
-\end{lstlisting}
-\end{tcolorbox}
-
-\noindent 没有副导师的研究生学位论文，请删去上述几行。
-
-\section{答辩信息}
-
-答辩信息用于在论文A3封面和中文彩色封面中渲染与研究生论文答辩相关的信息。
-
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-\degreetype{工学硕士}{Master of Engineering}
-\major{生物医学工程}
-\submajor{神经信息工程}
-\defenddate{2020年1月20日}
-\authorizedate{2020年1月23日}
-\committeechair{齐康}
-\reviewer{王建国}{韩冬青}
-\department{网络空间安全学院}{School of Cyberspace Security}
-\seuthesisthanks{本文的部分工作受国家自然基金 No. wdnmd666 的支持与帮助，在此表示感谢。}
-\end{lstlisting}
-\end{tcolorbox}
-
-其中，{\codefont degreetype}字段用于指定所申请的学位类型与等级。{\codefont major}和{\codefont submajor}字段用于指定研究生攻读的一级和二级学科名称，请依照中华人民共和国教育部一级和二级学科名录进行填写。如果所属专业直接隶属于一级学科，{\codefont submajor}字段可以留空不填。{\codefont defenddate}和{\codefont authorizedate}分别用于指定论文的答辩日期和学位的授予日期，请根据实际情况填写。{\codefont committeechair}和{\codefont reviewer}用于指定论文的答辩委员会主席和论文评阅人。根据《东南大学研究生学位论文格式规定》\cite{seugs2023rule}第二条第一款之要求，有如下规定：
-
-~
-
-\noindent{\color{black!45}
-论文印刷时尚无法填写的评阅人和答辩委员会主席等栏目待答辩完成后要填写补齐，不要空缺。盲审论文的评阅人处标明“盲审”。}
-
-~
-
-{\codefont department}字段用于指定研究生所属的院系，其中院系的英文名将用于英文封面的生成。学院的正确英文译名请查阅所属学院的官方网站。{\codefont seuthesisthanks}用于在论文的中文内页页脚处对论文所属的项目、赞助的基金课题进行简短的鸣谢。此处不宜书写大段文字，请用简单的一两句话对相关组织或机构表示感谢，对其他个人的感谢请在文尾的致谢部分进行。没有相关赞助的学位论文请直接删去该字段。
-
-\section{模板参数}
-
-你有可能已经注意到了在main.tex文件中引入模板类的命令里包含了若干模板参数：
-
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-\documentclass[algorithmlist,figurelist,tablelist,nomlist]{seumasterthesis}
-\end{lstlisting}
-\end{tcolorbox}
-
-\noindent 即{\codefont documentclass}命令后的中括号里的几个参数。这些参数用于控制条件编译以及在论文渲染时向模板类提供额外的信息。本节将会介绍本模板提供的模板参数及其具体含义。
-
-\subsection{链接着色}
-
-本模板通过使用hyperref宏包来提供索引和链接跳转功能。相信你已经注意到了，本模板所渲染出的PDF文档中的所有图片、表格、公式、算法和参考文献索引都被着色高亮，且可以通过点击跳转到原引位置。该功能便于读者在阅读电子文档时快速定位相应索引的位置，但是着色高亮的链接在论文付梓时可能会影响到印刷效果。因此，本模板提供了针对链接着色的模板参数。通过在模板参数列表中添加{\codefont nocolorlinks}参数，模板所渲染出的PDF文档中的所有文献索引都将被取消着色，以便论文的正式印刷。
-
-\subsection{图表、算法及术语目录}
-
-根据不同院系和专业的具体情况，硕士研究生学位论文可能并不需要图表、算法或术语目录中的一项或多项。尽管本模板默认会渲染出上述的所有目录，但是我们也提供了相应的模板参数来灵活控制这些目录的渲染。如果你在模板参数列表中显式指定{\codefont figurelist}，代表你希望在论文编译时在章节目录后添加图片目录；类似的，{\codefont tablelist}显式指定了表格目录的需求，{\codefont nomlist}指定了术语表，而{\codefont algorithmlist}指定了算法目录。需要注意的是，你并不需要关注这几个模板参数在参数表中的位置或顺序，具体目录的编译和渲染仍然会依照《东南大学研究生学位论文格式规定》\cite{seugs2023rule}第一条中所规定的顺序进行。
-
-\subsection{硕士类型}
-
-本模板同时支持学术型硕士研究生和专业型硕士研究生。当不添加任何模板参数时，该模板将默认渲染为学术型硕士研究生学位论文；而当在模板参数列表中显式指定{\codefont engineer}时，该模板将渲染为专业型硕士研究生学位论文。专业型与学术型硕士研究生学位论文的区别主要在于以下三点：
-\begin{enumerate}
-    \item A3 大封面和中文彩色封面的\textbf{标题}。学术型硕士为《硕士学位论文》，专业型硕士为《工程硕士学位论文》。需要注意的是，中文内页封面的标题在两种类型的硕士研究生学位论文中均为《硕士学位论文》。
-    \item A3 大封面和中文彩色封面的\textbf{学位论文形式}。专业型硕士研究生需要注明学位论文的研究形式，如应用研究、基础研究或综合研究。因此专业型硕士研究生需要填写main.tex文件中的{\codefont engthesistype}字段，学术型硕士研究生则可以忽略该字段。
-    \item A3 大封面和中文彩色封面的\textbf{学科名称}。学术型硕士研究生学位论文需要在答辩信息列表中填写一级和二级学科名称，而专业型硕士研究生需要填写的则是工程领域名称和研究方向。因此专业型硕士研究生需要在main.tex文件的{\codefont major}字段填写自己的工程领域名称，在{\codefont submajor}字段填写自己的研究方向。
-\end{enumerate}
+其中，$\Delta x$ 是末端位姿误差，$\Delta\theta$ 是关节角度的修正量，$J$ 是描述末端执行器速度与关节速度之间线性关系的雅可比矩阵。数值法通用性强，适用于任意结构的机械臂，但其计算量较大，可能陷入局部最优，且解的精度和收敛速度依赖于初始值的选取和迭代算法的设计。
