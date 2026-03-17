@@ -68,7 +68,7 @@
 
 解析法，也称代数法或几何法，通过对方程组 $T_n^0$ 进行代数运算或利用机械臂的几何关系来直接求解关节变量的封闭解。该方法计算速度快、能够求出所有可能的解，但仅适用于结构相对简单的机械臂，例如具有球形腕关节的六自由度机械臂。对于结构复杂的冗余机械臂，解析法通常难以适用。
 
-数值法是一种迭代求解方法，它将逆运动学问题转化为一个非线性优化问题。该方法从一个初始的关节角配置出发，通过迭代计算来逐步减小当前末端位姿与期望位姿之间的误差，直至误差小于预设阈值。基于雅可比矩阵的迭代法是其中最常用的一种，其核心思想如式\ref{eq:jacobian_inverse}所示。
+数值法是一种迭代求解方法，它将逆向运动学问题转化为一个非线性优化问题。该方法从一个初始的关节角配置出发，通过迭代计算来逐步减小当前末端位姿与期望位姿之间的误差，直至误差小于预设阈值。基于雅可比矩阵的迭代法是其中最常用的一种，其核心思想如式\ref{eq:jacobian_inverse}所示。
 
 \begin{equation}
   \label{eq:jacobian_inverse}
@@ -105,7 +105,17 @@ Franka Emika Panda 是一款七自由度的冗余机械臂，其结构紧凑、�
   \end{tabular}
 \end{table}
 
-将表\ref{tab:panda_dh_parameters}中的参数代入式\ref{eq:dh_transform}，即可得到各关节的变换矩阵 $A_i$，进而通过式\ref{eq:forward_kinematics}连乘得到其正向运动学解 $T_7^0$。由于 Franka Panda 是七自由度冗余机械臂，其逆运动学不存在封闭解析解，通常采用基于雅可比矩阵的数值法进行求解，利用其冗余自由度来优化关节限制、避开奇异点或执行次级任务。
+将表\ref{tab:panda_dh_parameters}中的参数代入式\ref{eq:dh_transform}，即可得到各关节的变换矩阵 $A_i$。例如，前两个关节的变换矩阵如式\ref{eq:panda_A1A2}所示。
+
+\begin{equation}
+\label{eq:panda_A1A2}
+\begin{aligned}
+A_1 &= \begin{bmatrix} c_1 & -s_1 & 0 & 0 \\ s_1 & c_1 & 0 & 0 \\ 0 & 0 & 1 & d_1 \\ 0 & 0 & 0 & 1 \end{bmatrix}, \quad
+A_2 = \begin{bmatrix} c_2 & 0 & -s_2 & 0 \\ s_2 & 0 & c_2 & 0 \\ 0 & -1 & 0 & 0 \\ 0 & 0 & 0 & 1 \end{bmatrix}
+\end{aligned}
+\end{equation}
+
+其中 $c_i = \cos\theta_i, s_i = \sin\theta_i$。其余各关节变换矩阵可同理求得。将所有变换矩阵连乘即可得到其正向运动学解 $T_7^0 = A_1 A_2 A_3 A_4 A_5 A_6 A_7$。由于 Franka Panda 是七自由度冗余机械臂，其逆运动学不存在封闭解析解，通常采用基于雅可比矩阵的数值法进行求解，利用其冗余自由度来优化关节限制、避开奇异点或执行次级任务。
 
 \subsubsection{UR5 逆运动学解析解}
 
@@ -129,24 +139,36 @@ Universal Robots UR5 是一款经典的六自由度协作机械臂，凭借其�
   \end{tabular}
 \end{table}
 
-UR5 机械臂的腕部三轴（关节4、5、6）交于一点，满足 Pieper 准则，因此其逆运动学存在封闭的解析解。求解过程通常采用解析法，通过解耦思想将位置和姿态问题分开处理。首先，根据末端位姿求出腕部中心点的位置，进而解出前三个关节 $\theta_1, \theta_2, \theta_3$；然后，根据求出的前三个关节计算出腕部相对于基座的姿态，结合期望的末端姿态，解出后三个关节 $\theta_4, \theta_5, \theta_6$。具体求解过程如下：
+UR5 机械臂的腕部三轴（关节4、5、6）交于一点，满足 Pieper 准则，因此其逆运动学存在封闭的解析解。求解过程采用解析法，通过解耦思想将位置和姿态问题分开处理。首先，根据末端位姿求出腕部中心点的位置，进而解出前三个关节 $\theta_1, \theta_2, \theta_3$；然后，根据求出的前三个关节计算出腕部相对于基座的姿态，结合期望的末端姿态，解出后三个关节 $\theta_4, \theta_5, \theta_6$。具体求解过程如下：
 
-给定末端期望位姿矩阵 $T_6^0 = \begin{bmatrix} R & p \\ 0 & 1 \end{bmatrix}$，腕部中心点 $p_c$ 的位置可以通过从末端点 $p$ 沿末端坐标系 $z_6$ 轴的反方向平移 $d_6$ 得到：
+给定末端期望位姿矩阵 $T_6^0 = \begin{bmatrix} R & p \\ 0 & 1 \end{bmatrix} = \begin{bmatrix} n_x & o_x & a_x & p_x \\ n_y & o_y & a_y & p_y \\ n_z & o_z & a_z & p_z \\ 0 & 0 & 0 & 1 \end{bmatrix}$，腕部中心点 $p_c$ 的位置可以通过从末端点 $p$ 沿末端坐标系 $z_6$ 轴的反方向平移 $d_6$ 得到：
 
 \begin{equation}
-  p_c = p - d_6 \cdot R \cdot \begin{bmatrix} 0 \\ 0 \\ 1 \end{bmatrix}
+  p_c = p - d_6 \cdot R \cdot \begin{bmatrix} 0 \\ 0 \\ 1 \end{bmatrix} = \begin{bmatrix} p_x - d_6 a_x \\ p_y - d_6 a_y \\ p_z - d_6 a_z \end{bmatrix}
 \end{equation}
 
 关节角 $\theta_1$ 可通过 $p_c$ 的 $x, y$ 坐标计算得到，通常存在两组解：
 
 \begin{equation}
-  \theta_1 = \text{atan2}(p_{cy}, p_{cx}) \pm \text{acos}\left(\frac{d_4}{\sqrt{p_{cx}^2 + p_{cy}^2}}\right)
+  \theta_1 = \text{atan2}(p_{cy}, p_{cx}) - \text{atan2}(\pm\sqrt{p_{cx}^2 + p_{cy}^2 - d_4^2}, d_4)
 \end{equation}
 
-关节角 $\theta_3$ 可利用余弦定理，根据 $p_c$ 与关节2、3形成的三角形边长关系求得，同样存在两组解：
+关节角 $\theta_5$ 可通过将 $T_6^0$ 左乘 $(T_1^0)^{-1}$ 得到 $T_6^1$，其位置向量的 $z$ 分量仅与 $\theta_5$ 有关，从而求得，同样存在两组解：
 
 \begin{equation}
-  \cos(\theta_3) = \frac{p_{c,xy}^2 - a_2^2 - a_3^2}{2 a_2 a_3}
+  \theta_5 = \pm \text{acos}\left(\frac{p_x s_1 - p_y c_1 - d_4}{d_6}\right)
 \end{equation}
 
-其中 $p_{c,xy}^2 = p_{cx}^2 + p_{cy}^2 - d_4^2$。关节角 $\theta_2$ 则可由 $\theta_1$ 和 $\theta_3$ 共同确定。求出前三个关节后，可以计算出从基座到关节3的变换矩阵 $T_3^0$，进而得到腕部相对于基座的旋转矩阵 $R_6^3 = (T_3^0)^{-1} T_6^0$。最后，通过对 $R_6^3$ 进行欧拉角分解，即可求得 $\theta_4, \theta_5, \theta_6$。由于三角函数的周期性和对称性，UR5 的逆运动学通常存在八组不同的关节角配置，均能使末端达到同一位姿。这种能够快速精确计算所有可能解的能力，对于需要实时轨迹规划的遥操作与实物控制至关重要。
+关节角 $\theta_6$ 可由 $T_6^1$ 的旋转矩阵元素得到。当 $\sin\theta_5 \neq 0$ 时：
+
+\begin{equation}
+  \theta_6 = \text{atan2}\left(\frac{-o_x s_1 + o_y c_1}{n_x s_1 - n_y c_1}, \frac{1}{\sin\theta_5}\right)
+\end{equation}
+
+求出 $\theta_1, \theta_5, \theta_6$ 后，可计算出 $T_4^3 = (T_3^2)^{-1}(T_2^1)^{-1}(T_1^0)^{-1}T_6^0(T_6^5)^{-1}(T_5^4)^{-1}$，进而求解剩余关节。关节角 $\theta_3$ 可利用余弦定理求得，存在两组解：
+
+\begin{equation}
+  \cos(\theta_3) = \frac{K - a_2^2 - a_3^2}{2 a_2 a_3}
+\end{equation}
+
+其中 $K$ 是一个由已知量构成的中间变量。关节角 $\theta_2$ 和 $\theta_4$ 则可由其他已知关节角共同确定。由于三角函数的周期性和对称性，UR5 的逆运动学通常存在八组不同的关节角配置，均能使末端达到同一位姿。这种能够快速精确计算所有可能解的能力，对于需要实时轨迹规划的遥操作与实物控制至关重要。
