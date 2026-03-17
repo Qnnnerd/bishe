@@ -28,7 +28,14 @@
 
 其中，$R \in SO(3)$ 是一个 $3 \times 3$ 的旋转矩阵，用于描述坐标系之间的相对姿态；$p \in \mathbb{R}^3$ 是一个 $3 \times 1$ 的平移向量，用于描述坐标系原点之间的相对位置。通过齐次变换矩阵，可以实现坐标点在不同坐标系下的表示转换以及多级坐标变换的复合运算。
 
-Denavit-Hartenberg (D-H) 参数法是一种建立机械臂各连杆坐标系并描述其相对位姿的标准方法，它仅用四个参数即可唯一确定两个相邻连杆坐标系之间的几何关系。这四个参数，即连杆长度 $a_{i-1}$、连杆扭转角 $\alpha_{i-1}$、连杆偏距 $d_i$ 和关节角 $\theta_i$，其定义如表\ref{tab:dh_parameters}所示。
+Denavit-Hartenberg (D-H) 参数法是一种建立机械臂各连杆坐标系并描述其相对位姿的标准方法，如图\ref{fig:dh_parameters}所示，它仅用四个参数即可唯一确定两个相邻连杆坐标系之间的几何关系。这四个参数，即连杆长度 $a_{i-1}$、连杆扭转角 $\alpha_{i-1}$、连杆偏距 $d_i$ 和关节角 $\theta_i$，其定义如表\ref{tab:dh_parameters}所示。
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.4\textwidth]{figures/content/ur-dhmodel.png}
+  \caption{D-H参数定义示意图}
+  \label{fig:dh_parameters}
+\end{figure}
 
 \begin{table}[htbp]
   \centering
@@ -157,40 +164,40 @@ UR5 机械臂的腕部三轴（关节4、5、6）交于一点，满足 Pieper �
   p_c = p - d_6 \cdot R \cdot \begin{bmatrix} 0 \\ 0 \\ 1 \end{bmatrix} = \begin{bmatrix} p_x - d_6 a_x \\ p_y - d_6 a_y \\ p_z - d_6 a_z \end{bmatrix}
 \end{equation}
 
-关节角 $\theta_1$ 的求解涉及到将 $p_c$ 投影到 $x_0-y_0$ 平面。从俯视角度看，$p_c$ 的投影点、基座原点以及关节2的轴线构成一个三角形，通过反正切函数和余弦定理即可求解。$\theta_1$ 通常存在两组解，对应机械臂“左手”和“右手”两种不同的构型：
+关节角 $\theta_1$ 的求解涉及到将 $p_c$ 投影到 $x_0-y_0$ 平面。从俯视角度看，$p_c$ 的投影点、基座原点以及关节2的轴线构成一个三角形，通过反正切函数和余弦定理即可求解。$\theta_1$ 通常存在两组解，对应机械臂左手和右手两种不同的构型：
 
 \begin{equation}
-  \theta_1 = \text{atan2}(p_{cy}, p_{cx}) - \text{atan2}(d_4, \pm\sqrt{p_{cx}^2 + p_{cy}^2 - d_4^2})
+  \theta_1 = \text{arctan2}(p_{cy}, p_{cx}) - \text{arctan2}(d_4, \pm\sqrt{p_{cx}^2 + p_{cy}^2 - d_4^2})
 \end{equation}
 
 关节角 $\theta_5$ 的求解利用了变换矩阵的特性。将总变换方程 $T_6^0 = T_1^0 T_2^1 T_3^2 T_4^3 T_5^4 T_6^5$ 左乘 $(T_1^0)^{-1}$，得到 $T_6^1 = (T_1^0)^{-1} T_6^0$。展开该矩阵的 $(3,4)$ 元素（即位置向量的 $z$ 分量），可以发现它仅与 $\theta_5$ 有关，从而得到 $\theta_5$ 的两组解：
 
 \begin{equation}
-  \theta_5 = \pm \text{acos}\left(\frac{p_x s_1 - p_y c_1 - d_4}{d_6}\right)
+  \theta_5 = \pm \text{arccos}\left(\frac{p_x s_1 - p_y c_1 - d_4}{d_6}\right)
 \end{equation}
 
 关节角 $\theta_6$ 可在求出 $\theta_5$ 后，通过 $T_6^1$ 矩阵的旋转部分元素得到。当 $\sin\theta_5 \neq 0$ 时，即非奇异位形下：
 
 \begin{equation}
-  \theta_6 = \text{atan2}\left(\frac{-o_x s_1 + o_y c_1}{\sin\theta_5}, \frac{n_x s_1 - n_y c_1}{\sin\theta_5}\right)
+  \theta_6 = \text{arctan2}\left(\frac{-o_x s_1 + o_y c_1}{\sin\theta_5}, \frac{n_x s_1 - n_y c_1}{\sin\theta_5}\right)
 \end{equation}
 
 关节角 $\theta_3$ 的求解同样利用几何关系。在关节2和关节3所在的平面内，连杆 $a_2$ 和 $a_3$ 与 $p_c$ 在该平面上的投影构成一个三角形。利用余弦定理可得：
 
 \begin{equation}
-  \theta_3 = \pm \text{acos}\left(\frac{\|p_{c}\|^2 - d_1^2 - d_4^2 - a_2^2 - a_3^2}{2 a_2 a_3}\right)
+  \theta_3 = \pm \text{arccos}\left(\frac{\|p_{c}\|^2 - d_1^2 - d_4^2 - a_2^2 - a_3^2}{2 a_2 a_3}\right)
 \end{equation}
 
 关节角 $\theta_2$ 可由 $\theta_1$ 和 $\theta_3$ 共同确定。其求解涉及到求解一个关于 $\sin\theta_2$ 和 $\cos\theta_2$ 的线性方程组，最终可表示为：
 
 \begin{equation}
-  \theta_2 = \text{atan2}(-p_{cz}, \pm\sqrt{p_{cx}^2+p_{cy}^2-d_4^2}) - \text{atan2}(a_3 s_3, a_2 + a_3 c_3)
+  \theta_2 = \text{arctan2}(-p_{cz}, \pm\sqrt{p_{cx}^2+p_{cy}^2-d_4^2}) - \text{arctan2}(a_3 s_3, a_2 + a_3 c_3)
 \end{equation}
 
 最后，关节角 $\theta_4$ 可由旋转矩阵 $R_3^6 = (R_3^0)^{-1} R_6^0$ 的元素得到，其中 $R_3^0$ 由已求出的前三个关节角确定：
 
 \begin{equation}
-  \theta_4 = \text{atan2}(R_{3,2}^6, R_{3,1}^6)
+  \theta_4 = \text{arctan2}(R_{3,2}^6, R_{3,1}^6)
 \end{equation}
 
 由于三角函数的周期性和对称性，UR5 的逆运动学通常存在八组不同的关节角配置，均能使末端达到同一位姿。该解析解能够计算出所有可能的关节角配置，为实时轨迹规划提供了确定性的解集。
