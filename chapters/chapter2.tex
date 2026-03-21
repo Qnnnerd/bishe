@@ -230,64 +230,61 @@ UR5 机械臂的腕部三轴交于一点，满足 Pieper 准则，因此其逆�
 \subsection{典型模仿学习算法}
 \label{subsec:typical_il_algorithms}
 
-在解决精细操作任务的模仿学习问题时，动作分块 Transformer 算法（Action Chunking with Transformers, ACT）\cite{zhao2023learning} 表现出了优异的性能。该算法基于 Transformer 架构构建了条件变分自编码器的编码器和解码器，用于对示教数据进行建模。具体而言，编码器负责对输入数据进行处理并高效提取关键特征；解码器则先借助 ResNet 网络对图像进行编码，随后通过 Transformer 编码器将多模态特征深度融合，最终由 Transformer 解码器生成连贯、流畅的动作序列。
+在解决精细操作任务的模仿学习问题时，动作分块 Transformer 算法（Action Chunking with Transformers, ACT）\cite{zhao2023learning} 表现出了优异的性能。该算法摒弃了传统的单步动作预测范式，创新性地结合了条件变分自编码器（CVAE）和 Transformer 架构，将决策过程重塑为多步动作序列的高维生成问题。
 
-针对模仿学习中存在的误差累积和人类演示非平稳问题，ACT 采用了动作分块策略。该策略将连续的动作序列分割为多个相对独立的动作组块，有效减少了误差在动作执行过程中的传递与积累。在面对高精度控制和闭环反馈的精细操作任务时，ACT 策略会预测未来 $k$ 个时间步的动作，使得任务的有效视野降低 $k$ 倍，以此缓解误差累积问题。
-
-此外，为提升策略的平滑性，ACT 引入了时间集成机制。在每个时间步推理动作序列时，生成不同时刻的动作组块，并按时序排列使不同动作组块相互重叠。在任一时间步生成多个预测动作后，采用指数加权平均的方式组合这些预测：
+为了有效表征同一观测状态下可能存在多种成功动作轨迹的多模态分布，ACT 引入了一个低维连续隐变量 $z$ 来显式编码演示数据中的风格特征。在给定当前观测序列 $o$ 的条件下，模型的核心目标是最大化未来 $k$ 步专家动作块 $a_{t:t+k-1}$ 的条件对数似然。由于直接积分难以计算，ACT 通过引入近似后验分布 $q_\phi(z|a, o)$ 来构建变分下界（ELBO）。假设隐变量的先验分布服从标准正态分布 $\mathcal{N}(0, I)$，其优化目标可转化为最小化包含重构损失与 KL 散度正则化项的联合损失函数：
 
 \begin{equation}
-  w_i = \exp(-m \cdot i)
+  \mathcal{L}_{\text{ACT}}(\theta, \phi) = \mathbb{E}_{q_\phi(z|o, a)} \left[ \| a_{t:t+k-1} - \hat{a}_{t:t+k-1} \|^2 \right] + \beta \cdot D_{\text{KL}} \left( q_\phi(z|o, a) \| \mathcal{N}(0, I) \right)
 \end{equation}
 
-其中 $w_0$ 是初始动作的权重，$m$ 为权重系数。这种加权组合机制进一步优化了动作生成的连贯性。
+针对模仿学习中存在的误差累积问题，ACT 采用了动作分块（Action Chunking）策略。Transformer 解码器一次性并行预测出未来 $k$ 个时间步的完整动作序列，使得任务的有效决策视距强行降低了 $k$ 倍，从根本上遏制了协变量偏移在执行初期的爆炸性增长。
 
-% \begin{figure}[htbp]
-%   \centering
-%   \includegraphics[width=0.6\textwidth]{figures/content/[此处需要补充具体数据/文献/细节]}
-%   \caption{基于 Transformer 的 ACT 模仿学习框架}
-%   \label{fig:act_architecture}
-% \end{figure}
-
-尽管 ACT 算法在精细操作任务中成效显著，但其在处理复杂动作分布和高维动作空间能力上仍有不足，难以执行复杂手部动作。相比之下，扩散策略算法（Diffusion Policy）\cite{chi2023diffusion} 能够在处理复杂动作分布时精准生成合适策略，高效探索高维动作空间并寻得最优解，且具备出色的训练稳定性。
-
-扩散策略基于去噪扩散概率模型，以随机朗之万动力学为理论基础，将动作序列的生成视为去噪过程。传统的显式策略将世界状态直接映射到动作，在处理多模态行为时存在局限；隐式策略通过能量函数定义动作分布，虽能表示多模态分布但训练时需负采样导致过程不稳定。扩散策略则不直接输出动作，而是基于视觉观察推断动作分数的梯度，并通过迭代逐步优化动作。这使其能够自然精确地表达多模态动作分布，适应高维动作空间，并通过直接学习能量函数梯度避免了传统负采样的不稳定问题。
-
-在具体原理上，扩散策略的输出生成过程被建模为去噪过程。在第 $k$ 次迭代中，去噪公式如下：
+此外，为解决开环执行动作块可能导致的机械臂动作不连贯与抖动问题，ACT 引入了动作集成（Action Ensembling）机制。在任意物理运行时间步 $t$，系统内部会同时存在来自过去 $k$ 个不同时刻对当前时间步的动作预测值。设 $\hat{a}_t^{(t-i)}$ 表示系统在过去时刻 $t-i$ 处所生成的针对当前时刻 $t$ 的目标动作预测，动作集成机制通过指数加权移动平均的方式对这些预测值进行融合：
 
 \begin{equation}
-  x^{k-1} = \alpha \left( x^k - \gamma \epsilon_\theta(x^k, k) + \mathcal{N}(0, \sigma^2 I) \right)
+  a_t = \frac{1}{Z_t} \sum_{i=0}^{k-1} w_i \cdot \hat{a}_t^{(t-i)}
 \end{equation}
 
-其中，$\epsilon_\theta(x^k, k)$ 是噪声预测网络，通过学习不断优化以准确预测噪声；$\alpha$、$\gamma$ 和 $\sigma$ 是与迭代步骤 $k$ 相关的参数，共同构成噪声调度；$\mathcal{N}(0, \sigma^2 I)$ 是每次迭代添加的高斯噪声，为迭代引入随机性以避免陷入局部最优。训练时，通过最小化均方误差损失函数来训练噪声预测网络：
+其中，权重系数服从指数衰减规律 $w_i = \exp(-m \cdot i)$，$m$ 为衰减因子，$Z_t$ 为归一化常数。这种加权组合机制赋予最新观测生成的预测最高权重，同时保留较早历史时刻的平滑预测成分，极大提升了动作执行的连贯性。
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.6\textwidth]{figures/content/[此处需要补充具体数据/文献/细节]}
+  \caption{基于 Transformer 的 ACT 模仿学习框架}
+  \label{fig:act_architecture}
+\end{figure}
+
+尽管 ACT 算法在精细操作任务中成效显著，但其通过 CVAE 的高斯先验强制规范隐变量的方式，在处理存在严苛物理接触约束的多模态分布时仍显吃力。相比之下，扩散策略算法（Diffusion Policy）\cite{chi2023diffusion} 创造性地将机械臂动作序列的生成过程重构为去噪扩散概率模型（DDPM）的条件去噪演化过程，展现出了对复杂动作空间无与伦比的建模精度与超强的训练稳定性。
+
+扩散策略的前向扩散过程是一个预设的马尔可夫链。给定人类专家提供的干净示范动作序列 $A_t^0$，算法逐步向动作序列中注入方差随时间递增的高斯噪声。通过运用高斯分布的加法性质，可以直接得出从初始干净动作到任意第 $k$ 步带噪动作 $A_t^k$ 的闭式边缘分布：
 
 \begin{equation}
-  L = \text{MSE} \left( \epsilon^k, \epsilon_\theta(x^0 + \epsilon^k, k) \right)
+  q(A_t^k | A_t^0) = \mathcal{N}\left( A_t^k; \sqrt{\bar{\alpha}_k} A_t^0, (1 - \bar{\alpha}_k) \mathbf{I} \right)
 \end{equation}
 
-为适应机械臂任务，扩散策略在视觉观察条件设定方面进行了改进，使用扩散模型近似条件分布以加快扩散过程。给定时间步 $t$ 的观察数据 $O_t$，预测动作序列 $A_t$ 的去噪过程具体为：
+其中 $\bar{\alpha}_k$ 为方差调度参数的累积乘积。逆向去噪过程则是模型需要学习的核心。模型利用参数化的深度神经网络构建一个噪声预测器 $\epsilon_\theta(A_t^k, O_t, k)$，在已知视觉观测特征 $O_t$ 的前提下逼近真实的逆向转移概率。其训练目标是最小化噪声匹配均方误差：
 
 \begin{equation}
-  A_t^{k-1} = \alpha \left( A_t^k - \gamma \epsilon_\theta(O_t, A_t^k, k) + \mathcal{N}(0, \sigma^2 I) \right)
+  \mathcal{L}_{\text{Diffusion}}(\theta) = \mathbb{E}_{k, A_t^0, \epsilon} \left[ \left\| \epsilon - \epsilon_\theta(A_t^k, O_t, k) \right\|^2 \right]
 \end{equation}
 
-相应的训练损失公式为：
+在模型推断阶段，扩散策略从随机采样的纯高斯噪声动作序列出发，按照随机朗之万动力学进行多步迭代优化。在每一次去噪迭代中，网络基于当前的带噪动作和视觉特征计算出噪声梯度，并依循以下公式对动作序列进行更新：
 
 \begin{equation}
-  L = \text{MSE} \left( \epsilon^k, \epsilon_\theta(O_t, A_t^0 + \epsilon^k, k) \right)
+  A_t^{k-1} = \frac{1}{\sqrt{\alpha_k}} \left( A_t^k - \frac{1 - \alpha_k}{\sqrt{1 - \bar{\alpha}_k}} \epsilon_\theta(A_t^k, O_t, k) \right) + \sigma_k z
 \end{equation}
 
-% \begin{figure}[htbp]
-%   \centering
-%   \includegraphics[width=0.6\textwidth]{figures/content/[此处需要补充具体数据/文献/细节]}
-%   \caption{不同策略表示方法对比及 Diffusion Policy 算法框架}
-%   \label{fig:diffusion_policy_architecture}
-% \end{figure}
+其中 $z \sim \mathcal{N}(0, \mathbf{I})$ 为探索性高斯扰动项。这种迭代梯度下降寻优过程，使得扩散策略能够从复杂的动作分布超曲面上，精准地塌缩至最符合当前视觉条件的可行解。
 
-在闭环动作序列预测上，扩散策略将动作序列预测能力与滚动时域控制相结合。在时间步 $t$，以最近 $T_o$ 步的观察数据为输入，预测 $T_p$ 步的动作，其中前 $T_a$ 步的动作会被直接执行在机械臂上而无需重新规划。这种设计平衡了长期规划与实时响应。
+在闭环动作序列预测上，扩散策略将动作序列预测能力与滚动时域控制（RHC）相结合。在时间步 $t$，以最近 $T_o$ 步的观察数据为输入，一次性预测 $T_p$ 步的动作序列，但仅将前 $T_a$ 步的动作直接执行在机械臂上。这种“看得很远，走得很稳”的设计，平衡了长期轨迹规划与对外界扰动的实时闭环响应。
 
-在网络架构设计上，扩散策略采用 CNN 和 Transformer 架构进行构建。基于 CNN 的架构使用修改后的 1D 时间卷积网络，借助 FiLM 预测动作轨迹；基于 Transformer 的架构则凭借输入与注意力机制，在高复杂度任务中表现卓越。具体而言，采用 ResNet18 作为视觉编码器，以空间 Softmax 池化替换全局平均池化以保留图像空间信息；用 GroupNorm 替代 BatchNorm 并与指数移动平均相结合，有效保障了训练稳定性。通过噪声调度合理调控扩散过程中的噪声变化，助力模型捕捉动作信号的高频和低频特征，从而优化动作生成的准确性与稳定性。
-
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.6\textwidth]{figures/content/[此处需要补充具体数据/文献/细节]}
+  \caption{不同策略表示方法对比及 Diffusion Policy 算法框架}
+  \label{fig:diffusion_policy_architecture}
+\end{figure}
 \section{视觉语言动作模型}
 \label{sec:vla_models}
 
