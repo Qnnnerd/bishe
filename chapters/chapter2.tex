@@ -237,12 +237,12 @@ UR5 机械臂的腕部三轴交于一点，满足 Pieper 准则，因此其逆�
 
 其中 $w_0$ 是初始动作的权重，$m$ 为权重系数。这种加权组合机制进一步优化了动作生成的连贯性。
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.6\textwidth]{figures/content/[此处需要补充具体数据/文献/细节]}
-  \caption{基于 Transformer 的 ACT 模仿学习框架}
-  \label{fig:act_architecture}
-\end{figure}
+% \begin{figure}[htbp]
+%   \centering
+%   \includegraphics[width=0.6\textwidth]{figures/content/[此处需要补充具体数据/文献/细节]}
+%   \caption{基于 Transformer 的 ACT 模仿学习框架}
+%   \label{fig:act_architecture}
+% \end{figure}
 
 尽管 ACT 算法在精细操作任务中成效显著，但其在处理复杂动作分布和高维动作空间能力上仍有不足，难以执行复杂手部动作。相比之下，扩散策略算法（Diffusion Policy）\cite{chi2023diffusion} 能够在处理复杂动作分布时精准生成合适策略，高效探索高维动作空间并寻得最优解，且具备出色的训练稳定性。
 
@@ -272,12 +272,12 @@ UR5 机械臂的腕部三轴交于一点，满足 Pieper 准则，因此其逆�
   L = \text{MSE} \left( \epsilon^k, \epsilon_\theta(O_t, A_t^0 + \epsilon^k, k) \right)
 \end{equation}
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.6\textwidth]{figures/content/[此处需要补充具体数据/文献/细节]}
-  \caption{不同策略表示方法对比及 Diffusion Policy 算法框架}
-  \label{fig:diffusion_policy_architecture}
-\end{figure}
+% \begin{figure}[htbp]
+%   \centering
+%   \includegraphics[width=0.6\textwidth]{figures/content/[此处需要补充具体数据/文献/细节]}
+%   \caption{不同策略表示方法对比及 Diffusion Policy 算法框架}
+%   \label{fig:diffusion_policy_architecture}
+% \end{figure}
 
 在闭环动作序列预测上，扩散策略将动作序列预测能力与滚动时域控制相结合。在时间步 $t$，以最近 $T_o$ 步的观察数据为输入，预测 $T_p$ 步的动作，其中前 $T_a$ 步的动作会被直接执行在机械臂上而无需重新规划。这种设计平衡了长期规划与实时响应。
 
