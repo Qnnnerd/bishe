@@ -114,12 +114,12 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
 
 \begin{figure}[htbp]
   \centering
-  \subfloat[Lift]{\includegraphics[width=.30\linewidth]{figures/content/robomimic_lift}}\hfill
-  \subfloat[Can]{\includegraphics[width=.30\linewidth]{figures/content/robomimic_can}}\hfill
-  \subfloat[Square]{\includegraphics[width=.30\linewidth]{figures/content/robomimic_square}}\\
-  \subfloat[Transport]{\includegraphics[width=.30\linewidth]{figures/content/robomimic_transport}}\hfill
-  \subfloat[Tool Hang]{\includegraphics[width=.30\linewidth]{figures/content/robomimic_toolhang}}
-  \caption{RoboMimic数据集操作任务示意图}
+  \subfloat[提升任务]{\includegraphics[width=.55\linewidth]{figures/content/robomimic_lift}}\\
+  \subfloat[罐头任务]{\includegraphics[width=.55\linewidth]{figures/content/robomimic_can}}\\
+  \subfloat[方形螺母任务]{\includegraphics[width=.55\linewidth]{figures/content/robomimic_square}}\\
+  \subfloat[运输任务]{\includegraphics[width=.55\linewidth]{figures/content/robomimic_transport}}\\
+  \subfloat[工具悬挂任务]{\includegraphics[width=.55\linewidth]{figures/content/robomimic_toolhang}}
+  \caption{RoboMimic数据集五项仿真操作任务示意图：(a)提升任务；(b)罐头任务；(c)方形螺母任务；(d)运输任务；(e)工具悬挂任务}
   \label{fig:robomimic_tasks}
 \end{figure}
 
@@ -128,3 +128,12 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
 在数据采集方面，RoboMimic收集由人类操作员远程控制生成的示教轨迹，根据操作员的熟练程度与数据生成方式，数据集被划分为三种主要类型，分别是熟练人类数据集、多人类数据集以及机器生成数据集。熟练人类数据集由一名熟练的操作员采集，每项任务均包含二百条成功的示教轨迹，数据具有较高的一致性。多人类数据集则由六名不同操作水平的操作员共同采集，每名操作员提供五十条轨迹，每项任务总计包含三百条成功轨迹。这种混合质量的数据集能够测试算法从次优示教中学习的能力，机器生成数据集是通过训练强化学习智能体并在不同训练阶段保存检查点所生成的，其中提升任务包含一千五百条轨迹，罐头任务包含三千九百条轨迹，数据呈现出从随机探索到专家表现的渐进分布特征。
 
 在模型训练的观测输入方面，RoboMimic数据集提供了低维状态观测与图像观测两种模态。低维状态观测包含机器人关节角度、末端执行器位姿、夹爪开合状态等本体感受信息，以及与任务相关的物体位置与姿态等物理状态信息。图像观测则通常包含正面视角与腕部视角的视觉输入。对于工具悬挂任务，正面视角被替换为侧面视角以提供深度感知。而在双臂运输任务中，系统为每个机械臂分别提供了肩部视角与腕部视角。本章的实验主要基于这些观测数据，通过构建多模态特征融合网络，引导扩散模型生成包含六维末端执行器位姿与一维夹爪开合状态的七维连续动作向量。
+
+\subsection{评估指标}
+\label{subsec:eval_metrics}
+
+在机器人操作任务的评估中，本章采用任务成功率作为核心量化指标。任务成功率定义为在固定数量的独立测试回合中，机械臂完整执行并满足任务终止条件的回合数占总测试回合数的比例。对于RoboMimic数据集中的每项任务，每种方法均在相同的初始条件下运行五十个测试回合，最终成功率以百分比形式报告，取值范围为0到100。
+
+具体的成功判定标准依任务性质而定。提升任务以方块末端高度超过预设阈值为成功条件。罐头任务以汽水罐被稳定放置于目标容器内为成功条件。方形螺母任务以螺母完全套入方形柱且接触传感器触发为成功条件。运输任务要求两个机械臂协同完成物体转移，以物体稳定落入目标容器为成功条件。工具悬挂任务则要求扳手最终悬挂于钩子上并保持静止，以此作为成功判定依据。上述判定标准均由RoboMimic仿真环境内置的奖励函数自动计算，排除了人工主观判断带来的误差。
+
+除任务成功率外，本章还记录各方法在不同数据集类型下的成功率变化，以分析算法对数据质量的敏感程度。在对比实验中，所有参与比较的方法均在相同的数据集划分、相同的训练轮次与相同的随机种子下进行训练，以保证比较的公平性。
