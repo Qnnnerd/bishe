@@ -15,9 +15,9 @@
   \label{fig:action_model}
 \end{figure}
 
-系统首先接收来自环境的观察输入 $O_t$，该输入包含视觉输入和机器人状态两部分，视觉输入通过视觉编码器提取为视觉特征表示，而机器人当前关节角度、末端执行器位姿等状态，则通过状态编码器转化为状态特征表示。这两种特征表示在特征融合模块中进行交互与整合，以形成统一的条件特征,为后续的动作生成提供充分的环境与自身状态上下文。
+系统首先接收来自环境的观察输入 $O_t$，该输入包含视觉输入和机器人状态两部分，视觉输入通过视觉编码器提取为视觉特征表示，而机器人当前关节角度、末端执行器位姿等状态，则通过状态编码器转化为状态特征表示。这两种特征表示在特征融合模块中进行交互与整合，以形成统一的条件特征，为后续的动作生成提供充分的环境与自身状态上下文。
 
-扩散动作生成模块负责基于上述条件特征生成连续的动作序列 $A_0$,该模块采用基于Transformer架构的扩散模型（Diffusion Transformer, DiT）\cite{peebles2023scalable}作为核心去噪网络，DiT网络由多个堆叠的DiT Block组成，用于逐步预测输入序列中的噪声 $\epsilon$。在训练阶段，模型接收添加了噪声的动作序列 $A_t$、当前时间步 $k$ 以及条件特征作为输入。在推理阶段，模型从纯高斯噪声出发，在条件特征的引导下，经过多步迭代去噪，最终生成符合专家分布的干净动作序列 $A_0$，并下发给机械臂执行。
+扩散动作生成模块负责基于上述条件特征生成连续的动作序列 $A_0$，该模块采用基于Transformer架构的扩散模型（Diffusion Transformer, DiT）\cite{peebles2023scalable}作为核心去噪网络，DiT网络由多个堆叠的DiT Block组成，用于逐步预测输入序列中的噪声 $\epsilon$。在训练阶段，模型接收添加了噪声的动作序列 $A_t$、当前时间步 $k$ 以及条件特征作为输入。在推理阶段，模型从纯高斯噪声出发，在条件特征的引导下，经过多步迭代去噪，最终生成符合专家分布的干净动作序列 $A_0$，并下发给机械臂执行。
 
 \subsection{视觉与状态特征编码}
 \label{sec:visual_state_encoding}
@@ -58,9 +58,7 @@ EfficientViT模块内部采用轻量级的多尺度注意力机制，特征首�
 \subsection{基于DiT的去噪动作生成模块}
 \label{sec:dit_denoising}
 
-在获得融合后的条件特征后，扩散动作生成模块负责以此为条件，通过迭代去噪的方式生成连续的动作序列。本算法以DiT\cite{peebles2023scalable} 作为去噪网络的骨干，并在此基础上针对机器人动作序列生成任务进行了适配设计。
-
-为了有效缓解误差累积并保证动作的连贯性，本算法采用动作集成（Action Chunk）机制进行动作建模。如图\ref{fig:action_chunk}所示，模型在每个时间步接收最近 $T_o$ 步的观测序列 $O_t = \{o_{t-T_o+1}, \ldots, o_t\}$ 作为条件输入，并一次性预测未来 $T_a$ 步的动作序列 $A_0 = \{a_t, a_{t+1}, \ldots, a_{t+T_a-1}\}$，其中每步动作 $a \in \mathbb{R}^{d_a}$，$d_a$ 为单步动作的维度。机械臂执行完当前动作块后，模型基于新的观测序列生成下一个动作块，从而构成闭环控制。
+在获得融合后的条件特征后，扩散动作生成模块负责以此为条件，通过迭代去噪的方式生成连续的动作序列。本算法以DiT\cite{peebles2023scalable} 作为去噪网络的骨干，并在此基础上针对机器人动作序列生成任务进行了适配设计。为了缓解误差累积并保证动作的连贯性，本算法采用动作集成（Action Chunk）机制进行动作建模。如图\ref{fig:action_chunk}所示，模型在每个时间步接收最近 $T_o$ 步的观测序列 $O_t = \{o_{t-T_o+1}, \ldots, o_t\}$ 作为条件输入，并一次性预测未来 $T_a$ 步的动作序列 $A_0 = \{a_t, a_{t+1}, \ldots, a_{t+T_a-1}\}$，其中每步动作 $a \in \mathbb{R}^{d_a}$，$d_a$ 为单步动作的维度。机械臂执行完当前动作块后，模型基于新的观测序列生成下一个动作块，从而构成闭环控制。
 
 \begin{figure}[htbp]
   \centering
@@ -112,21 +110,21 @@ DDIM 从时间步 $k$ 到时间步 $k-1$ 的更新公式被重新推导为：
 \subsection{RoboMimic数据集}
 \label{subsec:robomimic_dataset}
 
-RoboMimic是一个包含多种操作任务的机器人示教数据集，用于评估模仿学习与离线强化学习算法。该数据集统一采用具有七个自由度的Franka Emika Panda机械臂作为执行主体。为了测试算法在不同复杂度场景下的性能，RoboMimic设计了五种不同难度的仿真操作任务，涵盖了从基础抓取到高精度装配的多种技能需求。
+RoboMimic是一个包含多种操作任务的机器人示教数据集，用于评估模仿学习与离线强化学习算法。该数据集统一采用具有七个自由度的Franka Emika Panda机械臂作为执行主体，为了测试算法在不同复杂度场景下的性能，RoboMimic设计了五种不同难度的仿真操作任务，涵盖了从基础抓取到高精度装配的多种技能需求。
 
 \begin{figure}[htbp]
   \centering
-  \subfloat[提升任务]{\includegraphics[width=.30\linewidth]{figures/content/robomimic_lift}}\hfill
-  \subfloat[罐头任务]{\includegraphics[width=.30\linewidth]{figures/content/robomimic_can}}\hfill
-  \subfloat[方形螺母任务]{\includegraphics[width=.30\linewidth]{figures/content/robomimic_square}}\\
-  \subfloat[运输任务]{\includegraphics[width=.30\linewidth]{figures/content/robomimic_transport}}\hfill
-  \subfloat[工具悬挂任务]{\includegraphics[width=.30\linewidth]{figures/content/robomimic_toolhang}}
-  \caption{RoboMimic数据集五项仿真操作任务示意图：(a)提升任务；(b)罐头任务；(c)方形螺母任务；(d)运输任务；(e)工具悬挂任务}
+  \subfloat[Lift]{\includegraphics[width=.30\linewidth]{figures/content/robomimic_lift}}\hfill
+  \subfloat[Can]{\includegraphics[width=.30\linewidth]{figures/content/robomimic_can}}\hfill
+  \subfloat[Square]{\includegraphics[width=.30\linewidth]{figures/content/robomimic_square}}\\
+  \subfloat[Transport]{\includegraphics[width=.30\linewidth]{figures/content/robomimic_transport}}\hfill
+  \subfloat[Tool Hang]{\includegraphics[width=.30\linewidth]{figures/content/robomimic_toolhang}}
+  \caption{RoboMimic数据集操作任务示意图}
   \label{fig:robomimic_tasks}
 \end{figure}
 
 如图~\ref{fig:robomimic_tasks}~所示，这五项任务分别为提升（Lift）、罐头（Can）、方形螺母（Square）、运输（Transport）以及工具悬挂（Tool Hang）。提升任务要求机械臂从桌面拾取一个小方块并将其提升至指定高度以上，主要考察基础的抓取与提升能力。罐头任务需要机械臂将一个汽水罐从一个容器中拾取并放置到另一个指定的容器中，测试模型的抓取与放置技能。方形螺母任务要求机械臂将一个方形螺母精确套入方形柱上，侧重于考察插入操作能力。运输任务属于双臂协作任务，要求两个机械臂相互配合，将一个容器中的物体转移到另一个容器中，用于评估多智能体协调能力。工具悬挂任务是其中最为复杂的任务，要求机械臂首先将一个钩子插入底座以组装框架，随后将扳手挂在钩子上，这对操作的精度与多阶段规划能力提出了严格的要求。
 
-在数据采集方面，RoboMimic收集由人类操作员远程控制生成的示教轨迹，根据操作员的熟练程度与数据生成方式，数据集被划分为三种主要类型，分别是熟练人类数据集、多人类数据集以及机器生成数据集。熟练人类数据集由一名熟练的操作员采集，每项任务均包含二百条成功的示教轨迹，数据具有较高的一致性。多人类数据集则由六名不同操作水平的操作员共同采集，每名操作员提供五十条轨迹，每项任务总计包含三百条成功轨迹。这种混合质量的数据集能够测试算法从次优示教中学习的能力。机器生成数据集是通过训练强化学习智能体并在不同训练阶段保存检查点所生成的，其中提升任务包含一千五百条轨迹，罐头任务包含三千九百条轨迹，数据呈现出从随机探索到专家表现的渐进分布特征。
+在数据采集方面，RoboMimic收集由人类操作员远程控制生成的示教轨迹，根据操作员的熟练程度与数据生成方式，数据集被划分为三种主要类型，分别是熟练人类数据集、多人类数据集以及机器生成数据集。熟练人类数据集由一名熟练的操作员采集，每项任务均包含二百条成功的示教轨迹，数据具有较高的一致性。多人类数据集则由六名不同操作水平的操作员共同采集，每名操作员提供五十条轨迹，每项任务总计包含三百条成功轨迹。这种混合质量的数据集能够测试算法从次优示教中学习的能力，机器生成数据集是通过训练强化学习智能体并在不同训练阶段保存检查点所生成的，其中提升任务包含一千五百条轨迹，罐头任务包含三千九百条轨迹，数据呈现出从随机探索到专家表现的渐进分布特征。
 
 在模型训练的观测输入方面，RoboMimic数据集提供了低维状态观测与图像观测两种模态。低维状态观测包含机器人关节角度、末端执行器位姿、夹爪开合状态等本体感受信息，以及与任务相关的物体位置与姿态等物理状态信息。图像观测则通常包含正面视角与腕部视角的视觉输入。对于工具悬挂任务，正面视角被替换为侧面视角以提供深度感知。而在双臂运输任务中，系统为每个机械臂分别提供了肩部视角与腕部视角。本章的实验主要基于这些观测数据，通过构建多模态特征融合网络，引导扩散模型生成包含六维末端执行器位姿与一维夹爪开合状态的七维连续动作向量。
