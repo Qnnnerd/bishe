@@ -114,12 +114,12 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
 
 \begin{figure}[htbp]
   \centering
-  \subfloat[提升任务]{\includegraphics[width=.55\linewidth]{figures/content/robomimic_lift}}\\
-  \subfloat[罐头任务]{\includegraphics[width=.55\linewidth]{figures/content/robomimic_can}}\\
-  \subfloat[方形螺母任务]{\includegraphics[width=.55\linewidth]{figures/content/robomimic_square}}\\
-  \subfloat[运输任务]{\includegraphics[width=.55\linewidth]{figures/content/robomimic_transport}}\\
-  \subfloat[工具悬挂任务]{\includegraphics[width=.55\linewidth]{figures/content/robomimic_toolhang}}
-  \caption{RoboMimic数据集五项仿真操作任务示意图：(a)提升任务；(b)罐头任务；(c)方形螺母任务；(d)运输任务；(e)工具悬挂任务}
+  \subfloat[Lift]{\includegraphics[width=.19\linewidth]{figures/content/robomimic_lift}}\hfill
+  \subfloat[Can]{\includegraphics[width=.19\linewidth]{figures/content/robomimic_can}}\hfill
+  \subfloat[Square]{\includegraphics[width=.19\linewidth]{figures/content/robomimic_square}}\hfill
+  \subfloat[Transport]{\includegraphics[width=.19\linewidth]{figures/content/robomimic_transport}}\hfill
+  \subfloat[Tool Hang]{\includegraphics[width=.19\linewidth]{figures/content/robomimic_toolhang}}
+  \caption{RoboMimic数据集五项仿真操作任务示意图：(a)Lift；(b)Can；(c)Square；(d)Transport；(e)Tool Hang}
   \label{fig:robomimic_tasks}
 \end{figure}
 
@@ -132,8 +132,12 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
 \subsection{评估指标}
 \label{subsec:eval_metrics}
 
-在机器人操作任务的评估中，本章采用任务成功率作为核心量化指标。任务成功率定义为在固定数量的独立测试回合中，机械臂完整执行并满足任务终止条件的回合数占总测试回合数的比例。对于RoboMimic数据集中的每项任务，每种方法均在相同的初始条件下运行五十个测试回合，最终成功率以百分比形式报告，取值范围为0到100。
+在机器人操作任务的评估中，本章采用任务成功率作为核心量化指标。任务成功率定义为在固定数量的独立测试回合中，机械臂成功完成任务的回合数占总测试回合数的比例。其计算公式如下：
+\begin{equation}
+  \text{SR} = \frac{N_{\text{success}}}{N_{\text{total}}}
+\end{equation}
+其中，$\text{SR}$表示任务成功率，$N_{\text{success}}$表示成功完成任务的回合数，$N_{\text{total}}$表示总测试回合数。
+
+为了保证评估的可靠性与代表性，对于RoboMimic数据集中的每项仿真任务，本章参考相关研究的评估设定，报告在相同初始条件下，使用三个不同随机种子训练的模型在一千个随机初始化的测试回合中的平均成功率，即每种方法在每个任务上共进行三千个测试回合的评估。最终结果以平均成功率及其在三个随机种子上的标准差形式呈现。
 
 具体的成功判定标准依任务性质而定。提升任务以方块末端高度超过预设阈值为成功条件。罐头任务以汽水罐被稳定放置于目标容器内为成功条件。方形螺母任务以螺母完全套入方形柱且接触传感器触发为成功条件。运输任务要求两个机械臂协同完成物体转移，以物体稳定落入目标容器为成功条件。工具悬挂任务则要求扳手最终悬挂于钩子上并保持静止，以此作为成功判定依据。上述判定标准均由RoboMimic仿真环境内置的奖励函数自动计算，排除了人工主观判断带来的误差。
-
-除任务成功率外，本章还记录各方法在不同数据集类型下的成功率变化，以分析算法对数据质量的敏感程度。在对比实验中，所有参与比较的方法均在相同的数据集划分、相同的训练轮次与相同的随机种子下进行训练，以保证比较的公平性。
