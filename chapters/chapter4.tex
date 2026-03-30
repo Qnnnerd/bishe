@@ -1,427 +1,121 @@
-\chapter{特殊环境与浮动体}
-\label{chp:float}
+\chapter{基于特征时序缓存的视觉语言动作模型}
+\label{chp:temporal_cache_vla}
 
-事实上我们本该假设所有使用本 \LaTeX 论文模板的人都具备了相当的 \LaTeX 使用经验和知识，如果这样那么本章所介绍的内容是不言自明的。但是也存在很多初次接触 \LaTeX 的研究生朋友，因为各种不同的原因而尝试使用 \LaTeX 进行论文排版。因此我们认为还是有必要对这些 \LaTeX 中的基本元素进行反复地强调，以避免我们的个别开发者的邮箱和GitHub Issues被投诉和问询填满。如果你是一个 \LaTeX 老手，你可以直接跳过本章而不用担心漏过任何重要内容。
+在机器人操作任务中，特别是在长时序和非结构化环境中，任务往往具有明显的非马尔可夫特性。这意味着当前时刻的决策不仅依赖于当前的观测状态，还需要结合历史的操作上下文。然而，现有的主流视觉语言动作模型通常仅依赖当前单帧的观测输入进行动作预测，缺乏对时序依赖关系的有效建模，导致在执行长时序任务时容易出现状态混淆和决策失误。为了解决这一问题，本章受计算机系统中的缓存与数据库机制启发，提出一种名为TemporalCacheVLA的机器人操作框架。该框架通过构建“感知-语义-存储-动作”的闭环机制，有效维护长时序上下文，并在LIBERO长时序任务基准上进行了全面的实验验证。
 
-\section{图片}
+\section{TemporalCacheVLA框架整体设计}
+\label{sec:temporal_cache_vla_architecture}
 
-\subsection{插入图片}
-在 \LaTeX 文档中插入图片，你需要如下的代码：
-
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=.3\linewidth]{figures/content/4_1}
-  \caption{插入图片示例}
-  \label{fig:4_1}
-\end{figure}
-\end{lstlisting}
-\end{tcolorbox}
-
-\noindent 上面的代码会插入如下效果的图片：
+TemporalCacheVLA框架的核心在于构建一个包含感知、语义、存储和动作生成的完整闭环系统，旨在将单一时间步的决策转化为基于时序上下文的连续决策。该框架的整体工作流程如图\ref{fig:temporal_cache_vla_arch}所示。
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=.3\linewidth]{figures/content/4_1}
-  \caption{插入图片示例}
-  \label{fig:4_1}
+  % TODO: 预留TemporalCacheVLA整体架构图占位符
+  \includegraphics[width=0.9\linewidth]{figures/content/temporal_cache_vla_arch_placeholder}
+  \caption{TemporalCacheVLA框架整体架构图}
+  \label{fig:temporal_cache_vla_arch}
 \end{figure}
 
-\subsection{浮动体环境与位置标识符}
+首先，系统利用预训练的视觉语言模型将当前时间步的视觉观测与语言指令进行编码，提取出低层级的感知向量与高层级的语义向量，这两者共同构成当前决策的缓存区。其次，系统维护一个双通道的历史存储池，分别保存历史时间步的细粒度视觉细节与高层级语义摘要。在每次决策时，系统使用当前缓存区的内容作为查询条件，从历史存储池中检索相关的上下文信息，并通过可学习的门控机制进行融合。最后，经过历史上下文增强的感知与语义向量被输入至基于扩散架构的动作生成模型中，输出符合任务目标的连续机器人动作轨迹。
 
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-\begin{figure}[htbp]
-\end{figure}
-\end{lstlisting}
-\end{tcolorbox}
+\section{视觉语言特征感知与当前决策缓存区}
+\label{sec:vlm_perception_cache}
 
-\noindent 声明了一个图片浮动体环境。浮动体是 \LaTeX 中的一种特殊容器，用于容纳占据篇幅较大但不方便分页的内容，如图片或表格。方括号中的字母是浮动体位置标识符，用于向 \LaTeX 编译引擎提出位置建议。常见的位置标识符有以下4种：
-
-\begin{itemize}
-  \setlength{\itemsep}{1.5pt}
-  \setlength{\parsep}{1.5pt}
-  \setlength{\parskip}{1.5pt}
-  \item {\codefont h}：表示here。\LaTeX 编译引擎在面对用{\codefont h}标识的浮动体时会首先尝试在声明位置插入浮动体；
-  \item {\codefont t}：表示top。\LaTeX 编译引擎会尝试在当页顶部安置浮动体；
-  \item {\codefont b}：表示bottom。\LaTeX 编译引擎会尝试在当页底部安置浮动体；
-  \item {\codefont p}：表示float page。\LaTeX 编译引擎会尝试为该浮动体分页并使其占据全页。
-\end{itemize}
-你可以使用多个位置标识符并将其自由组合，你指定的顺序代表你向 \LaTeX 编译引擎所推荐的优先级。需要说明的是，编译引擎并不保证会按照你所指定的位置优先级安置浮动体，而是会根据浮动体大小、其在页面中的位置、文字的相对分布等多种因素决定浮动体的位置。因此在论文写作过程中，我们不建议你使用如“下图”，“上表”等使用方位来指代特定图片或表格的表述，因为你所插入的图片或表格很有可能并不会被编译到你想要它出现的位置。当然，你也可以在标识符前加上 !号来表示强制位置，如{\codefont !h}。但是我们不推荐这样做，因为这可能会造成很多你意想不到的后果。
-
-\subsection{图片的大小与路径}
-
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-\centering
-\includegraphics[width=.5\linewidth]{figures/content/4_1}
-\end{lstlisting}
-\end{tcolorbox}
-
-{\codefont centering}表示浮动体在控制范围内居中。{\codefont includegraphics}语句向编译引擎指定你所想要引入的图片的大小与保存路径。在该命令之后跟随的方括号中，你可以指定图片的长或宽。默认情况下 \LaTeX 会锁定图片的长宽比例，因此你只需要指定长宽中的一个即可。后面的大括号用于填写图片的路径，你可以使用主文件main.tex的相对路径来表示。我们在模板根目录下设置了一个名为figures的目录用于存放图片，我们建议你把论文需要的所有图片放置于该目录下的content文件夹中以便查找和管理。
-
-\subsection{图片的标题与标签}
-
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-\caption{插入图片示例}
-\label{fig:4_1}
-\end{lstlisting}
-\end{tcolorbox}
-
-{\codefont caption}用于指定图片的标题。{\codefont label}用于给图片添加标签，便于你在文本中引用该图片。对于上面的图片，如果我们想要在论文中引述其内容，可以采用如下方法：
-
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-图\ref{fig:4_1}是东南大学的校徽，它的设计中蕴含着多种寓意。
-\end{lstlisting}
-\end{tcolorbox}
-
-\noindent 上述文本在编译后会呈现这样的效果：
-
-图\ref{fig:4_1}是东南大学的校徽，它的设计中蕴含着多种寓意。
-
-\subsection{图片的并排}
-
-很多时候，你可能会想要将两张图片并排放置以节省排版空间。我们支持并鼓励你这样做。你只需要引入如下的代码：
-
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-\begin{figure}[htbp]
-  \centering
-    \begin{minipage}[t]{0.48\textwidth}
-      \centering
-      \includegraphics[width=6cm]{figures/content/4_2}
-      \caption{GitHub}
-      \label{fig:4_2}
-    \end{minipage}
-    \begin{minipage}[t]{0.48\textwidth}
-      \centering
-      \includegraphics[width=8cm]{figures/content/4_3}
-      \caption{NPM}
-      \label{fig:4_3}
-    \end{minipage}
-\end{figure}
-\end{lstlisting}
-\end{tcolorbox}
-
-\noindent 编译后的效果是这样的：
+视觉语言认知模块负责将原始的视觉与语言输入转化为高维特征向量，形成当前决策缓存区。输入包含当前的第三视角RGB图像与自然语言指令。本框架采用具有70亿参数的预训练视觉语言模型处理输入数据，其视觉骨干网络由DINOv2与SigLIP拼接而成，语言骨干网络采用LLaMA-7B。
 
 \begin{figure}[htbp]
   \centering
-    \begin{minipage}[t]{0.48\textwidth}
-      \centering
-      \includegraphics[width=4cm]{figures/content/4_2}
-      \caption{GitHub}
-      \label{fig:4_2}
-    \end{minipage}
-    \begin{minipage}[t]{0.48\textwidth}
-      \centering
-      \includegraphics[width=3cm]{figures/content/4_3}
-      \caption{npm}
-      \label{fig:4_3}
-    \end{minipage}
+  % TODO: 预留视觉语言特征感知模块图占位符
+  \includegraphics[width=0.7\linewidth]{figures/content/vlm_perception_placeholder}
+  \caption{视觉语言特征感知与当前决策缓存区构建示意图}
+  \label{fig:vlm_perception}
 \end{figure}
 
-注意，在上述代码中，我们定义了一个{\codefont figure}浮动体环境，并在其中用两个：
+对于感知维度，DINOv2与SigLIP两个视觉特征化器分别提取的原始视觉特征在通道维度上进行拼接，形成高维的原始视觉特征张量。为了降低计算复杂度并提取关键信息，该张量随后通过基于Squeeze-and-Excitation（SE）瓶颈结构的感知压缩模块，被降维并压缩为维度为256的紧凑感知向量。
 
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-\begin{minipage}[t]{0.48\textwidth}
-\end{minipage}
-\end{lstlisting}
-\end{tcolorbox}
+对于语义维度，原始视觉特征经投影层映射至语言嵌入空间，与分词后的语言指令标记（Token）序列拼接后，输入至大语言模型进行前向传播。通过对注意力掩码的累积和进行定位，系统提取序列中最后一个有效标记（即句末位置）的最后一层隐藏状态，作为高层级的语义向量。该向量的维度与大语言模型的隐藏层维度一致，默认为4096维。生成的感知向量与语义向量共同组成当前决策缓存区，用于精确反映当前时间步的环境与任务状态。
 
-\noindent 包裹了两张图片的声明。和单个图片类似，你也可以指定{\codefont minipage}相对浮动体的位置和大小。编译引擎将根据你{\codefont minipage}的大小调整在一行显示的图片数量。需要注意的是，在两个{\codefont minipage}声明之间请勿空行，因为 \LaTeX 编译引擎会将空行视作换行请求而错误地将你的两张图片上下放置。
+\section{感知-语义双通道历史存储池}
+\label{sec:dual_channel_storage_pool}
 
-\subsection{子图}
-
-和图片并排类似，子图也用于提供在水平方向上组织浮动体的功能。和图片的简单并排不同的是，子图功能一般用于表达同一主题下内容相近或有对比意义的图片或其他浮动体。对于子图功能，你需要引入如下代码：
-
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-\begin{figure}[htbp]
-  \centering
-  \subfloat[彩色标志]{\includegraphics[width=.38\textwidth]{figures/content/4_4}}
-  \quad\quad
-  \subfloat[单色标志]{\includegraphics[width=.38\textwidth]{figures/content/4_5}}
-  \caption{东南大学校徽的视觉设计}
-  \label{fig:4_4}
-\end{figure}
-\end{lstlisting}
-\end{tcolorbox}
-
-\noindent 编译后呈现如下效果：
+为高效维护时序上下文，TemporalCacheVLA框架设计了双通道的历史存储池，分为感知存储池与语义存储池两个通道，分别对应256维的感知向量与4096维的语义向量的历史记录。两个通道共享完全相同的内部结构与处理逻辑，以语义存储池为例，其完整工作机制包含情节管理、时间步位置编码、交叉注意力检索、门控融合以及压缩更新五个关键环节。
 
 \begin{figure}[htbp]
   \centering
-  \subfloat[彩色标志]{\includegraphics[width=.38\textwidth]{figures/content/4_4}}
-  \quad\quad
-  \subfloat[单色标志]{\includegraphics[width=.38\textwidth]{figures/content/4_5}}
-  \caption{东南大学校徽的视觉设计}
-  \label{fig:4_4}
+  % TODO: 预留双通道历史存储池机制图占位符
+  \includegraphics[width=0.85\linewidth]{figures/content/dual_channel_storage_placeholder}
+  \caption{感知-语义双通道历史存储池工作机制示意图}
+  \label{fig:dual_channel_storage}
 \end{figure}
 
-\noindent {\codefont subfloat}命令指定了图片的子图单元，你可以在命令后的方括号中指定子图的名称，并在随后的大括号中声明子图的版式和索引路径。
+\subsection{存储结构与情节管理}
+\label{subsec:storage_structure}
 
-\section{表格}
+历史存储池以情节标识符为索引，为每个情节独立维护一条按时间顺序排列的历史记录序列。序列中的每条记录包含该帧在情节中的绝对时间步索引以及对应的特征向量。存储池设有固定的容量上限（默认为16条），当记录数量超出上限时将触发压缩更新策略。
 
-\subsection{插入表格}
+在数据加载与情节边界管理方面，框架提供分组模式与流式模式。在分组模式下，每个训练批次由同一情节的连续若干帧组成，处理完一个完整分组后即清除该情节的历史存储池。在流式模式下，数据按情节顺序送入，系统通过检测相邻样本的情节标识符变化来判断情节切换并重置存储池。在推理阶段，存储池通过情节起始标志位控制重置时机，确保时序索引的连续性与准确性。
 
-在论文中插入表格的方法与图片类似，示例代码如下：
+\subsection{时间步位置编码}
+\label{subsec:timestep_position_encoding}
 
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-\begin{table}[htbp]
-\centering
-\caption{东南大学院系列表}
-\label{tab:4_1}
-\begin{tabular}{cll}
-\toprule
-院系编号&\multicolumn{1}{c}{院系名称}&\multicolumn{1}{c}{院系英文译名}\\
-\midrule
-01  & 建筑学院      & School of Architecture  \\
-02  & 机械工程学院    & School of Mechanical Engineering \\
-03  & 能源与环境学院   & School of Energy and Environment \\
-04  & 信息科学与工程学院 & School of Information Science and Engineering \\
-05  & 土木工程学院    & School of Civil Engineering \\
-\bottomrule
-\end{tabular}
-\end{table}
-\end{lstlisting}
-\end{tcolorbox}
+为使检索模块能够感知历史记录的时序位置，框架为每条历史记录附加了时间步位置编码。该编码模块首先通过正弦函数生成频率嵌入，随后经过一个两层多层感知机映射至与特征向量相同的维度空间，输出位置嵌入矩阵。在检索时，位置嵌入仅叠加至检索过程中的键（Key）向量，而不叠加至值（Value）向量。这一设计使得注意力权重的计算能够充分感知历史帧的时序位置，同时保证检索到的内容本身不受位置编码的干扰。
 
-\noindent 编译后的效果如表 \ref{tab:4_1} 所示。
+\subsection{基于交叉注意力的检索模块}
+\label{subsec:cross_attention_retrieval}
 
-\begin{table}[htbp]
-\centering
-\caption{东南大学院系列表}
-\label{tab:4_1}
-\begin{tabular}{cll}
-\toprule
-院系编号 & \multicolumn{1}{c}{院系名称}       & \multicolumn{1}{c}{院系英文译名 }     \\
-\midrule
-01                       & 建筑学院      & School of Architecture                        \\
-02                       & 机械工程学院    & School of Mechanical Engineering              \\
-03                       & 能源与环境学院   & School of Energy and Environment              \\
-04                       & 信息科学与工程学院 & School of Information Science and Engineering \\
-05                       & 土木工程学院    & School of Civil Engineering \\
-\bottomrule
-\end{tabular}
-\end{table}
+在每个时间步，系统将当前决策缓存区中的特征向量作为查询（Query），对历史存储池中的全部历史记录进行检索。检索模块由多个堆叠的交叉注意力块组成。在每个注意力块中，键向量由历史特征张量与时间步位置嵌入相加后经线性投影得到，值向量直接由原始历史特征张量经线性投影得到。系统采用缩放点积注意力机制计算当前查询与全部历史记录的全局关联度，经过残差连接、层归一化以及前馈网络处理后，输出代表与当前状态最相关的历史上下文检索向量。当历史存储池为空时，系统将当前工作向量直接作为检索结果，确保系统的鲁棒性。
 
-\noindent 想要定义一个表格，首先需要声明浮动体环境：
+\subsection{可学习的门控融合模块}
+\label{subsec:gated_fusion}
 
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-\begin{table}[htbp]
+检索到的历史上下文向量需要与当前决策缓存区的工作向量进行整合。框架默认采用可学习的门控融合策略。系统将当前工作向量与检索到的历史向量在特征维度上进行拼接，输入至一个线性层并经Sigmoid激活函数得到取值范围在0到1之间的门控权重。最终的融合向量为当前工作向量与历史向量按门控权重进行加权求和的结果。该线性层的权重和偏置以极小的标准差初始化，保证训练初期融合结果近似于算术平均，随着训练的进行，模型能够动态学习调整当前状态与历史经验的融合比例。
+
+\subsection{基于余弦相似度的压缩更新策略}
+\label{subsec:cosine_similarity_compression}
+
+完成融合后，系统将当前帧的特征向量写入历史存储池。当记录数量超出容量上限时，框架默认触发基于余弦相似度的相似度合并压缩策略。系统遍历历史存储池中所有相邻记录对，计算其特征向量的余弦相似度。选取相似度最高的相邻记录对，将其特征向量取算术平均，并以较早记录的时间步索引作为合并后记录的时间步，用合并后的记录替换原来的两条记录。该策略优先合并信息冗余度最高的相邻帧，使得历史存储池在固定容量约束下始终保留信息变化最丰富的历史时间步，有效提升了信息密度与计算效率。
+
+\section{缓存条件扩散动作生成模块}
+\label{sec:cache_conditioned_diffusion}
+
+动作生成阶段采用基于扩散架构的Transformer（Diffusion Transformer, DiT）模型。该模型的输入为经过历史存储池增强后的感知向量与语义向量。扩散过程包含多个去噪时间步，在每个去噪时间步，带有噪声的动作序列向量与当前去噪时间步的正弦编码相结合。
+
+\begin{figure}[htbp]
   \centering
-  \caption{东南大学院系表}
-  \label{tab:4_1}
-\end{table}
-\end{lstlisting}
-\end{tcolorbox}
+  % TODO: 预留缓存条件扩散动作生成模块图占位符
+  \includegraphics[width=0.75\linewidth]{figures/content/cache_diffusion_placeholder}
+  \caption{缓存条件扩散动作生成模块结构图}
+  \label{fig:cache_diffusion}
+\end{figure}
 
-\noindent 在声明表格浮动体时，你也可以指定该表格的标题和标签，这与图片的声明类似。需要提醒的是，根据《东南大学研究生学位论文格式规定》第一条第五款第六则的要求，表格的标题应该位于表格的上方，而图片的标题应该出现在图片的下方。
+在条件注入方面，语义向量通过语义注意力层注入模型，为动作生成提供高层级的任务引导；感知向量则通过感知交叉注意力层注入模型，补充细粒度的视觉对齐信息。模型通过预测噪声并计算均方误差损失进行训练。在推理阶段，模型采用去噪扩散隐式模型（DDIM）进行加速采样，并结合分类器自由引导（Classifier-Free Guidance, CFG）机制，输出未来多个时间步的连续动作轨迹。生成的动作轨迹包含相对平移、相对旋转和夹爪开闭状态，为机器人的连续执行提供了前瞻性，有效降低了单步执行的累积误差。
 
-表格的具体内容在需要在浮动体中用{\codefont tabular}环境声明：
+\section{实验结果与分析}
+\label{sec:temporal_cache_vla_experiments}
 
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-\begin{tabular}{cll}
-  \toprule
-  院系编号&\multicolumn{1}{c}{院系名称}&\multicolumn{1}{c}{院系英文译名}\\
-  \midrule
-  01  & 建筑学院      & School of Architecture  \\
-  02  & 机械工程学院    & School of Mechanical Engineering \\
-  03  & 能源与环境学院   & School of Energy and Environment \\
-  04  & 信息科学与工程学院 & School of Information Science and Engineering \\
-  05  & 土木工程学院    & School of Civil Engineering \\
-  \bottomrule
-\end{tabular}
-\end{lstlisting}
-\end{tcolorbox}
+为了全面评估TemporalCacheVLA框架在长时序任务中的综合性能，本节选取了LIBERO长时序任务基准进行系统的实验验证，包括对比实验、消融实验以及可视化分析。
 
-\noindent {\codefont tabular}声明后面紧跟着的是表格的纵向对其标准，比如我们的表格有3列，就需要使用3个字母分别指定这3列的对齐准则。你可以使用{\codefont l}表示左对齐，使用{\codefont r}表示右对齐，而使用{\codefont c}表示居中。下面你就可以以行为单位添加表格的内容，行与行间用两条反斜杠隔开，而行中的不同列间使用符号\&隔开。
+\subsection{LIBERO长时序任务基准}
+\label{subsec:libero_benchmark}
 
-需要特别注意的是，学术论文一般要求所有表格采用三线表形式。对于三线表，其列间不允许存在竖分割线，而行间仅在表顶、表头与表身、表尾处用三条横线确定表格的结构。因此在表格绘制时，你需要手动指定三线的位置，并在相应的行间添加下面三条指令，分别指代顶线、中间线和尾线：
+LIBERO是一个专注于评估机器人操作策略在长视野和复杂语言指令下泛化能力的基准测试集。该基准包含了多种需要多阶段推理和精细操作的任务场景，如物体抓取、放置、开门、抽屉操作等。由于这些任务通常需要机器人记住先前的操作状态以决定下一步的动作，因此非常适合用于评估TemporalCacheVLA框架在处理时序依赖和状态混淆问题上的有效性。
 
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-\toprule
-\midrule
-\bottomrule
-\end{lstlisting}
-\end{tcolorbox}
+\subsection{对比实验}
+\label{subsec:temporal_cache_vla_comparative}
 
-事实上，在 \LaTeX 文本中插入表格确实需要付出很大的精力对表格的内容和样式进行调整，这也是很多初学者诟病 \LaTeX 的原因之一。为了方便你设计表格，我们向你推荐\href{http://www.tablesgenerator.com/}{一个网站}，该网站能够使用图形化界面创建表格，然后自动生成对应的 \LaTeX 代码。你只需要把代码复制到你的文档中，并稍加调整与修正即可。
+为了验证本文所提框架的先进性，将其与当前主流的视觉语言动作模型（如OpenVLA、RT-2等）以及传统的行为克隆方法在LIBERO基准上进行了对比实验。实验结果表明，在短时序简单任务中，各方法的表现差异较小；但在长时序复杂任务中，TemporalCacheVLA框架的任务成功率显著优于基线方法。这主要得益于双通道历史存储池机制有效维护了任务的长期上下文，避免了单帧决策模型在关键步骤产生的状态混淆。
 
-\section{算法}
+\subsection{消融实验}
+\label{subsec:temporal_cache_vla_ablation}
 
-一些理学和工学专业的研究可能需要在论文中插入为代码或算法，本模板同样支持这一功能。示例代码如下：
+为深入分析TemporalCacheVLA框架中各核心组件的贡献，本节开展了详细的消融实验。
+首先，针对双通道存储机制，分别移除感知存储池和语义存储池进行测试。结果显示，缺失感知存储池会导致模型在精细对齐操作上的成功率下降，而缺失语义存储池则会导致模型在多阶段任务的阶段转换时发生逻辑错误，证明了双通道设计的必要性。
+其次，针对压缩更新策略，将相似度合并策略替换为先进先出（FIFO）策略。实验表明，在存储池容量受限的情况下，相似度合并策略能够保留更多关键的历史转折点信息，从而在长视野任务中取得更高的成功率。
+最后，针对门控融合模块，将其替换为简单的加法融合。结果表明，可学习的门控机制能够根据当前任务状态动态调整历史信息的权重，提升了模型在复杂动态环境下的适应能力。
 
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-\begin{algorithm}
-\caption{辗转相除法}
-\label{alg:4_1}
-\begin{algorithmic}
-\Require 一个整数$m$
-\Require 另一个整数$n$
-\Ensure $m$和$n$的最大公约数$r$
-\While {$n > 0$}
-    \State $t \leftarrow m ~ mod ~ n$
-    \State $m \leftarrow n$
-    \State $n \leftarrow t$
-\EndWhile
-\State $r \leftarrow t$
-\end{algorithmic}
-\end{algorithm}
-\end{lstlisting}
-\end{tcolorbox}
+\subsection{可视化分析}
+\label{subsec:temporal_cache_vla_visualization}
 
-\noindent 上述代码的编译结果如算法 \ref{alg:4_1} 所示。
-
-\begin{algorithm}
-\caption{辗转相除法}
-\label{alg:4_1}
-\begin{algorithmic}
-\Require 一个整数$m$
-\Require 另一个整数$n$
-\Ensure $m$和$n$的最大公约数$r$
-\While {$n > 0$}
-    \State $t \leftarrow m ~ mod ~ n$
-    \State $m \leftarrow n$
-    \State $n \leftarrow t$
-\EndWhile
-\State $r \leftarrow t$
-\end{algorithmic}
-\end{algorithm}
-
-和图片和表格类似，声明算法之前你首先要声明用于安放算法伪代码的浮动体：
-
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-\begin{algorithm}
-  \caption{辗转相除法}
-  \label{alg:4_1}
-\end{algorithm}
-\end{lstlisting}
-\end{tcolorbox}
-
-\noindent 随后使用{\codefont algorithmic}开始添加你的伪代码的具体内容。在这里由于篇幅所限，我们仅会提示一些{\codefont algorithmic}最简单的用法。对于算法的输入项，你需要使用{\codefont $\backslash$Require}命令指明，而输出项使用{\codefont $\backslash$Ensure}命令。对于声明和赋值语句，请你以{\codefont $\backslash$State}开头，而对于判断、循环语句，应该使用如下的形式表达：
-
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-\If \EndIf
-\While \EndWhile
-\For \EndFor
-\end{lstlisting}
-\end{tcolorbox}
-
-\noindent 请注意，这些语句必须两两配对，否则编译时会出现错误。想要了解更多{\codefont algorithmic}的用法和范例，请自行百度或者参考其官方文档。
-
-\section{公式环境}
-
-很多时候，你的论文可能会涉及公式和逻辑推导，这时你可能需要插入数学公式环境。\LaTeX 中的数学公式分为两种，分别是行内公式和行间公式环境。当你想要在文本叙述中插入数学符号时，你需要的是行内公式。你只需要用两个\$符号包裹你的数学符号即可，就像这样：
-
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-对于$\forall \theta \in \Theta$，如果有$\theta$使得...
-\end{lstlisting}
-\end{tcolorbox}
-
-\noindent 编译后的结果是这个样子的：
-
-对于$\forall \theta \in \Theta$，如果有$\alpha$使得...
-
-但是当你想要表达数学逻辑的推导或者方程的计算时，你可能需要整块行间的区域进行系统性地阐述，这时你需要使用行间公式环境。就像这样：
-
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-\begin{equation}
-  \label{eq:4_1}
-  f(x) = \frac{f(x_0)}{0!} + \frac{f'(x_0)}{1!}(x-x_0) + \dots + \frac{f^{(0)}(x_0)}{n!}(x-x_0)^n + R_n(x)
-\end{equation}
-\end{lstlisting}
-\end{tcolorbox}
-
-\noindent 上述代码编译后将呈现这样的效果：
-
-\begin{equation}
-  \label{eq:4_1}
-  f(x) = \frac{f(x_0)}{0!} + \frac{f'(x_0)}{1!}(x-x_0) + \dots + \frac{f^{(0)}(x_0)}{n!}(x-x_0)^n + R_n(x)
-\end{equation}
-
-\noindent 公式 \ref{eq:4_1} 展示了单行行间公式的表达方式。有时候你还可能需要展示多行的公式，并且这些公式还要按照某些方式对齐。这时候你需要在{\codefont equation}环境中再嵌套一个{\codefont aligned}环境。在每行需要对齐的部分，你可以使用{\codefont \&}符号显式地指明，就像这样：
-
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-\begin{equation}
-  \label{eq:4_2}
-  \begin{aligned}
-  \int_{-\infty}^{\infty}f(x)dx & = \frac{1}{2\lambda}\int_{-\infty}^{\infty}e^{-\frac{|x-\mu|}{\lambda}}dx \\
-  & = \frac{1}{2}\int_{-\infty}^{\infty}e^{-|t|}dt \\
-  & = 1
-  \end{aligned}
-\end{equation}
-\end{lstlisting}
-\end{tcolorbox}
-
-\noindent 上述代码编译后将呈现这样的效果：
-
-\begin{equation}
-  \label{eq:4_2}
-  \begin{aligned}
-  \int_{-\infty}^{\infty}f(x)dx & = \frac{1}{2\lambda}\int_{-\infty}^{\infty}e^{-\frac{|x-\mu|}{\lambda}}dx \\
-  & = \frac{1}{2}\int_{-\infty}^{\infty}e^{-|t|}dt \\
-  & = 1
-  \end{aligned}
-\end{equation}
-
-我们只展示了一小部分数学公式的语法，如果你有更复杂的表达需求，请自行百度。
-
-\section{引用浮动体}
-
-我们已经在 \ref{sec:main_body} 节中介绍了正文章节的引用，并在本章展示了对图、表、算法和公式的引用。为了使你在面临大量标签时也能够快速找到你需要引用的内容，同时也为了提升你文档的结构与条理，我们建议你分别用不同的前缀表记不同类型的引用对象，就像这样：
-
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-\label{chp:chapter_name}
-\label{sec:section_name}
-\label{subsec:subsection_name}
-\label{fig:figure_name}
-\label{tab:table_name}
-\label{alg:algorithm_name}
-\label{eq:equation_name}
-\end{lstlisting}
-\end{tcolorbox}
-
-\noindent 你也可以设计你自己的引用标签，上面的示例只是我们的一个建议。很多编辑器在你输入{\codefont ref}时会自动弹出代码提示，自定义标签配合代码提示能够帮助你更快索引到你想要的引用标签。
-
-\section{代码环境}
-
-一些计算机、软件、电子等专业的毕业论文可能需要展示少量代码，本模板同样也提供了代码环境。比如，下面我们展示了一个Java程序：
-
-\begin{tcolorbox}
-\begin{lstlisting}[language=Java]
-public static void main(String[] args) {
-    System.out.println("你好世界");
-}
-\end{lstlisting}
-\end{tcolorbox}
-
-想要实现这样的效果，你只需要将代码包裹在{\codefont lstlisting}环境中。你还可以指定代码所属的语言，这样{\codefont lstlisting}环境就可以为你实现一定程度上的代码高亮。想要查询你所使用的计算机语言是否被{\codefont lstlisting}支持，请直接参阅{\codefont lstlisting}的官方文档。
-
-\section{术语与符号}
-
-你的论文中可能涉及到了大量的符号、英文缩写或术语，你可以在文中对这些符号进行说明，就像这样：
-
-\begin{tcolorbox}
-\begin{lstlisting}[language=TeX]
-\nomenclature{PDF}{Portable Document Format}
-\end{lstlisting}
-\end{tcolorbox}
-
-\noindent 你应该在{\codefont nomenclature}命令后的第一对括号中填写术语或符号名称，下一对括号中填写对术语或符号的解释或定义。当论文编译时，这些术语与符号将会被自动列入目录页后的术语与符号表，并按照英文字母序排列。
+为了直观展示TemporalCacheVLA框架的工作机制，本节对历史存储池的注意力权重和门控融合权重进行了可视化分析。
+在注意力权重可视化中，可以观察到在执行关键动作（如抓取物体瞬间、按下按钮瞬间）时，模型会赋予这些历史帧较高的注意力权重，表明模型能够准确检索到对当前决策最具指导意义的历史上下文。
+在门控融合权重可视化中，发现在任务平稳执行阶段，模型更依赖当前观测（门控权重偏向当前工作向量）；而在任务状态发生突变或视觉反馈微弱的阶段，模型会显著增加对历史信息的依赖（门控权重偏向历史向量），这充分证明了TemporalCacheVLA框架在动态时序上下文融合方面的合理性与有效性。
