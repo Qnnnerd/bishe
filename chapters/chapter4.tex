@@ -26,7 +26,7 @@ TemporalCacheVLA提出了一种基于双通道时序缓存的解决方案，其�
 
 视觉语言特征感知模块负责将原始的图像与文本输入转化为高表征能力的特征向量。在机器人操作中，模型既需要理解如“把红色方块放到蓝色碗里”这样的全局语义，又需要捕捉如物体的边缘、位姿等局部空间细节。为了兼顾这两种需求，本章采用预训练的视觉语言模型作为基础架构，以实现对多模态输入的深度理解与特征提取。
 
-在视觉编码方面，本章延续了OpenVLA\cite{kim2024openvla}的工作，采用双分支的视觉骨干网络，将DINOv2\cite{oquab2023dinov2}与SigLIP\cite{zhai2023sigmoid}作为视觉编码器。DINOv2通过自监督学习在大量图像上进行预训练，擅长提取细粒度的空间几何特征与局部纹理信息；而SigLIP通过对比学习对齐图像与文本，对图像的全局语义和图文对应关系具有更强的感知能力。给定当前时间步 $t$ 的输入图像 $\mathbf{I}_t \in \mathbb{R}^{H \times W \times 3}$，这两个视觉编码器分别将其处理为图像块（Patch）序列，并输出对应的视觉特征表示。具体而言，DINOv2 输出特征序列 $\mathbf{F}^{\text{dino}}_t \in \mathbb{R}^{N \times d_1}$，SigLIP 输出特征序列 $\mathbf{F}^{\text{sig}}_t \in \mathbb{R}^{N \times d_2}$，其中 $N$ 为图像块的数量，$d_1$ 和 $d_2$ 分别为两个模型的特征维度。
+对于视觉编码，本章延续了OpenVLA\cite{kim2024openvla}的工作，采用双分支的视觉骨干网络，将DINOv2\cite{oquab2023dinov2}与SigLIP\cite{zhai2023sigmoid}作为视觉编码器。DINOv2通过自监督学习在大量图像上进行预训练，擅长提取细粒度的空间几何特征与局部纹理信息；而SigLIP通过对比学习对齐图像与文本，对图像的全局语义和图文对应关系具有更强的感知能力。给定当前时间步 $t$ 的输入图像 $\mathbf{I}_t \in \mathbb{R}^{H \times W \times 3}$，这两个视觉编码器分别将其处理为图像块（Patch）序列，并输出对应的视觉特征表示。具体而言，DINOv2 输出特征序列 $\mathbf{F}^{\text{dino}}_t \in \mathbb{R}^{N \times d_1}$，SigLIP 输出特征序列 $\mathbf{F}^{\text{sig}}_t \in \mathbb{R}^{N \times d_2}$，其中 $N$ 为图像块的数量，$d_1$ 和 $d_2$ 分别为两个模型的特征维度。
 
 考虑到单一视觉模型难以同时兼顾空间细节与全局语义，本章将这两种特征在通道维度上进行拼接，形成融合的高维原始视觉特征张量 $\mathbf{F}^{\text{vis}}_t = [\mathbf{F}^{\text{dino}}_t; \mathbf{F}^{\text{sig}}_t] \in \mathbb{R}^{N \times (d_1+d_2)}$。为了将视觉特征与语言模型的输入空间对齐，拼接后的视觉特征 $\mathbf{F}^{\text{vis}}_t$ 通过一个由MLP构成的投影层，映射至大语言模型的嵌入空间维度 $d_{\text{llm}}$，得到视觉 Token 序列 $\mathbf{V}_t = \text{MLP}(\mathbf{F}^{\text{vis}}_t) \in \mathbb{R}^{N \times d_{\text{llm}}}$。
 
@@ -159,6 +159,6 @@ LIBERO是一个专门用于评估机器人操作模型在多样化任务和长�
   }
 \end{table}
 
-从表~\ref{tab:libero_results}~的数据可以看出，本文提出的TemporalCacheVLA在所有子集上均取得了较高的成功率，平均成功率达到了百分之九十五点八，相较于OpenVLA和Octo等基线模型有一定提升。在长时序子集上，部分缺乏时序建模的方法成功率在百分之五十左右，而TemporalCacheVLA的成功率为百分之九十二点二。这一结果表明，感知与语义双通道历史存储池在处理长视野时序依赖方面具有一定的作用。
+从表~\ref{tab:libero_results}~的数据可以看出，本文提出的TemporalCacheVLA在所有子集上均取得了较高的成功率，平均成功率达到了百分之九十五点八，相较于OpenVLA和Octo等基线模型有一定提升。在长时序子集上，部分缺乏时序建模的方法成功率在百分之五十左右，而TemporalCacheVLA的成功率为百分之九十二点二。这一结果表明，感知与语义双通道历史存储池对长视野时序依赖的建模具有明显作用。
 
 此外，在包含九十个任务的综合子集上，TemporalCacheVLA的成功率为百分之九十四点九。这表明本文方法在处理大规模、多样化的任务分布时，能够保持一定的泛化能力和策略稳定性。
