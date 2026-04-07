@@ -76,17 +76,11 @@ EfficientViT模块内部采用轻量级的多尺度注意力机制，特征首�
 
 去噪网络的主体由 $N$ 个串联的 DiT Block 组成，每个 DiT Block 包含自注意力层、跨模态注意力层以及前馈网络层，各子模块均采用残差连接与层归一化的标准结构。自注意力子模块使输入序列中的动作 token 与条件 token 建立全局依赖关系。在跨模态交叉注意力，DiT Block 以当前序列特征为K向量和V向量，以来自特征融合模块的条件 token 序列为Q向量，并通过零初始化技巧对其权重进行初始化，确保在训练初期该分支不对主干产生干扰。前馈网络子模块由两层全连接层构成，隐层维度扩展为 $4d_h$，并采用 GELU 的 tanh 近似形式作为激活函数。经过所有 DiT Block 处理后，序列经由最终的层归一化与线性投影层映射回动作维度空间，并截取对应动作 token 的部分，得到预测的噪声 $\hat{\epsilon} \in \mathbb{R}^{T_a \times d_a}$。
 
-为了增强条件特征对动作生成的引导控制力，本算法引入了分类器自由引导（Classifier-Free Guidance, CFG）\cite{ho2022classifier}机制。在训练阶段，算法以一定的概率（如$10\%$）将条件特征 $\mathbf{z}$ 随机置空（替换为可学习的空特征 $\emptyset$），从而联合训练一个条件扩散模型 $\hat{\epsilon}_\theta(A_k, k, \mathbf{z})$ 和一个无条件扩散模型 $\hat{\epsilon}_\theta(A_k, k, \emptyset)$。训练目标采用均方误差损失函数，对于每个训练批次，算法首先为批次内每个样本随机采样一个扩散时间步 $k \sim \mathcal{U}(0, K)$ 以及对应的高斯噪声 $\epsilon \sim \mathcal{N}(0, \mathbf{I})$，依据前向过程计算带噪动作序列 $A_k$ 后送入 DiT 网络预测噪声，训练损失定义为：
+训练目标采用均方误差损失函数，对于每个训练批次，算法首先为批次内每个样本随机采样一个扩散时间步 $k \sim \mathcal{U}(0, K)$ 以及对应的高斯噪声 $\epsilon \sim \mathcal{N}(0, \mathbf{I})$，依据前向过程计算带噪动作序列 $A_k$ 后送入 DiT 网络预测噪声，训练损失定义为：
 \begin{equation}
   \mathcal{L}(\theta) = \mathbb{E}_{k,\, A_0,\, \epsilon}\!\left[\left\| \epsilon - \hat{\epsilon}_\theta(A_k,\, k,\, \mathbf{z}) \right\|^2\right]
 \end{equation}
-其中 $\hat{\epsilon}_\theta$ 为 DiT 网络的噪声预测输出，且在训练过程中 $\mathbf{z}$ 以一定概率被替换为 $\emptyset$，使该损失函数能够同时优化条件与无条件两种预测分支。
-
-在推理阶段，模型从纯高斯噪声 $A_K \sim \mathcal{N}(0, \mathbf{I})$ 出发，通过外推条件预测与无条件预测的差异来更新噪声：
-\begin{equation}
-  \hat{\epsilon} = \hat{\epsilon}_\theta(A_k, k, \emptyset) + w \cdot (\hat{\epsilon}_\theta(A_k, k, \mathbf{z}) - \hat{\epsilon}_\theta(A_k, k, \emptyset))
-\end{equation}
-其中 $w$ 为引导尺度（Guidance Scale）。当 $w > 1$ 时，模型会放大条件信号的作用。这种机制使得算法无需重新训练模型，即可在推理时灵活调整模型对条件信号的服从程度，从而在动作的多样性与精确性之间进行权衡。最终，模型在条件特征的引导下逐步去噪以生成干净的动作块 $A_0$，并将其下发给机械臂执行。
+其中 $\hat{\epsilon}_\theta$ 为 DiT 网络的噪声预测输出。最终，模型在条件特征的引导下逐步去噪以生成干净的动作块 $A_0$，并将其下发给机械臂执行。
 
 \begin{figure}[htbp]
   \centering
