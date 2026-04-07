@@ -131,6 +131,7 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
   \centering
   \caption{RoboMimic数据集各任务属性汇总表}
   \label{tab:robomimic_summary}
+  \small
   \begin{tabular}{lcccccc}
     \toprule
     任务 & PH & MH & 机器人 & 操作对象 & 动作维度 & 动作最大步数 \\
@@ -172,6 +173,7 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
   \centering
   \caption{不同方法在RoboMimic熟练人类（ph）数据集上的任务成功率对比}
   \label{tab:comparative_results_ph}
+  \small
   \begin{tabular}{lccccc}
     \toprule
     方法 & Can ph & Lift ph & Square ph & Transport ph & Tool Hang ph \\
@@ -188,6 +190,7 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
   \centering
   \caption{不同方法在RoboMimic多人类（mh）数据集上的任务成功率对比}
   \label{tab:comparative_results_mh}
+  \small
   \begin{tabular}{lcccc}
     \toprule
     方法 & Can mh & Lift mh & Square mh & Transport mh \\
@@ -224,7 +227,7 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
   \centering
   \caption{不同模型模块配置在各任务上的成功率消融对比}
   \label{tab:ablation_modules}
-  \resizebox{\textwidth}{!}{
+  \small
   \begin{tabular}{ccccccccc}
     \toprule
     \multicolumn{5}{c}{模型配置} & \multirow{2}{*}{Square mh} & \multirow{2}{*}{Transport ph} & \multirow{2}{*}{Transport mh} & \multirow{2}{*}{Tool Hang ph} \\
@@ -237,7 +240,6 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
     \checkmark & & & \checkmark & \checkmark & 0.847 & 0.837 & 0.763 & 0.769 \\
     \bottomrule
   \end{tabular}
-  }
 \end{table}
 
 \begin{figure}[htbp]
@@ -263,7 +265,7 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
   \centering
   \caption{不同推理去噪步数在各任务上的成功率对比}
   \label{tab:ablation_ddim}
-  \resizebox{\textwidth}{!}{
+  \small
   \begin{tabular}{lcccccc}
     \toprule
     任务 & 10步 & 20步 & 40步 & 60步 & 80步 & 100步 \\
@@ -274,7 +276,6 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
     Tool Hang ph & 0.301 & 0.552 & 0.721 & 0.792 & \textbf{0.801} & 0.791 \\
     \bottomrule
   \end{tabular}
-  }
 \end{table}
 
 表~\ref{tab:ablation_ddim}~的数据展示了去噪步数与生成质量之间的关系。总体而言，当推理去噪步数低于40步时，生成的动作序列质量出现明显下降，导致各项任务的成功率大幅降低。例如，在工具悬挂任务中，当步数从40步降至20步时，成功率从$0.721$减至$0.552$；降至10步时，成功率仅为$0.301$。同时，对于某些较为复杂的任务，其成功率在去噪步数低于60步时就已经开始出现下降趋势。例如在运输多人类任务和工具悬挂任务中，当步数从60步减少至40步时，成功率分别下降了$0.040$和$0.071$。尽管如此，为了在一些高动态真实世界环境中保持系统的响应能力，本文在实际应用中仍面临着在生成质量与推理速度之间进行权衡的挑战。
