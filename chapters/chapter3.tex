@@ -228,16 +228,14 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
   \caption{不同模型模块配置在各任务上的成功率消融对比}
   \label{tab:ablation_modules}
   \small
-  \begin{tabular}{ccccccccc}
+  \begin{tabular}{lcccc}
     \toprule
-    \multicolumn{5}{c}{模型配置} & \multirow{2}{*}{Square mh} & \multirow{2}{*}{Transport ph} & \multirow{2}{*}{Transport mh} & \multirow{2}{*}{Tool Hang ph} \\
-    \cmidrule(r){1-5}
-    EfficientViT & ResNet & 跨模态注意力 & 简单拼接 & 状态残差 & & & & \\
+    模型变体 & Square mh & Transport ph & Transport mh & Tool Hang ph \\
     \midrule
-    \checkmark & & \checkmark & & \checkmark & \textbf{0.878} & 0.862 & \textbf{0.801} & \textbf{0.791} \\
-    \checkmark & & \checkmark & & & 0.866 & \textbf{0.880} & 0.783 & 0.778 \\
-     & \checkmark & \checkmark & & \checkmark & 0.858 & 0.863 & 0.746 & 0.764 \\
-    \checkmark & & & \checkmark & \checkmark & 0.847 & 0.837 & 0.763 & 0.769 \\
+    完整模型 & \textbf{0.878} & 0.862 & \textbf{0.801} & \textbf{0.791} \\
+    去除状态残差注入路径 & 0.866 & \textbf{0.880} & 0.783 & 0.778 \\
+    替换为ResNet视觉编码器 & 0.858 & 0.863 & 0.746 & 0.764 \\
+    替换为简单拼接特征融合 & 0.847 & 0.837 & 0.763 & 0.769 \\
     \bottomrule
   \end{tabular}
 \end{table}
