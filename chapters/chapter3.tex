@@ -163,7 +163,7 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
 \end{equation}
 其中，$\text{SR}$表示任务成功率，$N_{\text{success}}$表示成功完成任务的回合数，$N_{\text{total}}$表示总测试回合数。
 
-为了保证评估的可靠性与代表性，对于RoboMimic数据集中的每项仿真任务，本章参考相关研究的评估设定，报告在相同初始条件下，使用三个不同随机种子训练的模型在一千个随机初始化的测试回合中的平均成功率，即每种方法在每个任务上共进行三千个测试回合的评估。最终结果以平均成功率及其在三个随机种子上的标准差形式呈现。
+为了保证评估的可靠性与代表性，对于RoboMimic数据集中的每项仿真任务，本章参考相关研究的评估设定，报告在相同初始条件下，使用三个不同随机种子训练的模型在一千个随机初始化的测试回合中的平均成功率，即每种方法在每个任务上共进行三千个测试回合的评估。最终结果以三个随机种子上的平均成功率形式呈现。
 
 具体的成功判定标准依任务性质而定。提升任务以方块末端高度超过预设阈值为成功条件。罐头任务以汽水罐被稳定放置于目标容器内为成功条件。方形螺母任务以螺母完全套入方形柱且接触传感器触发为成功条件。运输任务要求两个机械臂协同完成物体转移，以物体稳定落入目标容器为成功条件。工具悬挂任务则要求扳手最终悬挂于钩子上并保持静止，以此作为成功判定依据。上述判定标准均由RoboMimic仿真环境内置的奖励函数自动计算与统计。
 
@@ -178,36 +178,32 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
   \centering
   \caption{不同方法在RoboMimic熟练人类（ph）数据集上的任务成功率对比}
   \label{tab:comparative_results_ph}
-  \resizebox{\textwidth}{!}{
   \begin{tabular}{lccccc}
     \toprule
     方法 & Can ph & Lift ph & Square ph & Transport ph & Tool Hang ph \\
     \midrule
-    LSTM-GMM\cite{mandlekar2021matters} & $0.714 \pm 0.247$ & $0.978 \pm 0.017$ & $0.643 \pm 0.023$ & $0.656 \pm 0.049$ & $0.460 \pm 0.060$ \\
-    IBC\cite{florence2022implicit} & $0.008 \pm 0.006$ & $0.709 \pm 0.008$ & $0.002 \pm 0.001$ & $0.000 \pm 0.000$ & $0.000 \pm 0.000$ \\
-    Diffusion Policy\cite{chi2023diffusion} & $0.992 \pm 0.002$ & $1.000 \pm 0.000$ & $0.935 \pm 0.006$ & $0.859 \pm 0.015$ & $0.772 \pm 0.012$ \\
-    本文方法 & $\mathbf{0.995 \pm 0.001}$ & $\mathbf{1.000 \pm 0.001}$ & $\mathbf{0.935 \pm 0.004}$ & $\mathbf{0.862 \pm 0.015}$ & $\mathbf{0.791 \pm 0.014}$ \\
+    LSTM-GMM\cite{mandlekar2021matters} & 0.714 & 0.978 & 0.643 & 0.656 & 0.000 \\
+    IBC\cite{florence2022implicit} & 0.008 & 0.709 & 0.002 & 0.000 & 0.000 \\
+    Diffusion Policy\cite{chi2023diffusion} & 0.992 & 1.000 & 0.935 & 0.859 & 0.772 \\
+    本文方法 & \textbf{0.995} & \textbf{1.000} & \textbf{0.935} & \textbf{0.862} & \textbf{0.791} \\
     \bottomrule
   \end{tabular}
-  }
 \end{table}
 
 \begin{table}[htbp]
   \centering
   \caption{不同方法在RoboMimic多人类（mh）数据集上的任务成功率对比}
   \label{tab:comparative_results_mh}
-  \resizebox{\textwidth}{!}{
   \begin{tabular}{lcccc}
     \toprule
     方法 & Can mh & Lift mh & Square mh & Transport mh \\
     \midrule
-    LSTM-GMM\cite{mandlekar2021matters} & $0.887 \pm 0.033$ & $0.992 \pm 0.001$ & $0.491 \pm 0.057$ & $0.254 \pm 0.017$ \\
-    IBC\cite{florence2022implicit} & $0.001 \pm 0.001$ & $0.222 \pm 0.112$ & $0.000 \pm 0.001$ & $0.000 \pm 0.000$ \\
-    Diffusion Policy\cite{chi2023diffusion} & $0.958 \pm 0.003$ & $0.998 \pm 0.001$ & $0.858 \pm 0.007$ & $0.643 \pm 0.004$ \\
-    本文方法 & $\mathbf{0.964 \pm 0.002}$ & $\mathbf{1.000 \pm 0.001}$ & $\mathbf{0.878 \pm 0.010}$ & $\mathbf{0.801 \pm 0.020}$ \\
+    LSTM-GMM\cite{mandlekar2021matters} & 0.887 & 0.992 & 0.491 & 0.254 \\
+    IBC\cite{florence2022implicit} & 0.001 & 0.222 & 0.000 & 0.000 \\
+    Diffusion Policy\cite{chi2023diffusion} & 0.958 & 0.998 & 0.858 & 0.643 \\
+    本文方法 & \textbf{0.964} & \textbf{1.000} & \textbf{0.878} & \textbf{0.801} \\
     \bottomrule
   \end{tabular}
-  }
 \end{table}
 
 从表中的结果可以看出，LSTM-GMM和IBC方法在提升任务上取得了一定的成功率，但在面临长视距和高精度的任务，如运输任务和工具悬挂任务时，性能出现下降。而基于扩散模型的方法在各项任务上表现出较高的成功率，这说明扩散模型在拟合复杂多模态动作分布方面更具有适用性。
@@ -241,10 +237,10 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
     \cmidrule(r){1-5}
     EfficientViT & ResNet & 跨模态注意力 & 简单拼接 & 状态残差 & & & & \\
     \midrule
-    \checkmark & & \checkmark & & \checkmark & $\mathbf{0.878 \pm 0.010}$ & $0.862 \pm 0.015$ & $\mathbf{0.801 \pm 0.020}$ & $\mathbf{0.791 \pm 0.014}$ \\
-    \checkmark & & \checkmark & & & $0.866 \pm 0.011$ & $\mathbf{0.880 \pm 0.014}$ & $0.783 \pm 0.021$ & $0.778 \pm 0.015$ \\
-     & \checkmark & \checkmark & & \checkmark & $0.858 \pm 0.011$ & $0.863 \pm 0.015$ & $0.746 \pm 0.023$ & $0.764 \pm 0.015$ \\
-    \checkmark & & & \checkmark & \checkmark & $0.847 \pm 0.011$ & $0.837 \pm 0.016$ & $0.763 \pm 0.024$ & $0.769 \pm 0.017$ \\
+    \checkmark & & \checkmark & & \checkmark & \textbf{0.878} & 0.862 & \textbf{0.801} & \textbf{0.791} \\
+    \checkmark & & \checkmark & & & 0.866 & \textbf{0.880} & 0.783 & 0.778 \\
+     & \checkmark & \checkmark & & \checkmark & 0.858 & 0.863 & 0.746 & 0.764 \\
+    \checkmark & & & \checkmark & \checkmark & 0.847 & 0.837 & 0.763 & 0.769 \\
     \bottomrule
   \end{tabular}
   }
@@ -278,10 +274,10 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
     \toprule
     任务 & 10步 & 20步 & 40步 & 60步 & 80步 & 100步 \\
     \midrule
-    Square mh & $0.501 \pm 0.015$ & $0.752 \pm 0.012$ & $0.871 \pm 0.011$ & $0.880 \pm 0.009$ & $0.882 \pm 0.010$ & $0.879 \pm 0.010$ \\
-    Transport ph & $0.552 \pm 0.020$ & $0.721 \pm 0.018$ & $0.842 \pm 0.015$ & $0.861 \pm 0.016$ & $0.863 \pm 0.014$ & $0.864 \pm 0.016$ \\
-    Transport mh & $0.503 \pm 0.022$ & $0.651 \pm 0.025$ & $0.762 \pm 0.021$ & $0.802 \pm 0.018$ & $0.801 \pm 0.019$ & $0.800 \pm 0.020$ \\
-    Tool Hang ph & $0.301 \pm 0.030$ & $0.552 \pm 0.025$ & $0.721 \pm 0.018$ & $0.792 \pm 0.015$ & $0.801 \pm 0.014$ & $0.791 \pm 0.014$ \\
+    Square mh & 0.501 & 0.752 & 0.871 & 0.880 & \textbf{0.882} & 0.879 \\
+    Transport ph & 0.552 & 0.721 & 0.842 & 0.861 & 0.863 & \textbf{0.864} \\
+    Transport mh & 0.503 & 0.651 & 0.762 & \textbf{0.802} & 0.801 & 0.800 \\
+    Tool Hang ph & 0.301 & 0.552 & 0.721 & 0.792 & \textbf{0.801} & 0.791 \\
     \bottomrule
   \end{tabular}
   }
