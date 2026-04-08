@@ -10,7 +10,7 @@
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.88\linewidth]{figures/content/action_model}
+  \includegraphics[width=0.95\linewidth]{figures/content/action_model}
   \caption{基于扩散模型的模仿学习动作生成算法整体架构}
   \label{fig:action_model}
 \end{figure}
@@ -40,7 +40,7 @@ EfficientViT模块内部采用轻量级的多尺度注意力机制，特征首�
 对于机器人状态编码，由于各关节的当前角度、末端执行器位姿和夹爪的开合状态这样的状态数据通常是低维向量，可直接采用多层感知机（MLP）作为状态编码器，如图\ref{fig:state_encoder}。该编码器首先经过三个全连接层和GeLU激活函数，将低维的原始状态向量映射到与视觉特征相同维度的高维潜在空间中，再进行标准化后通过Position Embedding得到状态向量，以便在特征融合模块中与视觉特征进行有效的交互和对齐。
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.66\linewidth]{figures/content/state_encoder}
+  \includegraphics[width=0.8\linewidth]{figures/content/state_encoder}
   \caption{状态编码器结构示意图}
   \label{fig:state_encoder}
 \end{figure}
@@ -270,10 +270,10 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
     \toprule
     任务 & 10步 & 20步 & 40步 & 60步 & 80步 & 100步 \\
     \midrule
-    Square mh & 0.501 & 0.752 & 0.871 & 0.880 & \textbf{0.882} & 0.879 \\
+    Square mh & 0.501 & 0.752 & 0.871 & 0.880 & \textbf{0.880} & 0.878 \\
     Transport ph & 0.552 & 0.721 & 0.842 & 0.861 & 0.863 & \textbf{0.864} \\
-    Transport mh & 0.503 & 0.651 & 0.762 & \textbf{0.802} & 0.801 & 0.800 \\
-    Tool Hang ph & 0.301 & 0.552 & 0.721 & 0.792 & \textbf{0.801} & 0.791 \\
+    Transport mh & 0.503 & 0.651 & 0.762 & 0.794 & 0.800 & \textbf{0.801} \\
+    Tool Hang ph & 0.301 & 0.552 & 0.721 & 0.752 & 0.787 & \textbf{0.791} \\
     \bottomrule
   \end{tabular}
 \end{table}
