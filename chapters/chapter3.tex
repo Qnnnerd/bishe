@@ -223,7 +223,7 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
 
 对于模型结构的消融实验，主要针对视觉编码器的选择、特征融合机制的设计以及状态特征残差注入路径三个方面进行对比。具体而言，本节设计了三种模型变体与完整模型进行对比：第一种变体将本文采用的EfficientViT视觉编码器替换为常规的ResNet；第二种变体在特征融合模块中移除了非对称跨模态注意力机制，转而采用将视觉特征与状态特征在通道维度上直接拼接的简单融合方式；第三种变体保留了跨模态注意力机制，但去除了状态特征的残差注入路径。各模型变体的配置及对应的成功率结果如表~\ref{tab:ablation_modules}~所示。
 
-\begin{table}[htbp]
+\begin{table}[htb]
   \centering
   \caption{不同模型模块配置在各任务上的成功率消融对比}
   \label{tab:ablation_modules}
@@ -242,7 +242,7 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
   \end{tabular}
 \end{table}
 
-\begin{figure}[htbp]
+\begin{figure}[htb]
   \centering
   \includegraphics[width=0.95\linewidth]{figures/content/fig_ablation}
   \caption{不同模型模结构执行轨迹对比图}
@@ -261,7 +261,7 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
 
 在扩散动作生成模型中，扩散步数的设定对最终动作序列的生成质量具有决定性作用。充足的扩散步数能够保证模型充分拟合复杂的多模态动作分布，但同时也会带来较长的推理延迟。尽管本文在推理阶段引入了DDIM加速采样算法以提升系统的响应速度，去噪步数的减少仍不可避免地会对模型的动作生成质量产生影响。为了系统评估这一影响并验证本文默认配置的合理性，本节对不同推理去噪步数下的任务成功率进行了对比分析。实验测试了从十步到一百步的多种推理去噪步数配置，在此配置中，一百步等价于不跳步的完整去噪过程，而十步则为本文的默认加速配置。具体的成功率变化如表~\ref{tab:ablation_ddim}~所示。
 
-\begin{table}[htbp]
+\begin{table}[htb]
   \centering
   \caption{不同推理去噪步数在各任务上的成功率对比}
   \label{tab:ablation_ddim}
