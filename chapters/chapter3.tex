@@ -167,11 +167,11 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
 
 为了评估本文提出的基于扩散模型的动作生成算法的性能，本节选取了三种基线方法进行对比实验，分别是基于高斯混合模型的长短期记忆网络LSTM-GMM\cite{mandlekar2021matters}、隐式行为克隆IBC\cite{florence2022implicit}以及标准的扩散策略Diffusion Policy\cite{chi2023diffusion}。LSTM-GMM是一种序列建模方法，通过混合高斯分布来拟合多模态动作。IBC通过能量模型隐式地表示动作分布。标准的扩散策略是基于扩散模型的视觉动作生成方法。
 
-表~\ref{tab:comparative_results_ph}和表~\ref{tab:comparative_results_mh}分别展示了本文方法与各基线方法在RoboMimic数据集熟练人类（ph）和多人类（mh）示教数据子集上的成功率对比结果。
+表~\ref{tab:comparative_results_ph}和表~\ref{tab:comparative_results_mh}分别展示了本文方法与各基线方法在RoboMimic数据集（ph）和（mh）示教数据子集上的成功率对比结果。
 
 \begin{table}[htbp]
   \centering
-  \caption{不同方法在RoboMimic熟练人类（ph）数据集上的任务成功率对比}
+  \caption{不同方法在RoboMimic（ph）数据集上的任务成功率对比}
   \label{tab:comparative_results_ph}
   \small
   \begin{tabular}{lccccc}
@@ -188,7 +188,7 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
 
 \begin{table}[htbp]
   \centering
-  \caption{不同方法在RoboMimic多人类（mh）数据集上的任务成功率对比}
+  \caption{不同方法在RoboMimic（mh）数据集上的任务成功率对比}
   \label{tab:comparative_results_mh}
   \small
   \begin{tabular}{lcccc}
@@ -210,7 +210,7 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.95\linewidth]{figures/content/robomimic_comparation_short}
-  \caption{Can 和 Lift 任务上的末端执行器轨迹对比}
+  \caption{Can 和 Lift 任务上的轨迹对比图}
   \label{fig:robomimic_comparation_short}
 \end{figure}
 
@@ -221,11 +221,11 @@ Can 和 Lift 均为简单任务，从表中可以看出两种方法均以满分�
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.95\linewidth]{figures/content/robomimic_comparation_long}
-  \caption{Square 和 Tool Hang 任务上的末端执行器轨迹对比}
+  \caption{Square 和 Tool Hang 任务上的轨迹对比图}
   \label{fig:robomimic_comparation_long}
 \end{figure}
 
-Square 和 Tool Hang 均为多阶段精细操作任务，对末端执行器的定位精度要求较高，两条轨迹形态的差异相对更为明显。在 Square 任务中，两种方法均在螺母孔上方区域集中运动，但在下压插入阶段，基线方法的轨迹有一定横向摇摆且路径相对分散，而本文方法的轨迹较为收敛。在 Tool Hang 任务中，轨迹整体跨度较大，两条轨迹在接近钩子时弧度均有一定差异，基线方法的弧度较大，本文方法的轨迹相对平缓。视觉与状态特征的融合质量对模型对目标位置的判断有一定影响，本文设计的非对称跨模态注意力融合机制以视觉特征主导构建注意力权重，并通过残差路径保留本体状态信号，对轨迹的稳定性有一定帮助。
+Square 和 Tool Hang 均为多阶段精细操作任务，对末端执行器的定位精度要求较高，两条轨迹形态的差异相对更为明显。在 Square 任务中，两种方法均在螺母孔上方区域集中运动，但在下压插入阶段，基线方法的轨迹有一定横向摇摆且路径相对分散。在 Tool Hang 任务中，轨迹整体跨度较大，两条轨迹在接近钩子时弧度均有一定差异，基线方法的弧度较大，本文方法的轨迹相对平缓。视觉与状态特征的融合质量对模型对目标位置的判断有一定影响，本文设计的非对称跨模态注意力融合机制以视觉特征主导构建注意力权重，并通过残差路径保留本体状态信号，对轨迹的稳定性有一定帮助。
 
 \subsection{消融实验}
 \label{subsec:ablation_study}
@@ -236,7 +236,7 @@ Square 和 Tool Hang 均为多阶段精细操作任务，对末端执行器的�
 
 \begin{table}[htb]
   \centering
-  \caption{不同模型模块配置在各任务上的成功率消融对比}
+  \caption{不同模型模块配置在各任务上的成功率}
   \label{tab:ablation_modules}
   \small
   \begin{tabular}{ccccccc}
@@ -253,14 +253,14 @@ Square 和 Tool Hang 均为多阶段精细操作任务，对末端执行器的�
   \end{tabular}
 \end{table}
 
-从表~\ref{tab:ablation_modules}~的数据可以看出，各模块的引入在多数任务上对最终性能有正向贡献。当使用ResNet替换EfficientViT时，模型在运输多人类任务上的成功率从$0.801$下降至$0.746$，在工具悬挂任务上从$0.791$降至$0.764$。在处理多步高分辨率图像序列时，ResNet缺乏全局感受野，在提取长视距任务所需的空间几何信息时存在局限，而EfficientViT的多尺度线性注意力机制能够同时捕捉局部细节与全局结构，对目标位置的估计更为准确。
+从表~\ref{tab:ablation_modules}~的数据可以看出，本文引入的模块在多数任务上对最终性能有正向贡献。当使用ResNet替换EfficientViT时，模型在运输多人类任务上的成功率从$0.801$下降至$0.746$，在工具悬挂任务上从$0.791$降至$0.764$。在处理多步高分辨率图像序列时，ResNet缺乏全局感受野，在提取长视距任务所需的空间几何信息时存在局限，而EfficientViT的多尺度线性注意力机制能够同时捕捉局部细节与全局结构，对目标位置的估计更为准确。
 
 图~\ref{fig:ablation_comparation_square}~展示了 Square 任务上四种模型配置的末端执行器轨迹对比。图中四行依次对应完整模型、去除状态残差、去除跨模态注意力、替换为ResNet四种配置的轨迹，轨迹颜色由橙红渐变至浅蓝。
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.95\linewidth]{figures/content/robomimic_ablation_square}
-  \caption{Square 任务消融实验轨迹对比}
+  \caption{Square 任务消融实验轨迹对比图}
   \label{fig:ablation_comparation_square}
 \end{figure}
 
@@ -271,7 +271,7 @@ Square 和 Tool Hang 均为多阶段精细操作任务，对末端执行器的�
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.95\linewidth]{figures/content/robomimic_ablation_toolhang}
-  \caption{Tool Hang 任务消融实验轨迹对比}
+  \caption{Tool Hang 任务消融实验轨迹对比图}
   \label{fig:ablation_comparation_toolhang}
 \end{figure}
 
@@ -296,6 +296,6 @@ Square 和 Tool Hang 均为多阶段精细操作任务，对末端执行器的�
   \end{tabular}
 \end{table}
 
-表~\ref{tab:ablation_ddim}~的数据展示了去噪步数与生成质量之间的关系。总体而言，当推理去噪步数低于40步时，生成的动作序列质量出现明显下降，导致各项任务的成功率大幅降低。例如，在工具悬挂任务中，当步数从40步降至20步时，成功率从$0.721$减至$0.552$；降至10步时，成功率仅为$0.301$。这种现象的原因在于过少的去噪步数会导致 DDIM 采样时的离散化近似误差显著增加，模型难以在极少的迭代内将高斯噪声精确映射回复杂的多模态动作分布，从而产生不连贯或偏离目标的动作轨迹。
+当推理去噪步数低于40步时，生成的动作序列质量出现明显下降，导致各项任务的成功率大幅降低。例如在工具悬挂任务中，当步数从40步降至20步时，成功率从$0.721$减至$0.552$；降至10步时，成功率仅为$0.301$。这种现象的原因在于过少的去噪步数会导致 DDIM 采样时的离散化近似误差显著增加，模型难以在极少的迭代内将高斯噪声精确映射回复杂的多模态动作分布，从而产生不连贯或偏离目标的动作轨迹。
 
 对于较为复杂的任务，其成功率在去噪步数低于60步时就已经开始出现下降趋势，在运输多人类任务和工具悬挂任务中，当步数从60步减少至40步时，成功率分别下降了$0.032$和$0.031$。运输多人类任务包含多名操作员的示教数据，动作分布更具有多峰特性，模型需要更多的去噪步数来准确捕捉和还原这种复杂的分布。工具悬挂任务涉及长视距的多阶段操作以及极高的操作精度要求，任何微小的动作偏差都会在长序列执行中累积并导致任务失败，因此对去噪步数的减少更为敏感。相比之下，方形螺母任务的动作模式相对单一，即使在40步时也能保持$0.871$的较高成功率。综合考虑生成质量与推理延迟，本文将默认推理去噪步数设定为十步，以在实时控制场景下保持可接受的响应速度。
