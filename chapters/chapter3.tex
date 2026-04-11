@@ -205,7 +205,7 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
 
 从表中的结果可以看出，IBC在简单的 Lift 任务上尚能取得一定成功率，但在 Square、Transport 和 Tool Hang 等复杂任务上成功率接近于零。这是因为 IBC 在推理时依赖迭代优化来搜索最优动作，而复杂任务的动作分布具有高度多模态性，能量函数优化容易陷入局部极値，导致方法在这类任务上基本失效。LSTM-GMM 的混合高斯分量数量有限，对高度复杂的多模态分布的拟合能力不足，加之 LSTM 的隐状态递归传递在长时序任务中容易积累误差，因此在 Tool Hang 等需要多阶段精确规划的任务上成功率较低。基于扩散模型的方法通过迭代去噪逐步逼近真实动作分布，能够覆盖多模态动作空间中的多个模式，在长视距和高精度任务上相较于上述两类方法表现出更高的成功率。
 
-图~\ref{fig:robomimic_comparation_short}~和图~\ref{fig:robomimic_comparation_long}~分别展示了本文方法与 Diffusion Policy 在四项任务上的末端执行器轨迹对比。各图中边框颜色用于区分任务，每个任务的上行为本文方法的轨迹，下行为 Diffusion Policy 的轨迹，轨迹颜色由橙红渐变至浅蓝，对应时间序列的起点与终点。
+图~\ref{fig:robomimic_comparation_short}~和图~\ref{fig:robomimic_comparation_long}~分别展示了本文方法与 Diffusion Policy 在四项任务上的末端执行器轨迹对比，所有轨迹均取自 ph 子集中的成功示例。各图中边框颜色用于区分任务，每个任务的上行为本文方法的轨迹，下行为 Diffusion Policy 的轨迹，轨迹颜色由橙红渐变至浅蓝，对应时间序列的起点与终点。
 
 \begin{figure}[htbp]
   \centering
@@ -253,7 +253,7 @@ Square 任务要求末端执行器将螺母精确对准并插入方形柱，整�
 
 从表~\ref{tab:ablation_modules}~的数据可以看出，本文引入的模块在多数任务上对最终性能有正向贡献。当使用ResNet替换EfficientViT时，模型在 Transport mh 任务上的成功率从$0.801$下降至$0.746$，在 Tool Hang ph 任务上从$0.791$降至$0.764$。在处理多步高分辨率图像序列时，ResNet缺乏全局感受野，在提取长视距任务所需的空间几何信息时存在局限，而EfficientViT的多尺度线性注意力机制能够同时捕捉局部细节与全局结构，对目标位置的估计更为准确。
 
-图~\ref{fig:ablation_comparation_square}~和图~\ref{fig:ablation_comparation_toolhang}~分别展示了 Square 和 Tool Hang 任务上四种模型配置的末端执行器轨迹对比。各图中四行依次对应完整模型、去除状态残差、去除跨模态注意力、替换为 ResNet 四种配置的轨迹，轨迹颜色由橙红渐变至浅蓝。
+图~\ref{fig:ablation_comparation_square}~和图~\ref{fig:ablation_comparation_toolhang}~分别展示了 Square 和 Tool Hang 任务上四种模型配置的末端执行器轨迹对比，所有轨迹均取自 ph 子集中的成功示例。各图中四行依次对应完整模型、去除状态残差、去除跨模态注意力、替换为 ResNet 四种配置的轨迹，轨迹颜色由橙红渐变至浅蓝。
 
 \begin{figure}[htbp]
   \centering
