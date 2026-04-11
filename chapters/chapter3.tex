@@ -167,7 +167,7 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
 
 为了评估本文提出的基于扩散模型的动作生成算法的性能，本节选取了三种基线方法进行对比实验，分别是基于高斯混合模型的长短期记忆网络LSTM-GMM\cite{mandlekar2021matters}、隐式行为克隆IBC\cite{florence2022implicit}以及标准的扩散策略Diffusion Policy\cite{chi2023diffusion}。LSTM-GMM 是一种序列建模方法，通过混合高斯分布来拟合多模态动作。IBC 通过能量模型隐式地表示动作分布。
 
-表~\ref{tab:comparative_results_ph}和表~\ref{tab:comparative_results_mh}分别展示了本文方法与各基线方法在RoboMimic ph 和 mh 示教数据子集上的成功率对比结果。
+表~\ref{tab:comparative_results_ph}和表~\ref{tab:comparative_results_mh}分别展示了本文方法与各基线方法在RoboMimic ph 和 mh 数据子集上的成功率对比结果。
 
 \begin{table}[htbp]
   \centering
@@ -203,7 +203,7 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
   \end{tabular}
 \end{table}
 
-从表中的结果可以看出，IBC在简单的 Lift 任务上尚能取得一定成功率，但在 Square、Transport 和 Tool Hang 等复杂任务上成功率接近于零。这是因为 IBC 在推理时依赖迭代优化来搜索最优动作，而复杂任务的动作分布具有高度多模态性，能量函数优化容易陷入局部极値，导致方法在这类任务上基本失效。LSTM-GMM 的混合高斯分量数量有限，对高度复杂的多模态分布的拟合能力不足，加之 LSTM 的隐状态递归传递在长时序任务中容易积累误差，因此在 Tool Hang 等需要多阶段精确规划的任务上成功率较低。基于扩散模型的方法通过迭代去噪逐步逼近真实动作分布，能够覆盖多模态动作空间中的多个模式，在长视距和高精度任务上相较于上述两类方法表现出更高的成功率。
+从表中的结果可以看出，IBC在简单的 Lift 任务上能取得一定成功率，但在 Square、Transport 和 Tool Hang 等复杂任务上成功率接近于零。这是因为 IBC 在推理时依赖迭代优化来搜索最优动作，而复杂任务的动作分布具有高度多模态性，能量函数优化容易陷入局部极値，导致方法在这类任务上基本失效。LSTM-GMM 的混合高斯分量数量有限，对高度复杂的多模态分布的拟合能力不足，加之 LSTM 的隐状态递归传递在长时序任务中容易积累误差，因此在 Tool Hang 等需要多阶段精确规划的任务上成功率较低。基于扩散模型的方法通过迭代去噪逐步逼近真实动作分布，能够覆盖多模态动作空间中的多个模式，在长视距和高精度任务上相较于上述两类方法表现出更高的成功率。
 
 图~\ref{fig:robomimic_comparation_short}~和图~\ref{fig:robomimic_comparation_long}~分别展示了本文方法与 Diffusion Policy 在四项任务上的末端执行器轨迹对比，所有轨迹均取自 ph 子集中的成功示例。各图中边框颜色用于区分任务，每个任务的上行为本文方法的轨迹，下行为 Diffusion Policy 的轨迹，轨迹颜色由橙红渐变至浅蓝，对应时间序列的起点与终点。
 
@@ -214,7 +214,7 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
   \label{fig:robomimic_comparation_short}
 \end{figure}
 
-Can 和 Lift 均为简单的单目标抓放任务，从表中可以看出两种方法均以满分率完成，图中两条轨迹的整体形态也较为相近。在 Can 任务中可以看出，Diffusion Policy 的轨迹在接近目标容器时有小幅折返，本文方法的轨迹相对平滑，这与 EfficientViT 对目标位置的感知相对较好有关，使末端执行器在接近阶段无需过多修正。
+Can 和 Lift 均为简单的单目标抓放任务，从表~\ref{tab:comparative_results_ph}和表~\ref{tab:comparative_results_mh}中可以看出两种方法均以满分率完成，图~\ref{fig:robomimic_comparation_short}~中两条轨迹的整体形态也较为相近。在 Can 任务中可以看出，Diffusion Policy 的轨迹在接近目标容器时有小幅折返，本文方法的轨迹相对平滑，这与 EfficientViT 对目标位置的感知相对较好有关，使末端执行器在接近阶段无需过多修正。
 
 \begin{figure}[htbp]
   \centering
@@ -223,7 +223,7 @@ Can 和 Lift 均为简单的单目标抓放任务，从表中可以看出两种�
   \label{fig:robomimic_comparation_long}
 \end{figure}
 
-Square 任务要求末端执行器将螺母精确对准并插入方形柱，整个过程对横向定位精度要求较高。从图中可以看出，Diffusion Policy 在下压插入阶段轨迹有一定横向摇摆，路径相对分散，而本文方法在该阶段的轨迹较为收敛，末端执行器能够较直接地完成插入。Tool Hang 任务需要末端执行器在较大的空间跨度内完成钩子的定位与挂接，对路径的方向连续性要求较高。从图中可以看出，Diffusion Policy 在接近钩子时轨迹弧度较大，路径有一定迂回，而本文方法的轨迹弧度相对平缓，路径更为直接。这两项任务均需要模型对目标位置有较准确的判断，本文设计的非对称跨模态注意力融合机制以视觉特征主导构建注意力权重，并通过残差路径保留本体状态信号，在一定程度上有助于末端执行器保持较稳定的运动方向。
+Square 任务要求末端执行器将螺母精确对准并插入方形柱，整个过程对横向定位精度要求较高，从图~\ref{fig:robomimic_comparation_long}~中可以看出，Diffusion Policy 在下压插入阶段轨迹有一定横向摇摆，路径相对分散，而本文方法在该阶段的轨迹较为收敛，末端执行器能够较直接地完成插入；Tool Hang 任务需要末端执行器在较大的空间跨度内完成钩子的定位与挂接，对路径的方向连续性要求较高，Diffusion Policy 在接近钩子时轨迹弧度较大，路径有一定迂回，而本文方法的轨迹弧度相对平缓，路径更为直接。这两项任务均需要模型对目标位置有较准确的判断，本文设计的非对称跨模态注意力融合机制以视觉特征主导构建注意力权重，并通过残差路径保留本体状态信号，在一定程度上有助于末端执行器保持较稳定的运动方向。
 
 \subsection{消融实验}
 \label{subsec:ablation_study}
