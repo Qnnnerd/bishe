@@ -214,7 +214,7 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
   \label{fig:robomimic_comparation_short}
 \end{figure}
 
-Lift 和 Can 均为单臂单目标操作任务，两种方法均能较顺利地完成，轨迹整体形态相近。在 Can 任务中可以看出，基线方法在接近目标容器时有小幅折返，本文方法的轨迹相对平滑一些，这与 EfficientViT 对目标位置的感知相对较好有关。
+Can 和 Lift 均为简单任务，从表中可以看出两种方法均以满分率完成。图中两条轨迹整体形态相近，但在 Can 任务中可以看出， Diffusion Policy 的轨迹在接近目标容器时有小幅折返，本文方法的轨迹相对平滑一些。这与 EfficientViT 对目标位置的感知相对较好有关，使末端执行器在接近阶段无需过多修正。
 
 图~\ref{fig:robomimic_comparation_long}~展示了 Square 和 Tool Hang 任务上的轨迹对比。图中橙色边框区域为 Square 任务，紫色边框区域为 Tool Hang 任务，每个任务的上行为本文方法的轨迹，下行为基线方法的轨迹。
 
