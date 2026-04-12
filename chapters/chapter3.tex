@@ -253,23 +253,24 @@ Square 任务要求末端执行器将螺母精确对准并插入方形柱，整�
 
 从表~\ref{tab:ablation_modules}~的数据可以看出，本文引入的模块在多数任务上对最终性能有正向贡献。当使用ResNet替换EfficientViT时，模型在 Transport mh 任务上的成功率从$0.801$下降至$0.746$，在 Tool Hang ph 任务上从$0.791$降至$0.764$。在处理多步高分辨率图像序列时，ResNet缺乏全局感受野，在提取长视距任务所需的空间几何信息时存在局限，而EfficientViT的多尺度线性注意力机制能够同时捕捉局部细节与全局结构，对目标位置的估计更为准确。
 
-图~\ref{fig:ablation_comparation_square}~和图~\ref{fig:ablation_comparation_toolhang}~分别展示了 Square 和 Tool Hang 任务上四种模型配置的末端执行器轨迹对比，所有轨迹均取自 ph 子集中的成功示例。各图中四行依次对应完整模型、去除状态残差、去除跨模态注意力、替换为 ResNet 四种配置的轨迹，轨迹颜色由橙红渐变至浅蓝。
-
-\begin{figure}[htbp]
+\begin{figure}[htb]
   \centering
   \includegraphics[width=0.95\linewidth]{figures/content/robomimic_ablation_square}
   \caption{Square 任务消融实验轨迹对比图}
   \label{fig:ablation_comparation_square}
 \end{figure}
 
-在 Square 任务中，完整模型的轨迹在插入阶段较为收敛，末端执行器在螺母孔上方完成对齐后下压。去除跨模态注意力的变体在插入阶段轨迹有一定弯折，路径相对偏长。去除状态残差的变体在接近螺母孔时有小幅抖动，路径相对分散。替换为ResNet的变体轨迹整体形态与完整模型相近，在插入阶段终点位置有小幅偏移。去除跨模态注意力对成功率的影响相对较大，在 Square mh 任务中成功率由$0.878$下降至$0.847$，在 Transport ph 任务中由$0.862$下降至$0.837$，说明跨模态注意力机制对视觉与状态特征的融合有一定作用。
-
-\begin{figure}[htbp]
+\begin{figure}[htb]
   \centering
   \includegraphics[width=0.95\linewidth]{figures/content/robomimic_ablation_toolhang}
   \caption{Tool Hang 任务消融实验轨迹对比图}
   \label{fig:ablation_comparation_toolhang}
 \end{figure}
+
+图~\ref{fig:ablation_comparation_square}~和图~\ref{fig:ablation_comparation_toolhang}~分别展示了 Square 和 Tool Hang 任务上四种模型配置的末端执行器轨迹对比，所有轨迹均取自 ph 子集中的成功示例。各图中四行依次对应完整模型、去除状态残差、去除跨模态注意力、替换为 ResNet 四种配置的轨迹，轨迹颜色由橙红渐变至浅蓝。
+
+在 Square 任务中，完整模型的轨迹在插入阶段较为收敛，末端执行器在螺母孔上方完成对齐后下压。去除跨模态注意力的变体在插入阶段轨迹有一定弯折，路径相对偏长。去除状态残差的变体在接近螺母孔时有小幅抖动，路径相对分散。替换为ResNet的变体轨迹整体形态与完整模型相近，在插入阶段终点位置有小幅偏移。去除跨模态注意力对成功率的影响相对较大，在 Square mh 任务中成功率由$0.878$下降至$0.847$，在 Transport ph 任务中由$0.862$下降至$0.837$，说明跨模态注意力机制对视觉与状态特征的融合有一定作用。
+
 
 在 Tool Hang 任务中，轨迹整体跨度较大，不同配置之间的差异相对明显。完整模型在接近钩子时轨迹弧度平缓，路径较为直接。去除跨模态注意力的变体在接近钩子时轨迹弧度较大，路径有所偏长。去除状态残差的变体在空孔阶段末端有小幅抖动，路径相对分散。替换为ResNet的变体路径整体较长，这与视觉编码器对目标位置的感知有关，缺乏全局感受野在一定程度上影响了路径的收敛性。Tool Hang 任务需要模型在长时序内持续对钩子位置进行判断，视觉特征提取质量和状态信号的完整性对轨迹的稳定性均有影响。去除状态残差注入路径后，模型在 Tool Hang ph 任务上成功率下降了$0.013$，在 Square mh 任务上下降了$0.012$，说明状态残差路径对末端执行器运动方向的稳定有一定作用。
 
