@@ -9,7 +9,7 @@
 \subsection{标准D-H参数运动学建模}
 \label{subsec:dh_modeling}
 
-机械臂运动学是研究机械臂在空间中的运动特性的学科，其核心任务是建立机械臂各关节变量与末端执行器在笛卡尔空间中位姿之间的数学关系，这种关系是实现机械臂运动控制以及与环境交互的基础。为描述机械臂上各个连杆的位置和姿态，需要在机械臂的关键位置上固连一系列的坐标系，例如基坐标系 \{B\}、工具坐标系 \{T\} 以及每个连杆的连杆坐标系 \{i\}。不同坐标系之间的相对位姿关系可以通过齐次变换矩阵进行描述。一个通用的齐次变换矩阵 $T$ 是一个 $4 \times 4$ 的矩阵，其形式如式\ref{eq:homogeneous_transform}所示。
+机械臂运动学是研究机械臂在空间中的运动特性的学科，其核心任务是建立机械臂各关节变量与末端执行器在笛卡尔空间中位姿之间的数学关系，这种关系是实现机械臂运动控制以及与环境交互的基础。如图~\ref{fig:dh_parameters}(a)所示，为描述机械臂上各个连杆的位置和姿态，需要在机械臂的关键位置上固连一系列的坐标系，例如基坐标系 \{B\}、工具坐标系 \{T\} 以及每个连杆的连杆坐标系 \{i\}。不同坐标系之间的相对位姿关系可以通过齐次变换矩阵进行描述。一个通用的齐次变换矩阵 $T$ 是一个 $4 \times 4$ 的矩阵，其形式如式\ref{eq:homogeneous_transform}所示。
 
 \begin{equation}
   \label{eq:homogeneous_transform}
@@ -26,12 +26,12 @@
 
 其中，$R \in SO(3)$ 是一个 $3 \times 3$ 的旋转矩阵，用于描述坐标系之间的相对姿态；$p \in \mathbb{R}^3$ 是一个 $3 \times 1$ 的平移向量，用于描述坐标系原点之间的相对位置。通过齐次变换矩阵，可以实现坐标点在不同坐标系下的表示转换以及多级坐标变换的复合运算。
 
-Denavit-Hartenberg 参数法是一种建立机械臂各连杆坐标系并描述其相对位姿的标准方法，如图\ref{fig:dh_parameters}所示，它仅用四个参数即可唯一确定两个相邻连杆坐标系之间的几何关系。这四个参数，即连杆长度 $a_{i-1}$、连杆扭转角 $\alpha_{i-1}$、连杆偏距 $d_i$ 和关节角 $\theta_i$，其定义如表\ref{tab:dh_parameters}所示。
+Denavit-Hartenberg 参数法是一种建立机械臂各连杆坐标系并描述其相对位姿的标准方法，如图~\ref{fig:dh_parameters}(b)所示，它仅用四个参数即可唯一确定两个相邻连杆坐标系之间的几何关系。这四个参数，即连杆长度 $a_{i-1}$、连杆扭转角 $\alpha_{i-1}$、连杆偏距 $d_i$ 和关节角 $\theta_i$，其定义如表\ref{tab:dh_parameters}所示。
 
 \begin{figure}[htb]
   \centering
-  \subfloat[机械臂简化运动学模型]{\includegraphics[height=5cm]{figures/content/arm_axis_model}}\hfill
-  \subfloat[D-H参数定义示意图]{\includegraphics[height=5cm]{figures/content/ur-dhmodel.png}}
+  \subfloat[机械臂简化运动学模型]{\includegraphics[width=0.44\linewidth]{figures/content/arm_axis_model}}\quad
+  \subfloat[D-H参数定义示意图]{\includegraphics[width=0.44\linewidth]{figures/content/ur-dhmodel.png}}
   \caption{机械臂运动学建模示意图}
   \label{fig:dh_parameters}
 \end{figure}
