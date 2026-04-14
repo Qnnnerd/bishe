@@ -140,7 +140,19 @@ TemporalCacheVLA提出了一种基于双通道时序缓存的解决方案，其�
 
 LIBERO是一个专门用于评估机器人操作模型在多样化任务和长时序场景下性能的基准数据集，该数据集共包含五个子集，分别侧重于评估机器人操作能力的不同维度。空间子集（Spatial）包含十个任务，主要测试机器人在不同空间布局下的推理与操作能力；物体子集（Object）包含十个任务，侧重于评估模型对不同视觉外观、形状和纹理的物体的泛化能力；目标子集（Goal）包含十个任务，要求机器人在相同的初始场景下，根据不同的语言指令完成不同的目标状态。
 
-长时序子集（Long）是其中最具挑战性的部分，包含十个任务，要求机器人执行包含多个子目标的复杂长序列操作。例如，机器人需要先打开柜门，取出其中的碗，然后再将碗放置到指定位置。综合子集（LIBERO-90）则包含九十个多样化的任务，全面考察模型在海量任务中的综合表现与容量极限。在实验中，每个任务包含五十条人类专家示教轨迹。模型仅使用第三人称视角的单帧RGB图像和自然语言指令作为输入，不依赖任何腕部相机视图。LIBERO数据集的具体任务细节如表~\ref{tab:libero_tasks}~所示。
+长时序子集（Long）是其中最具挑战性的部分，包含十个任务，要求机器人执行包含多个子目标的复杂长序列操作。例如，机器人需要先打开柜门，取出其中的碗，然后再将碗放置到指定位置。综合子集（LIBERO-90）则包含九十个多样化的任务，全面考察模型在海量任务中的综合表现与容量极限。在实验中，每个任务包含五十条人类专家示教轨迹。模型仅使用第三人称视角的单帧RGB图像和自然语言指令作为输入，不依赖任何腕部相机视图。LIBERO数据集的具体任务细节如表~\ref{tab:libero_tasks}~所示，各子集的场景示例如图~\ref{fig:libero_tasks}~所示。
+
+\begin{figure}[htbp]
+  \centering
+  \setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.5pt}%
+  \subfloat[Spatial]{\fbox{\includegraphics[width=.19\linewidth]{figures/content/libero_spatial}}}\hfill
+  \subfloat[Object]{\fbox{\includegraphics[width=.19\linewidth]{figures/content/libero_object}}}\hfill
+  \subfloat[Goal]{\fbox{\includegraphics[width=.19\linewidth]{figures/content/libero_goal}}}\hfill
+  \subfloat[Long]{\fbox{\includegraphics[width=.19\linewidth]{figures/content/libero_long}}}\hfill
+  \subfloat[LIBERO-90]{\fbox{\includegraphics[width=.19\linewidth]{figures/content/libero-90}}}
+  \caption{LIBERO数据集五个子集的场景示例}
+  \label{fig:libero_tasks}
+\end{figure}
 
 \begin{table}[htb]
   \centering
