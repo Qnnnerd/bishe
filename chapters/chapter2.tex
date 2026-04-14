@@ -1,7 +1,7 @@
 \chapter{相关理论与技术基础}
 \label{chp:foundations}
 
-本章旨在为后文提出的机器人自主操作算法提供必要的理论支撑与技术背景。内容将围绕机器人模仿学习这一核心技术路线展开，系统性地介绍其研究所需的前置知识。首先，将对机械臂运动学与控制的基本原理进行阐述，重点介绍 Denavit-Hartenberg 参数法在运动学建模中的应用，为后续的动作生成提供物理约束与数学基础。随后，将介绍模仿学习理论，探讨其基本原理以及当前典型的模仿学习算法。最后，将介绍视觉语言动作模型的核心思想与结构原理，它构成了本文所提算法的基石。
+机器人操作任务的自动化依赖于对机械臂运动特性的准确建模以及对人类操作行为的有效学习。传统的运动规划方法需要对环境进行精确建模，难以适应非结构化场景；模仿学习则通过从人类示教数据中学习操作策略，为机器人在复杂环境中的自主操作提供了一条可行路径。本章围绕这一技术路线，依次介绍机械臂运动学建模、模仿学习理论以及视觉语言动作模型的基本原理，为后续章节的算法设计提供理论基础。
 
 \section{机械臂运动学建模}
 \label{sec:kinematics}
@@ -30,8 +30,9 @@ Denavit-Hartenberg 参数法是一种建立机械臂各连杆坐标系并描述�
 
 \begin{figure}[htb]
   \centering
-  \includegraphics[width=0.4\textwidth]{figures/content/ur-dhmodel.png}
-  \caption{D-H参数定义示意图}
+  \subfloat[机械臂简化运动学模型]{\includegraphics[height=5cm]{figures/content/arm_axis_model}}\hfill
+  \subfloat[D-H参数定义示意图]{\includegraphics[height=5cm]{figures/content/ur-dhmodel.png}}
+  \caption{机械臂运动学建模示意图}
   \label{fig:dh_parameters}
 \end{figure}
 
