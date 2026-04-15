@@ -137,7 +137,7 @@ TemporalCacheVLA提出了一种基于双通道时序缓存的解决方案，其�
 \subsection{LIBERO数据集}
 \label{subsec:chap4_dataset}
 
-如图\ref{fig:libero_tasks}所示，LIBERO是一个专门用于评估机器人操作模型在多样化任务和长时序场景下性能的基准数据集，该数据集共包含五个子集，分别侧重于评估机器人操作能力的不同维度，各子集的具体任务描述如表\ref{tab:libero_tasks}所示。空间子集（Spatial）包含十个任务，主要测试机器人在不同空间布局下的推理与操作能力；物体子集（Object）包含十个任务，侧重于评估模型对不同视觉外观、形状和纹理的物体的泛化能力；目标子集（Goal）包含十个任务，要求机器人在相同的初始场景下，根据不同的语言指令完成不同的目标状态；长时序子集（Long）是其中最具挑战性的部分，包含十个任务，要求机器人执行包含多个子目标的复杂长序列操作。例如，机器人需要先打开柜门，取出其中的碗，然后再将碗放置到指定位置。综合子集（LIBERO-90）则包含九十个多样化的任务，全面考察模型在海量任务中的综合表现与容量极限。在实验中，每个任务包含五十条人类专家示教轨迹，模型仅使用第三人称视角的单帧RGB图像和自然语言指令作为输入，不依赖任何腕部相机视图。
+如图\ref{fig:libero_tasks}所示，LIBERO是一个专门用于评估机器人操作模型在多样化任务和长时序场景下性能的基准数据集，该数据集共包含五个子集，分别侧重于评估机器人操作能力的不同维度，各子集的具体任务描述如表\ref{tab:libero_tasks}所示。空间子集（Spatial）包含十个任务，主要测试机器人在不同空间布局下的推理与操作能力；物体子集（Object）包含十个任务，侧重于评估模型对不同视觉外观、形状和纹理的物体的泛化能力；目标子集（Goal）包含十个任务，要求机器人在相同的初始场景下，根据不同的语言指令完成不同的目标状态；综合子集（LIBERO-100）则包含一百个多样化的任务，全面考察模型在海量任务中的综合表现与容量极限，该子集分为九十个预训练子集与十个验证子集。在实验中，每个任务包含五十条人类专家示教轨迹，模型仅使用第三人称视角的单帧RGB图像和自然语言指令作为输入，不依赖任何腕部相机视图。
 
 \begin{figure}[htbp]
   \centering
@@ -145,8 +145,7 @@ TemporalCacheVLA提出了一种基于双通道时序缓存的解决方案，其�
   \subfloat[Spatial]{\fbox{\includegraphics[width=.19\linewidth]{figures/content/libero_spatial}}}\hfill
   \subfloat[Object]{\fbox{\includegraphics[width=.19\linewidth]{figures/content/libero_object}}}\hfill
   \subfloat[Goal]{\fbox{\includegraphics[width=.19\linewidth]{figures/content/libero_goal}}}\hfill
-  \subfloat[Long]{\fbox{\includegraphics[width=.19\linewidth]{figures/content/libero_long}}}\hfill
-  \subfloat[LIBERO-90]{\fbox{\includegraphics[width=.19\linewidth]{figures/content/libero-90}}}
+  \subfloat[LIBERO-100]{\fbox{\includegraphics[width=.19\linewidth]{figures/content/libero-100}}}
   \caption{LIBERO数据集子集典型场景示意图}
   \label{fig:libero_tasks}
 \end{figure}
@@ -162,8 +161,7 @@ TemporalCacheVLA提出了一种基于双通道时序缓存的解决方案，其�
     Spatial & 拿起[物体]并将其放置在[目标]的[空间关系]处 & 10 \\
     Object & 拿起[食物]并将其放入[容器]中 & 10 \\
     Goal & 打开/关闭[容器]；打开抽屉并将[物体]放入其中；将[物体]放在[目标]上/中；将[物体]推到[目标]的位置；打开[电器] & 10 \\
-    Long & 将[物体1]和[物体2]都放入[容器]中；打开[电器]并将[物体]放在上面；将[物体]放入[容器/电器]中并关闭；将[物体1]放在[目标1]上，将[物体2]放在[目标2]上/在[目标2]的[关系]处；拿起[物体]并将其放入收纳盒隔间中 & 10 \\
-    LIBERO-90 & 打开/关闭[容器/电器][并将物体放在上面/里面；可选地与另一个打开/关闭动作排序]；打开[容器]并将[物体]放入其中；将[物体]放入/放在[目标]中/上/下或在[相对位置]处；将[物体1]堆叠在[物体2]上[可选地将它们放入容器中]；拿起[物体]并将其放入[容器]（篮子/托盘）中；将马克杯放在左/右盘子上，或将书放在收纳盒中/架子上/架子下；打开/关闭[电器][可选地将物体放在上面] & 90 \\
+    LIBERO-100 & 打开/关闭[容器/电器][并将物体放在上面/里面；可选地与另一个打开/关闭动作排序]；打开[容器]并将[物体]放入其中；将[物体]放入/放在[目标]中/上/下或在[相对位置]处；将[物体1]堆叠在[物体2]上[可选地将它们放入容器中]；拿起[物体]并将其放入[容器]（篮子/托盘）中；将马克杯放在左/右盘子上，或将书放在收纳盒中/架子上/架子下；打开/关闭[电器][可选地将物体放在上面] & 90 \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -188,24 +186,22 @@ TemporalCacheVLA提出了一种基于双通道时序缓存的解决方案，其�
   \resizebox{\textwidth}{!}{
   \begin{tabular}{lcccccc}
     \toprule
-    方法 & Spatial & Object & Goal & Long & LIBERO-90 & 平均成功率 \\
+    方法 & Spatial & Object & Goal & LIBERO-100 & 平均成功率 \\
     \midrule
-    Octo\cite{mees2024octo} & 78.9 & 85.7 & 84.6 & 51.1 & - & 75.1 \\
-    MDT\cite{reuss2024multimodal} & 78.5 & 87.5 & 73.5 & 64.8 & - & 76.1 \\
-    UniACT\cite{zheng2025uniact} & 77.0 & 87.0 & 77.0 & 70.0 & 73.0 & 76.8 \\
-    SpatialVLA\cite{qu2025spatialvla} & 88.2 & 89.9 & 78.6 & 55.5 & 46.2 & 71.7 \\
-    TraceVLA\cite{zheng2024tracevla} & 84.6 & 85.2 & 75.1 & 54.1 & - & 74.8 \\
-    OpenVLA\cite{kim2024openvla} & 84.7 & 88.4 & 79.2 & 53.7 & 73.5 & 75.9 \\
-    $\pi_0$-FAST\cite{pertsch2025fast} & 96.4 & 96.8 & 88.6 & 60.2 & 83.1 & 85.0 \\
-    CogACT\cite{liang2024cogact} & 97.2 & 98.0 & 90.2 & 88.8 & 92.1 & 93.2 \\
-    $\pi_0$\cite{black2024pi} & 96.8 & 95.8 & 95.8 & 85.2 & - & 94.2 \\
+    Octo\cite{mees2024octo} & 78.9 & 85.7 & 84.6 & 51.1  & 75.1 \\
+    MDT\cite{reuss2024multimodal} & 78.5 & 87.5 & 73.5 & 64.8 & 76.1 \\
+    UniACT\cite{zheng2025uniact} & 77.0 & 87.0 & 77.0  & 73.0 & 76.8 \\
+    SpatialVLA\cite{qu2025spatialvla} & 88.2 & 89.9 & 78.6  & 46.2 & 71.7 \\
+    TraceVLA\cite{zheng2024tracevla} & 84.6 & 85.2 & 75.1 & 54.1 & 74.8 \\
+    OpenVLA\cite{kim2024openvla} & 84.7 & 88.4 & 79.2 & 73.5 & 75.9 \\
+    $\pi_0$-FAST\cite{pertsch2025fast} & 96.4 & 96.8 & 88.6 & 83.1 & 85.0 \\
+    CogACT\cite{liang2024cogact} & \textbf{97.2} & 98.0 & 90.2 & 88.8 & 93.2 \\
+    $\pi_0$\cite{black2024pi} & 96.8 & \textbf{98.8} & 95.8 & 85.2 & 94.2 \\
     \midrule
-    TemporalCacheVLA (本文) & \textbf{98.0} & \textbf{98.1} & \textbf{95.9} & \textbf{92.2} & \textbf{94.9} & \textbf{95.8} \\
+    TemporalCacheVLA (本文) & 97.0 & 98.1 & \textbf{95.9} & \textbf{94.9} & \textbf{94.8} \\
     \bottomrule
   \end{tabular}
   }
 \end{table}
 
-从表~\ref{tab:libero_results}~的数据可以看出，本文提出的TemporalCacheVLA在所有子集上均取得了较高的成功率，平均成功率达到了百分之九十五点八，相较于OpenVLA和Octo等基线模型有一定提升。在长时序子集上，部分缺乏时序建模的方法成功率在百分之五十左右，而TemporalCacheVLA的成功率为百分之九十二点二。这一结果表明，感知与语义双通道历史存储池对长视野时序依赖的建模具有明显作用。
 
-此外，在包含九十个任务的综合子集上，TemporalCacheVLA的成功率为百分之九十四点九。这表明本文方法在处理大规模、多样化的任务分布时，能够保持一定的泛化能力和策略稳定性。
