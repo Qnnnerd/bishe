@@ -33,7 +33,7 @@ TemporalCacheVLA提出了一种基于双通道时序缓存的解决方案，其�
   \mathbf{V}_t = \text{MLP}(\mathbf{F}^{\text{vis}}_t) \in \mathbb{R}^{N \times d_{\text{llm}}}
 \end{equation}
 
-在获取了视觉与语言的独立表征后，如何将异构的多模态信息进行深度融合，并提取出指导动作生成的统一表示，是特征感知模块需要解决的另一核心问题。简单的特征拼接或浅层注意力机制往往难以捕捉视觉场景与语言指令之间复杂的逻辑关联。为此，本章选用 LLaMA 3.1 8B\cite{dubey2024llama} 作为大语言模型骨干来进行多模态融合。这一选择主要得益于其因果语言模型（Causal Language Model）的架构特性。该架构不仅在纯文本推理上表现优异，其单向注意力机制使得模型能够以自回归方式处理视觉模型输出的序列化特征，从而实现视觉上下文与当前语言指令的有效融合。
+在获取了视觉与语言的独立表征后，如何将异构的多模态信息进行深度融合，并提取出指导动作生成的统一表示，是特征感知模块需要解决的另一核心问题。简单的特征拼接或浅层注意力机制往往难以捕捉视觉场景与语言指令之间复杂的逻辑关联。为此，本章选用 LLaMA 3.1 8B\cite{grattafiori2024llama} 作为大语言模型骨干来进行多模态融合。这一选择主要得益于其因果语言模型（Causal Language Model）的架构特性。该架构不仅在纯文本推理上表现优异，其单向注意力机制使得模型能够以自回归方式处理视觉模型输出的序列化特征，从而实现视觉上下文与当前语言指令的有效融合。
 
 自然语言指令 $\ell$ 首先经过分词器（Tokenizer）处理，转化为离散的文本向量序列 $\mathbf{T} = [t_1, t_2, \ldots, t_L]$，其中 $L$ 为指令长度。随后，文本向量序列通过嵌入层转化为连续的语言嵌入序列 $\mathbf{E}^{\text{lang}} \in \mathbb{R}^{L \times d_{\text{llm}}}$。接着，视觉向量序列 $\mathbf{V}_t$ 与语言嵌入序列 $\mathbf{E}^{\text{lang}}$ 在序列维度上进行拼接，形成完整的多模态输入序列 $[\mathbf{V}_t; \mathbf{E}^{\text{lang}}]$。该序列被输入至大语言模型中进行自回归前向传播。通过对注意力掩码的累积和进行定位，系统提取序列中最后一个有效向量的最后一层隐藏状态，作为高层级的语义向量 $\mathbf{h}^{\text{sem}}_t \in \mathbb{R}^{d_{\text{llm}}}$
 \begin{equation}
@@ -190,14 +190,13 @@ TemporalCacheVLA提出了一种基于双通道时序缓存的解决方案，其�
     \toprule
     方法 & Spatial & Object & Goal & Long & LIBERO-90 & 平均成功率 \\
     \midrule
-    Octo\cite{team2024octo} & 78.9 & 85.7 & 84.6 & 51.1 & - & 75.1 \\
-    MDT\cite{reuss2024mdt} & 78.5 & 87.5 & 73.5 & 64.8 & - & 76.1 \\
+    Octo\cite{mees2024octo} & 78.9 & 85.7 & 84.6 & 51.1 & - & 75.1 \\
+    MDT\cite{reuss2024multimodal} & 78.5 & 87.5 & 73.5 & 64.8 & - & 76.1 \\
     UniACT\cite{zheng2025uniact} & 77.0 & 87.0 & 77.0 & 70.0 & 73.0 & 76.8 \\
     SpatialVLA\cite{qu2025spatialvla} & 88.2 & 89.9 & 78.6 & 55.5 & 46.2 & 71.7 \\
     TraceVLA\cite{zheng2024tracevla} & 84.6 & 85.2 & 75.1 & 54.1 & - & 74.8 \\
     OpenVLA\cite{kim2024openvla} & 84.7 & 88.4 & 79.2 & 53.7 & 73.5 & 75.9 \\
-    $\pi_0$-FAST\cite{pertsch2025pi0fast} & 96.4 & 96.8 & 88.6 & 60.2 & 83.1 & 85.0 \\
-    TriVLA\cite{liu2025trivla} & 91.2 & 93.8 & 89.8 & 73.2 & - & 87.0 \\
+    $\pi_0$-FAST\cite{pertsch2025fast} & 96.4 & 96.8 & 88.6 & 60.2 & 83.1 & 85.0 \\
     CogACT\cite{liang2024cogact} & 97.2 & 98.0 & 90.2 & 88.8 & 92.1 & 93.2 \\
     $\pi_0$\cite{black2024pi} & 96.8 & 95.8 & 95.8 & 85.2 & - & 94.2 \\
     \midrule
