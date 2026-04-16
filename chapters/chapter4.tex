@@ -218,3 +218,113 @@ TemporalCacheVLA在LIBERO四个子集上的实验结果如图~\ref{fig:libero_re
 从表\ref{tab:libero_results}的实验结果可以看出，在侧重空间布局推理的Spatial子集上，CogACT以$97.2\%$的成功率居首，TemporalCacheVLA以$97.0\%$的成功率略低于最优表现，这是因为CogACT采用的认知动作分词策略在空间推理任务中具备较强的动作规划能力，而Spatial子集中的任务多为单步或短序列操作，时序上下文的作用相对有限，因此本文方法中的特征时序缓存机制的优势尚未显现。在侧重物体外观泛化的Object子集上，$\pi_0$以$98.8\%$的表现最优，本文方法取得了$98.1\%$的成功率，由于$\pi_0$基于流匹配的动作生成策略在捕捉细粒度物体特征方面具有一定优势，而本文方法则通过存储池中保留的历史感知向量，在多次抓取尝试中持续积累对目标物体的观测信息，从而也能够取得较高的任务成功率。
 
 在强调指令跟随的Goal子集与包含长时序任务的LIBERO-100子集上，本文方法分别取得了$95.9\%$和$94.9\%$的最高成功率。特别是LIBERO-100子集中，许多任务涉及多个子目标的顺序执行，要求模型在完成前一阶段后准确切换至下一阶段，这对历史上下文的保留提出了较高要求。本文通过双通道时序缓存机制，将历史的感知细节与语义摘要分别保存在存储池中，并在每次决策时检索相关的历史上下文进行融合。这种机制使模型能够清晰地感知当前所处的任务阶段，有效缓解了长视距任务中常见的状态遗忘与决策波动问题，从而在这两个复杂子集上取得了相较于其他方法更为明显的性能提升。
+\subsection{消融实验}
+\label{subsec:chap4_ablation}
+
+消融实验均在LIBERO-100子集上开展，该子集涵盖一百个多样化任务，包含长时序多阶段操作，能够充分体现各模块在复杂场景下的作用。
+
+表\ref{tab:ablation_modules}给出了不同模块构成下的消融结果。在移除缓存检索机制的变体中，决策缓存区向量、历史存储池向量与时间步嵌入直接通过多层感知机（MLP）融合，成功率降至83.2\%。移除门控融合模块后，历史向量与当前向量改为直接MLP拼接，模型无法根据任务阶段动态调整历史信息的权重，成功率为80.5\%。取消缓存压缩机制则使存储池退化为先进先出队列，早期关键状态被直接丢弃，成功率进一步降至79.3\%。完整模型达到94.9\%，与各消融变体的差距均超过10个百分点。
+
+\begin{table}[htbp]
+  \centering
+  \caption{不同模块构成对模型性能的影响}
+  \label{tab:ablation_modules}
+  \begin{tabular}{cccc}
+    \toprule
+    缓存检索 & 门控融合 & 缓存压缩 & 平均成功率 (\%) \\
+    \midrule
+    -- & \checkmark & \checkmark & 83.2 \\
+    \checkmark & -- & \checkmark & 80.5 \\
+    \checkmark & \checkmark & -- & 79.3 \\
+    \checkmark & \checkmark & \checkmark & \textbf{94.9} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+表\ref{tab:ablation_cache_type}列出了不同缓存类型配置下的成功率。仅保留感知缓存或仅保留条件缓存时，成功率分别为85.2\%和83.7\%。为便于各消融变体之间的横向比较，后续实验的可视化结果均取自同一任务场景下的执行过程。图\ref{fig:cache_type}展示了各变体的成功轨迹对比，图\ref{fig:cache_type_failure}则给出了失败案例。由图\ref{fig:cache_type}可以看出，仅含条件缓存的模型在从关闭抽屉到拿起碗的状态切换过程中花费了更多步数，原因在于缺少感知特征的历史记录，机器人难以精确定位当前阶段的操作目标。仅含感知缓存的模型局部动作较为流畅，但整体轨迹比完整模型更为曲折，反映出高层语义指导的缺失。图\ref{fig:cache_type_failure}中的失败案例进一步说明了这一差异：缺乏感知缓存的模型因缺少视觉细节校准而无法顺利拿起碗；条件缓存缺失时，模型虽能完成基础动作，却因语言意图约束不足而执行了错误的任务序列。
+
+\begin{table}[htbp]
+  \centering
+  \caption{不同缓存类型对模型性能的影响}
+  \label{tab:ablation_cache_type}
+  \begin{tabular}{ccc}
+    \toprule
+    感知缓存 & 条件缓存 & 平均成功率 (\%) \\
+    \midrule
+    \checkmark & -- & 85.2 \\
+    -- & \checkmark & 83.7 \\
+    \checkmark & \checkmark & \textbf{94.9} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figures/content/cache_type}
+  \caption{不同缓存类型在同一任务场景下的成功轨迹对比}
+  \label{fig:cache_type}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figures/content/cache_type_failure}
+  \caption{缺乏特定缓存类型导致的典型失败案例分析}
+  \label{fig:cache_type_failure}
+\end{figure}
+
+存储池容量同样影响模型性能，相关结果见表\ref{tab:ablation_cache_length}和图\ref{fig:cache_length}。存储长度为4时，成功率为89.3\%，过短的记忆窗口无法覆盖任务早期的关键状态，在长时序任务中表现较差。长度增至16时，模型达到94.9\%的最佳成功率。将长度进一步扩大至64并未带来性能提升，成功率回落至89.3\%，且显存消耗有所增加。这与实验细节中将存储长度默认设为16的选择相符。
+
+\begin{table}[htbp]
+  \centering
+  \caption{不同缓存存储长度对模型性能的影响}
+  \label{tab:ablation_cache_length}
+  \begin{tabular}{cc}
+    \toprule
+    存储长度 & 平均成功率 (\%) \\
+    \midrule
+    4 & 89.3 \\
+    16 & \textbf{94.9} \\
+    64 & 89.3 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.6\linewidth]{figures/content/cache_length}
+  \caption{不同缓存存储长度下的表现对比}
+  \label{fig:cache_length}
+\end{figure}
+
+表\ref{tab:ablation_cfg}和图\ref{fig:cfg_ablation}、图\ref{fig:cfg_failure}展示了不同CFG引导强度系数 $\omega$ 对动作生成的影响，基准配置 $\omega=1.5$ 对应94.9\%的最高成功率。语言引导权重随 $\omega$ 增大而增强，动作执行也随之趋于刻板；当 $\omega$ 偏小时，动作灵活性有所提升，但轨迹的冗余程度也会相应增加。图\ref{fig:cfg_failure}中两个极端配置的失败案例可以清晰说明这一趋势：$\omega=0.1$ 时机器人动作平滑，但语言引导不足导致任务后期拿错了目标物品；$\omega=5$ 时动作过于僵化，在面对未见场景时无法完成关闭抽屉的步骤而卡住。
+
+\begin{table}[htbp]
+  \centering
+  \caption{不同CFG引导强度系数对模型性能的影响}
+  \label{tab:ablation_cfg}
+  \begin{tabular}{cc}
+    \toprule
+    引导强度系数 $\omega$ & 平均成功率 (\%) \\
+    \midrule
+    0.1 & 91.5 \\
+    0.5 & 91.1 \\
+    1.5 & \textbf{94.9} \\
+    2.0 & 93.6 \\
+    5.0 & 92.1 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figures/content/cfg_ablation}
+  \caption{不同CFG引导强度下的成功轨迹对比}
+  \label{fig:cfg_ablation}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figures/content/cfg_failure}
+  \caption{极端CFG引导强度配置下的典型失败案例}
+  \label{fig:cfg_failure}
+\end{figure}
