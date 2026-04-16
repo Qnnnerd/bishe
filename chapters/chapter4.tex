@@ -145,7 +145,7 @@ TemporalCacheVLA提出了一种基于双通道时序缓存的解决方案，其�
   \subfloat[Spatial]{\fbox{\includegraphics[width=.19\linewidth]{figures/content/libero_spatial}}}\hfill
   \subfloat[Object]{\fbox{\includegraphics[width=.19\linewidth]{figures/content/libero_object}}}\hfill
   \subfloat[Goal]{\fbox{\includegraphics[width=.19\linewidth]{figures/content/libero_goal}}}\hfill
-  \subfloat[LIBERO-100]{\fbox{\includegraphics[width=.19\linewidth]{figures/content/libero-100}}}
+  \subfloat[LIBERO-100]{\fbox{\includegraphics[width=.19\linewidth]{figures/content/libero-90}}}
   \caption{LIBERO数据集子集典型场景示意图}
   \label{fig:libero_tasks}
 \end{figure}
@@ -177,16 +177,16 @@ TemporalCacheVLA提出了一种基于双通道时序缓存的解决方案，其�
 \subsection{对比实验结果与分析}
 \label{subsec:chap4_comparison}
 
-为了验证TemporalCacheVLA的有效性，本文将其与当前领域内的主流视觉语言动作模型进行了对比，其结果如图~\ref{fig:libero_results}~所示，各方法在LIBERO四个子集上的成功率对比结果如表~\ref{tab:libero_results}~所示。
+为了验证TemporalCacheVLA的有效性，本文将其与当前领域内的主流视觉语言动作模型进行了对比，其结果如图~\ref{fig:libero_results}~所示，各方法在LIBERO四个子集上的成功率对比结果如表~\ref{tab:libero_results}~所示，表中加粗部分表示该方法在相应子集上的最佳表现。
 
-\begin{figure}
+\begin{figure}[htb]
   \centering
-  \includegraphics[width=0.8\linewidth]{figures/content/libero_datasets}
+  \includegraphics[width=0.8\linewidth]{figures/content/libero-datasets}
   \caption{在LIBERO数据集四个子集上的成功动作样本示例图}
   \label{fig:libero_results}
 \end{figure}
 
-\begin{table}[htbp]
+\begin{table}[htb]
   \centering
   \caption{不同方法在LIBERO基准数据集上的成功率}
   \label{tab:libero_results}
