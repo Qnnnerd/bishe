@@ -244,9 +244,7 @@ TemporalCacheVLA在LIBERO四个子集上的实验结果如图~\ref{fig:libero_re
 
 从表~\ref{tab:ablation_modules}~中的数据可以看出，当取消缓存压缩机制时，成功率从完整模型的$94.9$降至$82.3$，降幅最大。这是因为先进先出队列会直接覆盖早期的状态记录，导致模型在执行多阶段任务时丢失了最初的任务上下文，从而在后续操作中发生状态混淆。移除门控融合模块使成功率降至$83.5$，证明拼接融合无法根据当前任务所处的具体阶段动态分配历史信息与当前观测的权重，导致冗余历史信息对当前精细操作产生干扰。而移除缓存检索机制导致成功率降至$86.2$，说明仅依赖~MLP~无法在历史存储池中准确定位与当前状态最相关的上下文，削弱了时序特征的利用效率。相比之下，完整模型在三项机制的协同配合下，能够有效筛选、动态融合并长效保留关键历史信息，从而取得了最佳的动作表现。
 
-双通道特征时序缓存机制的核心思想是将低层级的感知细节与高层级的语义摘要分离存储，以防止高维语义信息在融合过程中淹没低维的空间特征。为了验证这一双通道设计的必要性，本节对感知缓存与条件缓存的作用进行了消融实验。在实验中，分别构建了仅保留感知缓存通道与仅保留条件缓存通道的两种设置，不同缓存类型配置下的成功率结果如表~\ref{tab:ablation_cache_type}~所示。
-
-\begin{table}[htb]
+\begin{table}[!tb]
   \centering
   \caption{不同缓存类型对模型性能的影响}
   \label{tab:ablation_cache_type}
@@ -261,14 +259,16 @@ TemporalCacheVLA在LIBERO四个子集上的实验结果如图~\ref{fig:libero_re
   \end{tabular}
 \end{table}
 
-为了统一可视化对比效果，后续所有的消融实验轨迹可视化图均在“关上顶部的抽屉并把黑色的碗放在里面”这一任务场景下进行。图~\ref{fig:cache_type}~和图~\ref{fig:cache_type_failure}~分别展示了不同缓存类型变体在同一任务场景下的成功轨迹对比与典型失败案例。与对比实验中的轨迹图类似，图中标注的轨迹线表示机械臂末端执行器从当前轨迹起点运动到终点的路径，轨迹颜色由橙红渐变至浅蓝，后续所有的消融可视化图均采用相同的结构。
-
 \begin{figure}[htb]
   \centering
   \includegraphics[width=0.8\linewidth]{figures/content/cache_type}
   \caption{不同缓存类型的成功轨迹对比}
   \label{fig:cache_type}
 \end{figure}
+
+双通道特征时序缓存机制的核心思想是将低层级的感知细节与高层级的语义摘要分离存储，以防止高维语义信息在融合过程中淹没低维的空间特征。为了验证这一双通道设计的必要性，本节对感知缓存与条件缓存的作用进行了消融实验。在实验中，分别构建了仅保留感知缓存通道与仅保留条件缓存通道的两种设置，不同缓存类型配置下的成功率结果如表~\ref{tab:ablation_cache_type}~所示。
+
+为了统一可视化对比效果，后续所有的消融实验轨迹可视化图均在“关上顶部的抽屉并把黑色的碗放在里面”这一任务场景下进行。图~\ref{fig:cache_type}~和图~\ref{fig:cache_type_failure}~分别展示了不同缓存类型变体在同一任务场景下的成功轨迹对比与典型失败案例。与对比实验中的轨迹图类似，图中标注的轨迹线表示机械臂末端执行器从当前轨迹起点运动到终点的路径，轨迹颜色由橙红渐变至浅蓝，后续所有的消融可视化图均采用相同的结构。
 
 \begin{figure}[htb]
   \centering
@@ -288,10 +288,7 @@ TemporalCacheVLA在LIBERO四个子集上的实验结果如图~\ref{fig:libero_re
 
 图~\ref{fig:cache_type_failure}~的失败案例更直观地体现了两种缓存的作用差异，缺乏感知缓存的模型由于缺少视觉细节的校准，在接近目标时无法精确对齐，导致无法顺利拿起碗而造成任务失败；而缺乏条件缓存的模型虽然在局部动作的执行上能够做到位，但由于缺乏语言意图的全局约束，更容易执行错误的动作。这可以说明感知缓存与条件缓存的双通道设计在长时序操作可以获得更好的表现。
 
-
-除了缓存类型，历史存储池的存储长度也就是容量上限，也是影响模型时序上下文保留能力的重要超参数。过小的存储长度可能导致任务早期的关键状态被过早丢弃，而过大的存储长度则可能引入过多的冗余信息，增加特征融合的难度与显存开销。为了探究不同存储长度对动作生成性能的具体影响，本节设置了存储长度分别为4、16和64的三种模型配置。不同存储长度下的任务成功率对比见表~\ref{tab:ablation_cache_length}~，相应的动作表现对比图如图~\ref{fig:cache_length}~所示。
-
-\begin{table}[htb]
+\begin{table}[b]
   \centering
   \caption{不同缓存存储长度对模型性能的影响}
   \label{tab:ablation_cache_length}
@@ -306,7 +303,14 @@ TemporalCacheVLA在LIBERO四个子集上的实验结果如图~\ref{fig:libero_re
   \end{tabular}
 \end{table}
 
+除了缓存类型，历史存储池的存储长度也就是容量上限，也是影响模型上下文保留能力的重要超参数。过小的存储长度可能导致任务早期的状态被丢弃，而过大的存储长度则可能引入冗余信息，增加特征融合难度与显存开销。为了探究不同存储长度对模型性能的影响，本节设置了存储长度分别为4、16和64的三种模型配置。不同存储长度下的任务成功率对比见表~\ref{tab:ablation_cache_length}~，相应的动作表现对比图如图~\ref{fig:cache_length}~所示。
 
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figures/content/cfg_ablation}
+  \caption{不同CFG引导强度下的成功轨迹对比}
+  \label{fig:cfg_ablation}
+\end{figure}
 
 从表~\ref{tab:ablation_cache_length}~的数据可以看出，存储长度对模型成功率的总体影响相对平缓，不同配置下的表现均较为相近，但过长或过短都会导致性能有所下降。当存储长度设定为4时，成功率为$89.3$，这与本文提出的相似度合并缓存压缩策略有关，该策略使存储池中保留的均为能够明确记录状态变化的关键信息，因此即使在较短的存储长度下，模型依然能够保持较好的表现。当存储长度增加至16时，模型能够充分覆盖任务执行过程中的有效上下文，达到了$94.9$的最佳性能。然而，将存储长度进一步扩大至64时，模型的表现并未随之提升，成功率回落至$92.3$。这是因为过长的存储序列引入了过多的历史帧，增加了交叉注意力检索模块区分关键信息的难度，同时也会带来额外的显存消耗。这说明适中的存储长度在保留有效历史上下文与避免信息冗余之间取得了较好的平衡。
 
@@ -329,14 +333,8 @@ TemporalCacheVLA在LIBERO四个子集上的实验结果如图~\ref{fig:libero_re
   \end{tabular}
 \end{table}
 
-图~\ref{fig:cfg_ablation}~和图~\ref{fig:cfg_failure}~分别展示了不同引导强度配置下的成功轨迹对比与极端配置下的典型失败案例。
 
-\begin{figure}[!htb]
-  \centering
-  \includegraphics[width=0.8\linewidth]{figures/content/cfg_ablation}
-  \caption{不同CFG引导强度下的成功轨迹对比}
-  \label{fig:cfg_ablation}
-\end{figure}
+图~\ref{fig:cfg_ablation}~和图~\ref{fig:cfg_failure}~分别展示了不同引导强度配置下的成功轨迹对比与极端配置下的典型失败案例。
 
 \begin{figure}[!htb]
   \centering
