@@ -123,9 +123,29 @@ GELLO遥操平台的主要硬件构成如图~\ref{fig:hardware_components}~所�
   \end{tabular}
 \end{table}
 
-在完成原始数据的采集后，系统需要将其转换为模型训练所需的标准格式。本研究遵循机器人学习数据系统（RLDS，Robotics Learning Data System）的数据规范，开发了定制化的数据集构建脚本。在数据处理过程中，脚本首先读取每帧记录的真实关节位置，利用UR5e的正运动学模型与DH参数，计算出包含工具中心点偏移的末端执行器位姿。随后，通过计算相邻两帧末端位姿的三维平移差值与旋转向量差值，结合夹爪的开合状态，构建出7维的动作标签向量。这种基于正运动学重建与差分计算的方法，减少了直接使用原始控制指令可能引入的执行器偏差。
+在完成原始数据的采集后，系统需要将其转换为模型训练所需的标准格式。本研究遵循机器人学习数据系统（RLDS，Robotics Learning Data System）的数据规范，开发了定制化的数据集构建脚本。脚本读取每帧记录的真实关节角度 $\theta_t \in \mathbb{R}^6$，利用式~\ref{eq:forward_kinematics}~的UR5e正运动学模型与DH参数，计算出末端法兰的齐次变换矩阵 $T_6^0$。由于夹爪安装在法兰末端，系统沿末端坐标系Z轴引入17 cm的工具中心点偏移。经过该偏移计算，最终得到包含夹爪末端位置 $p_t$ 与姿态旋转矩阵 $R_t$ 的完整位姿矩阵 $T_{\text{tcp}}$。
 
-图~\ref{fig:action_distribution_placeholder}~展示了自建数据集与LIBERO数据集的动作分布对比。从图中分析可知，在真实机器人的遥操作采集中，为了保证设备与环境的安全性，操作者通常会采取更为保守的控制策略。这导致真实数据集中的每组动作序列包含更多的执行步数，且单步动作的位姿变化量小于仿真环境中的动作幅度。这也是本章在真实场景下进行专项微调的动因之一。
+通过计算相邻两帧末端位姿的差值，系统构建出动作标签。平移差值 $\Delta p$ 直接由相邻两帧的位置向量相减得到：
+
+\begin{equation}
+  \Delta p = p_{t+1} - p_t
+\end{equation}
+
+旋转差值 $\Delta R$ 通过相邻两帧的旋转矩阵计算相对旋转，并利用对数映射 $\text{Log}(\cdot)$ 转换为三维旋转向量 $\Delta r$：
+
+\begin{equation}
+  \Delta R = R_{t+1} R_t^{-1}, \quad \Delta r = \text{Log}(\Delta R)
+\end{equation}
+
+结合夹爪的开合状态指令 $g_{t+1}$，最终构建出7维的动作标签向量 $a_t$：
+
+\begin{equation}
+  a_t = [\Delta p_x, \Delta p_y, \Delta p_z, \Delta r_x, \Delta r_y, \Delta r_z, g_{t+1}]^T
+\end{equation}
+
+这种基于正运动学重建与差分计算的方法，减少了直接使用原始控制指令可能引入的执行器偏差。
+
+图~\ref{fig:action_distribution_placeholder}~展示了自建数据集与LIBERO数据集的动作分布对比。在真实机器人的遥操作采集中，为了保证设备与环境的安全性，操作者通常会采取更为保守的控制策略。真实数据集中的每组动作序列因此包含更多的执行步数，单步动作的位姿变化量也小于仿真环境中的动作幅度。这也是本章在真实场景下进行专项微调的动因之一。
 
 \begin{figure}[htbp]
   \centering
