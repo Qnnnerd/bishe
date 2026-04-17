@@ -63,3 +63,74 @@ GELLO遥操平台的主要硬件构成如图~\ref{fig:hardware_components}~所�
   p_{\text{gripper}} = (1 - v_{\text{norm}}) \times 1000
 \end{equation}
 其中，$v_{\text{norm}}$为遥操臂夹爪舵机的归一化关节角，$p_{\text{gripper}}$为目标夹爪的位置指令。为了抑制操作者手部微小抖动对夹爪控制的干扰，系统在桥接节点中引入了滑动窗口滤波机制。该节点维护一个0.1 s的时间窗口，取窗口内指令的中位数作为当前时刻的有效输出，并设定了最小变化阈值。只有当新指令与上一有效指令的差值超过该阈值时，系统才会向夹爪发送更新命令，从而避免因手部微小抖动引发的夹爪频繁动作。
+
+\subsection{数据采集与处理}
+\label{subsec:data_collection_processing}
+
+本平台参照LIBERO数据集的场景设置，搭建了如图~\ref{fig:real_robot_pic}~所示的机器人桌面操作场景。该场景主要划分为两个功能区域：左侧为抓取工作区，放置了多种供机器人操作的物体；右侧为抽屉操作区，放置了一个多层透明抽屉柜。在感知配置上，系统遵循LIBERO的单视角设定，在场景前方部署了一个固定视角的RGB相机，用于全局捕获机器人本体与操作区域的视觉信息。
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figures/content/real_robot_pic.pdf}
+  \caption{真实机器人桌面操作场景搭建}
+  \label{fig:real_robot_pic}
+\end{figure}
+
+如图~\ref{fig:data_collection}~所示，操作者通过观察RGB相机实时回传的图像画面，转动GELLO遥操臂来控制UR5e机械臂执行相应的操作任务。在遥操作过程中，PC控制中枢运行采集主控脚本，以30 Hz的频率同步记录相机的RGB图像帧以及机械臂当前的关节位置与夹爪状态。这种在线遥操作与同步记录的机制，确保了视觉观测与本体状态的时间同步，为后续的模仿学习提供多模态观测-动作数据对。
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.6\linewidth]{figures/content/data_collection.pdf}
+  \caption{基于GELLO的遥操作数据采集流程}
+  \label{fig:data_collection}
+\end{figure}
+
+基于上述场景，本节按操作复杂度设计了三类任务：简单抓取任务、抽屉操作任务以及长时效复合任务。在任务对象上，系统共引入了10种不同外观的水果模型以及2种不同高度的抽屉作为操作目标。图~\ref{fig:task_trajectories_placeholder}~给出了各类型任务的采集轨迹样例。
+
+\begin{figure}[htbp]
+  \centering
+  % 占位图：采集的不同类型任务的轨迹样例
+  \includegraphics[width=0.9\linewidth]{example-image-a}
+  \caption{不同类型任务的采集轨迹样例}
+  \label{fig:task_trajectories_placeholder}
+\end{figure}
+
+在采集过程中发现，由于本研究采用扩散模型作为动作生成模型，单纯依赖多样化的专家运动轨迹并不足以满足其对动作分布的学习要求。当模型在推理过程中因累积误差偏离专家轨迹时，往往难以自主调整并恢复到正确的执行路径中。为了解决这一问题，本节在常规专家轨迹之外，专门采集了200条纠错轨迹。在采集纠错轨迹时，操作者故意引导机械臂向各个错误方向运动，随后再将其纠正回正确的操作路径，从而丰富了动作分布，提升了模型对偏离轨迹的恢复能力。图~\ref{fig:correction_trajectories_placeholder}~展示了纠错轨迹的典型样例。
+
+\begin{figure}[htbp]
+  \centering
+  % 占位图：纠错轨迹的样例
+  \includegraphics[width=0.6\linewidth]{example-image-b}
+  \caption{纠错轨迹样例}
+  \label{fig:correction_trajectories_placeholder}
+\end{figure}
+
+各类任务的采集数量汇总于表~\ref{tab:dataset_statistics}~。
+
+\begin{table}[htbp]
+  \centering
+  \caption{真实场景数据采集任务与轨迹数量统计}
+  \label{tab:dataset_statistics}
+  \begin{tabular}{llc}
+    \toprule
+    \textbf{任务类型} & \textbf{任务描述} & \textbf{轨迹数量} \\
+    \midrule
+    简单抓取 & 拿起[水果] & 150 \\
+    抽屉操作 & 打开第[几]个抽屉 & 150 \\
+    长时效任务 & 打开第[几]个抽屉并把[水果]放在里面 & 200 \\
+    纠错轨迹 & —— & 200 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+在完成原始数据的采集后，系统需要将其转换为模型训练所需的标准格式。本研究遵循机器人学习数据系统（RLDS，Robotics Learning Data System）的数据规范，开发了定制化的数据集构建脚本。在数据处理过程中，脚本首先读取每帧记录的真实关节位置，利用UR5e的正运动学模型与DH参数，计算出包含工具中心点偏移的末端执行器位姿。随后，通过计算相邻两帧末端位姿的三维平移差值与旋转向量差值，结合夹爪的开合状态，构建出7维的动作标签向量。这种基于正运动学重建与差分计算的方法，减少了直接使用原始控制指令可能引入的执行器偏差。
+
+图~\ref{fig:action_distribution_placeholder}~展示了自建数据集与LIBERO数据集的动作分布对比。从图中分析可知，在真实机器人的遥操作采集中，为了保证设备与环境的安全性，操作者通常会采取更为保守的控制策略。这导致真实数据集中的每组动作序列包含更多的执行步数，且单步动作的位姿变化量小于仿真环境中的动作幅度。这也是本章在真实场景下进行专项微调的动因之一。
+
+\begin{figure}[htbp]
+  \centering
+  % 占位图：自建数据集的动作分布和libero动作分布对比图
+  \includegraphics[width=0.8\linewidth]{example-image-c}
+  \caption{自建数据集与LIBERO数据集动作分布对比}
+  \label{fig:action_distribution_placeholder}
+\end{figure}
