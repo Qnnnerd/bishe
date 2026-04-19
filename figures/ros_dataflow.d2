@@ -1,0 +1,62 @@
+direction: right
+
+vars: {
+  d2-config: {
+    layout-engine: elk
+  }
+}
+
+camera: "RGB相机\n(USB Camera)" {
+  shape: rectangle
+  style.fill: "#E8F4FD"
+}
+
+control_node: "控制节点\n(action_control.py)" {
+  shape: rectangle
+  style.fill: "#FFF3CD"
+  style.stroke: "#856404"
+  style.stroke-width: 2
+}
+
+flask_server: "远端推理服务\n(Flask Server)" {
+  shape: rectangle
+  style.fill: "#D4EDDA"
+  style.stroke: "#155724"
+}
+
+ur5e: "UR5e控制器\n(UR Driver)" {
+  shape: rectangle
+  style.fill: "#F8D7DA"
+  style.stroke: "#721c24"
+}
+
+gripper: "DH-AG95夹爪\n(Gripper)" {
+  shape: rectangle
+  style.fill: "#F8D7DA"
+  style.stroke: "#721c24"
+}
+
+joint_states: "/joint_states\n(关节状态话题)" {
+  shape: oval
+  style.fill: "#E2E3E5"
+}
+
+follow_traj: "/follow_joint_trajectory\n(轨迹Action接口)" {
+  shape: oval
+  style.fill: "#E2E3E5"
+}
+
+gripper_ctrl: "/gripper/ctrl\n(夹爪话题)" {
+  shape: oval
+  style.fill: "#E2E3E5"
+}
+
+camera -> control_node: "① 采集RGB图像\ncv2.VideoCapture"
+control_node -> flask_server: "② HTTP POST请求\n图像+语言指令+session_id"
+flask_server -> control_node: "③ 返回动作分块\n15步×7维动作序列"
+ur5e -> joint_states: "④ 发布当前关节角"
+joint_states -> control_node: "⑤ 订阅关节状态\n正运动学→当前末端位姿"
+control_node -> follow_traj: "⑥ 发送关节轨迹\n安全校验后的目标关节角"
+follow_traj -> ur5e: "⑦ 执行轨迹\nUR Driver驱动电机"
+control_node -> gripper_ctrl: "⑧ 发布夹爪指令\n开合状态同步"
+gripper_ctrl -> gripper: "⑨ 执行夹爪控制"
