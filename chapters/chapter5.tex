@@ -4,7 +4,7 @@
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.9\linewidth]{figures/content/real_robot_system}
+    \includegraphics[width=0.85\linewidth]{figures/content/real_robot_system}
     \caption{基于GELLO遥操作装置的机器人系统集成框架示意图}
     \label{fig:real_system_integration}
 \end{figure}
@@ -21,18 +21,18 @@
 
 \begin{figure}[htbp]
   \centering
-  \subfloat[UR5e机械臂]{\includegraphics[width=.30\textwidth]{figures/content/UR5e.jpg}}
+  \subfloat[UR5e机械臂]{\includegraphics[width=.2\textwidth]{figures/content/UR5e.jpg}}
   \quad
-  \subfloat[RGB相机]{\includegraphics[width=.30\textwidth]{figures/content/camera_pic.png}}
+  \subfloat[RGB相机]{\includegraphics[width=.2\textwidth]{figures/content/camera_pic.png}}
   \\
-  \subfloat[DH-AG95夹爪]{\includegraphics[width=.30\textwidth]{figures/content/dh-ag95.png}}
+  \subfloat[DH-AG95夹爪]{\includegraphics[width=.2\textwidth]{figures/content/dh-ag95.png}}
   \quad
-  \subfloat[Dynamixel舵机]{\includegraphics[width=.30\textwidth]{figures/content/dynamixel.png}}
+  \subfloat[Dynamixel舵机]{\includegraphics[width=.2\textwidth]{figures/content/dynamixel.png}}
   \caption{GELLO遥操平台主要硬件构成}
   \label{fig:hardware_components}
 \end{figure}
 
-GELLO遥操平台的主要硬件构成如图~\ref{fig:hardware_components}~所示。目标执行端采用UR5e六自由度协作机械臂，该机械臂具备5 kg的有效载荷与850 mm的最大工作半径，能够满足桌面级复杂操作任务的需求。末端执行器配备了大寰DH-AG95自适应平行夹爪，其最大开口宽度达到95 mm，并提供可调夹持力，满足多种物体的抓取需求。在感知端，系统部署了一个固定视角的RGB相机，用于捕获工作空间的图像信息。在控制端，GELLO遥操臂作为UR5e的缩比复制品，通过七个Dynamixel舵机实现对目标机械臂及末端夹爪的全状态控制。
+GELLO遥操平台的主要硬件构成如图~\ref{fig:hardware_components}~所示。目标执行端采用UR5e六自由度协作机械臂，该机械臂具备5 kg的有效载荷与850 mm的最大工作半径，能够满足桌面级复杂操作任务的需求。末端执行器配备了大寰DH-AG95自适应平行夹爪，其最大开口宽度达到95 mm，满足多种物体的抓取需求。在感知端，系统部署了一个固定视角的RGB相机，用于捕获工作空间的图像信息。在控制端，GELLO遥操臂作为UR5e的缩比复制品，通过七个Dynamixel舵机实现对目标机械臂及末端夹爪的全状态控制。
 
 \begin{figure}[htbp]
   \centering
