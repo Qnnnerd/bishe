@@ -145,12 +145,17 @@ GELLO遥操平台的主要硬件构成如图~\ref{fig:hardware_components}~所�
 
 这种基于正运动学重建与差分计算的方法，减少了直接使用原始控制指令可能引入的执行器偏差。
 
-图~\ref{fig:action_distribution_placeholder}~展示了自建数据集与LIBERO数据集的动作分布对比。在真实机器人的遥操作采集中，为了保证设备与环境的安全性，操作者通常会采取更为保守的控制策略。真实数据集中的每组动作序列因此包含更多的执行步数，单步动作的位姿变化量也小于仿真环境中的动作幅度。这也是本章在真实场景下进行专项微调的动因之一。
+图~\ref{fig:action_distribution_compare}~展示了自建数据集与LIBERO仿真数据集的动作分布对比。如图~\ref{fig:action_distribution_compare}(a)所示，自建抓取任务数据集的平移范数集中在零值附近，而仿真数据集的平移范数分布更为宽散，真实数据集中的单步动作位姿变化量远小于仿真环境中的动作幅度，每组动作序列因此包含更多的执行步数。
+
+此外，不同任务类型的动作分布也存在明显差异。如图~\ref{fig:action_distribution_compare}(b)所示，在抽屉操作任务中，由于需要沿特定方向拉动抽屉，其绕 $x$ 轴的旋转分量（rx）分布出现了明显的负向偏移，而仿真数据集的该分量则集中在零值。如图~\ref{fig:action_distribution_compare}(c)所示，在七维动作的整体分布上，抓取任务数据集的夹爪控制分量（g）集中在中间状态，反映了真实夹爪在抓取过程中的连续闭合特性，而仿真数据集的夹爪动作则呈现出明显的二值化双峰分布。这些分布差异说明，直接将预训练模型用于真实场景时需要针对性的微调。
 
 \begin{figure}[htbp]
   \centering
-  % 占位图：自建数据集的动作分布和libero动作分布对比图
-  \includegraphics[width=0.8\linewidth]{example-image-c}
+  \subfloat[抓取任务平移范数分布对比]{\includegraphics[width=0.48\linewidth]{figures/content/action_dist_pickup_trans_norm.png}}
+  \hfill
+  \subfloat[抽屉任务X轴旋转分量分布对比]{\includegraphics[width=0.48\linewidth]{figures/content/action_dist_drawer_rx.png}}
+  
+  \subfloat[抓取任务七维动作总览分布对比]{\includegraphics[width=0.98\linewidth]{figures/content/action_dist_pickup_overview.png}}
   \caption{自建数据集与LIBERO数据集动作分布对比}
-  \label{fig:action_distribution_placeholder}
+  \label{fig:action_distribution_compare}
 \end{figure}
