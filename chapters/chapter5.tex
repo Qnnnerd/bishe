@@ -111,9 +111,9 @@ GELLO遥操平台的主要硬件构成如图~\ref{fig:hardware_components}~所�
   \centering
   \caption{真实场景数据采集任务与轨迹数量统计}
   \label{tab:dataset_statistics}
-  \begin{tabular}{lp{0.6\textwidth}c}
+  \begin{tabular}{lp{0.5\textwidth}cc}
     \toprule
-    \textbf{任务类型} & \textbf{任务描述} &  \textbf{最大步数} & \textbf{轨迹数量} \\
+    \textbf{任务类型} & \textbf{任务描述} & \textbf{最大步数} & \textbf{轨迹数量} \\
     \midrule
     简单抓取 & 拿起[水果] & 150 & 150 \\
     抽屉操作 & 打开第[几]个抽屉 & 300 & 150 \\
@@ -143,29 +143,20 @@ GELLO遥操平台的主要硬件构成如图~\ref{fig:hardware_components}~所�
   a_t = [\Delta p_x, \Delta p_y, \Delta p_z, \Delta r_x, \Delta r_y, \Delta r_z, g_{t+1}]^T
 \end{equation}
 
-这种基于正运动学重建与差分计算的方法，减少了直接使用原始控制指令可能引入的执行器偏差。
+在模仿学习中，动作空间的表征方式对模型的学习效果与泛化能力具有重要影响。如果直接以关节角作为学习目标，模型无需经过逆运动学求解，能够直接输出底层控制指令。然而，关节角表征对机器人的初始状态存在强依赖，在不同起始位姿下执行相同语义的任务时，关节角的输出差异往往较大，导致模型难以泛化至未见过的初始状态。相比之下，以末端执行器位姿作为学习目标，能够使模型学到的动作表征更贴近任务层面的语义逻辑，提升跨场景的泛化能力。尽管这种方式在实际控制时需要依赖逆运动学求解，且扩散模型在推理时可能偶尔生成幅度较大的动作指令，但可以通过在逆运动学求解阶段引入安全保护机制来规避风险。因此，本研究采用末端位姿差分作为动作表征。
 
-本节从平移幅值、夹爪指令分布和动作维度耦合三个角度，对自建数据集与LIBERO仿真数据集的动作分布进行对比分析。
-
-图~\ref{fig:action_dist_pickup_trans_norm}~展示了抓取任务在真实场景与仿真环境下的平移幅值分布对比。其中平移幅值定义为单步末端位姿平移分量的二范数，单位为米。自建数据集的平移幅值集中在0至0.005米区间，而仿真数据集的分布较为分散，延伸至0.8米。真实机器人在遥操作采集中出于安全保护考量，操作者以小步幅进行运动控制，因此真实轨迹包含更多的执行步数，单步位移量在毫米量级。
+不同任务对动作的要求不同，导致其平移和旋转的分布存在差异。图~\ref{fig:action_dist_task_norm}~展示了抓取任务与抽屉操作任务在平移幅值和旋转幅值上的分布对比，其中平移幅值定义为单步末端位姿平移分量的二范数，旋转幅值定义为旋转向量的二范数。抽屉操作任务的平移幅值分布尾部更长，这与其需要持续拉动抽屉的运动特性有关；而抓取任务的旋转幅值更集中在0附近，因为在接近目标物体的过程中末端姿态通常保持相对固定。
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.7\linewidth]{figures/content/action_dist_pickup_trans_norm.png}
-  \caption{抓取任务真实场景与仿真环境平移幅值分布对比}
-  \label{fig:action_dist_pickup_trans_norm}
+  \subfloat[平移幅值分布对比]{\includegraphics[width=0.48\linewidth]{figures/content/action_dist_task_trans_norm.png}\label{fig:action_dist_task_trans_norm}}
+  \hfill
+  \subfloat[旋转幅值分布对比]{\includegraphics[width=0.48\linewidth]{figures/content/action_dist_task_rot_norm.png}\label{fig:action_dist_task_rot_norm}}
+  \caption{抓取任务与抽屉操作任务动作幅值分布对比}
+  \label{fig:action_dist_task_norm}
 \end{figure}
 
-图~\ref{fig:action_dist_pickup_gripper}~展示了夹爪指令的分布情况，夹爪指令归一化至0至1区间，0代表全开，1代表全闭。仿真数据集的夹爪动作呈二值化双峰分布，集中在全开与全闭两个状态。自建数据集的夹爪指令集中在微开状态，仅在最终抓取阶段达到全闭。仿真环境通常将夹爪简化为离散的开关控制，而真实夹爪采用连续的位置控制。将基于二值化夹爪数据训练的模型用于真实场景，夹爪控制会因动作分布不匹配而失效。
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.7\linewidth]{figures/content/action_dist_pickup_gripper.png}
-  \caption{抓取任务真实场景与仿真环境夹爪指令分布对比}
-  \label{fig:action_dist_pickup_gripper}
-\end{figure}
-
-除了真实与仿真的差异，不同任务类型在动作维度的耦合关系上也表现出不同特征。图~\ref{fig:action_dist_corr}~展示了抓取任务与抽屉操作任务的动作维度相关系数热图。在抓取任务中，三个旋转分量之间呈现高度共线关系，且平移与旋转分量之间的相关系数接近0，说明该任务的旋转自由度退化，平移与旋转相对解耦。而在抽屉操作任务中，沿 $x$ 轴的平移与绕 $y$ 轴的旋转存在中等程度的负相关，反映了操作者在拉动抽屉时手臂前伸与腕部俯仰的协调配合。针对某一任务训练的策略在迁移至其他任务时，动作维度的耦合结构会发生根本性变化。这些分布特征的差异，是后续开展真实场景专项微调的直接动因。
+除动作幅值外，各动作维度的相关性同样存在差异。图~\ref{fig:action_dist_corr}~展示了抓取任务与抽屉操作任务的动作维度相关系数热图。在抓取任务中，三个旋转分量之间呈现高度共线关系，且平移与旋转分量之间的相关系数接近0，说明该任务的平移与旋转相对解耦。而在抽屉操作任务中，沿 $x$ 轴的平移与绕 $y$ 轴的旋转存在中等程度的负相关，反映了操作者在拉动抽屉时手臂前伸与腕部俯仰的协调配合。两类任务在动作维度耦合结构上的差异，决定了各自策略的学习难点不同。
 
 \begin{figure}[htbp]
   \centering
@@ -174,4 +165,15 @@ GELLO遥操平台的主要硬件构成如图~\ref{fig:hardware_components}~所�
   \subfloat[抽屉操作任务动作维度相关性]{\includegraphics[width=0.48\linewidth]{figures/content/action_dist_corr_drawer.png}}
   \caption{不同任务类型动作维度相关性对比}
   \label{fig:action_dist_corr}
+\end{figure}
+
+真实场景采集的数据与仿真环境数据在动作分布上同样存在差异。图~\ref{fig:action_dist_long_vs_libero}~展示了自建长时效任务数据集与LIBERO仿真数据集在平移和旋转幅值上的分布对比。在采集真实数据时，考虑到对机器人的安全保护，操作者控制的动作幅度都比较小。因此，无论是平移还是旋转，真实数据的分布在0附近都更为密集。而LIBERO仿真环境不需要这一层安全考量，仿真模型可以按照任务要求执行较大幅度的动作，分布在更宽的幅值范围内。
+
+\begin{figure}[htbp]
+  \centering
+  \subfloat[平移幅值分布对比]{\includegraphics[width=0.48\linewidth]{figures/content/action_dist_long_vs_libero_trans.png}\label{fig:action_dist_long_vs_libero_trans}}
+  \hfill
+  \subfloat[旋转幅值分布对比]{\includegraphics[width=0.48\linewidth]{figures/content/action_dist_long_vs_libero_rot.png}\label{fig:action_dist_long_vs_libero_rot}}
+  \caption{长时效任务真实场景与仿真环境动作幅值分布对比}
+  \label{fig:action_dist_long_vs_libero}
 \end{figure}
