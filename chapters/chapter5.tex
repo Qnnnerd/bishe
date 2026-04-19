@@ -21,13 +21,13 @@
 
 \begin{figure}[htbp]
   \centering
-  \subfloat[UR5e机械臂]{\includegraphics[width=.45\textwidth]{figures/content/UR5e.jpg}}
+  \subfloat[UR5e机械臂]{\includegraphics[width=.30\textwidth]{figures/content/UR5e.jpg}}
   \quad
-  \subfloat[RGB相机]{\includegraphics[width=.45\textwidth]{figures/content/camera_pic.png}}
+  \subfloat[RGB相机]{\includegraphics[width=.30\textwidth]{figures/content/camera_pic.png}}
   \\
-  \subfloat[DH-AG95夹爪]{\includegraphics[width=.45\textwidth]{figures/content/dh-ag95.png}}
+  \subfloat[DH-AG95夹爪]{\includegraphics[width=.30\textwidth]{figures/content/dh-ag95.png}}
   \quad
-  \subfloat[Dynamixel舵机]{\includegraphics[width=.45\textwidth]{figures/content/dynamixel.png}}
+  \subfloat[Dynamixel舵机]{\includegraphics[width=.30\textwidth]{figures/content/dynamixel.png}}
   \caption{GELLO遥操平台主要硬件构成}
   \label{fig:hardware_components}
 \end{figure}
@@ -37,7 +37,7 @@ GELLO遥操平台的主要硬件构成如图~\ref{fig:hardware_components}~所�
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.8\linewidth]{figures/content/gello_pic.pdf}
-  \caption{GELLO遥操臂与目标机械臂的关节对应关系及通信拓扑}
+  \caption{GELLO遥操臂实物图}
   \label{fig:gello_pic}
 \end{figure}
 
@@ -72,7 +72,7 @@ GELLO遥操平台的主要硬件构成如图~\ref{fig:hardware_components}~所�
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.8\linewidth]{figures/content/real_robot_pic.pdf}
-  \caption{真实机器人桌面操作场景搭建}
+  \caption{真实机器人桌面操作场景}
   \label{fig:real_robot_pic}
 \end{figure}
 
@@ -111,14 +111,14 @@ GELLO遥操平台的主要硬件构成如图~\ref{fig:hardware_components}~所�
   \centering
   \caption{真实场景数据采集任务与轨迹数量统计}
   \label{tab:dataset_statistics}
-  \begin{tabular}{llc}
+  \begin{tabular}{lp{0.6\textwidth}c}
     \toprule
-    \textbf{任务类型} & \textbf{任务描述} & \textbf{轨迹数量} \\
+    \textbf{任务类型} & \textbf{任务描述} &  \textbf{最大步数} & \textbf{轨迹数量} \\
     \midrule
-    简单抓取 & 拿起[水果] & 150 \\
-    抽屉操作 & 打开第[几]个抽屉 & 150 \\
-    长时效任务 & 打开第[几]个抽屉并把[水果]放在里面 & 200 \\
-    纠错轨迹 & —— & 200 \\
+    简单抓取 & 拿起[水果] & 150 & 150 \\
+    抽屉操作 & 打开第[几]个抽屉 & 300 & 150 \\
+    长时效任务 & 打开第[几]个抽屉并把[水果]放在里面 & 500 & 200 \\
+    纠错轨迹 & -- & 600 & 200 \\
     \bottomrule
   \end{tabular}
 \end{table}
