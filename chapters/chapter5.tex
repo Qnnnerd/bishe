@@ -145,17 +145,33 @@ GELLO遥操平台的主要硬件构成如图~\ref{fig:hardware_components}~所�
 
 这种基于正运动学重建与差分计算的方法，减少了直接使用原始控制指令可能引入的执行器偏差。
 
-图~\ref{fig:action_distribution_compare}~展示了自建数据集与LIBERO仿真数据集的动作分布对比。如图~\ref{fig:action_distribution_compare}(a)所示，自建抓取任务数据集的平移范数集中在零值附近，而仿真数据集的平移范数分布更为宽散，真实数据集中的单步动作位姿变化量远小于仿真环境中的动作幅度，每组动作序列因此包含更多的执行步数。
+本节从平移幅值、夹爪指令分布和动作维度耦合三个角度，对自建数据集与LIBERO仿真数据集的动作分布进行对比分析。
 
-此外，不同任务类型的动作分布也存在明显差异。如图~\ref{fig:action_distribution_compare}(b)所示，在抽屉操作任务中，由于需要沿特定方向拉动抽屉，其绕 $x$ 轴的旋转分量（rx）分布出现了明显的负向偏移，而仿真数据集的该分量则集中在零值。如图~\ref{fig:action_distribution_compare}(c)所示，在七维动作的整体分布上，抓取任务数据集的夹爪控制分量（g）集中在中间状态，反映了真实夹爪在抓取过程中的连续闭合特性，而仿真数据集的夹爪动作则呈现出明显的二值化双峰分布。这些分布差异说明，直接将预训练模型用于真实场景时需要针对性的微调。
+图~\ref{fig:action_dist_pickup_trans_norm}~展示了抓取任务在真实场景与仿真环境下的平移幅值分布对比。其中平移幅值定义为单步末端位姿平移分量的二范数，单位为米。自建数据集的平移幅值集中在0至0.005米区间，而仿真数据集的分布较为分散，延伸至0.8米。真实机器人在遥操作采集中出于安全保护考量，操作者以小步幅进行运动控制，因此真实轨迹包含更多的执行步数，单步位移量在毫米量级。
 
 \begin{figure}[htbp]
   \centering
-  \subfloat[抓取任务平移范数分布对比]{\includegraphics[width=0.48\linewidth]{figures/content/action_dist_pickup_trans_norm.png}}
+  \includegraphics[width=0.7\linewidth]{figures/content/action_dist_pickup_trans_norm.png}
+  \caption{抓取任务真实场景与仿真环境平移幅值分布对比}
+  \label{fig:action_dist_pickup_trans_norm}
+\end{figure}
+
+图~\ref{fig:action_dist_pickup_gripper}~展示了夹爪指令的分布情况，夹爪指令归一化至0至1区间，0代表全开，1代表全闭。仿真数据集的夹爪动作呈二值化双峰分布，集中在全开与全闭两个状态。自建数据集的夹爪指令集中在微开状态，仅在最终抓取阶段达到全闭。仿真环境通常将夹爪简化为离散的开关控制，而真实夹爪采用连续的位置控制。将基于二值化夹爪数据训练的模型用于真实场景，夹爪控制会因动作分布不匹配而失效。
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.7\linewidth]{figures/content/action_dist_pickup_gripper.png}
+  \caption{抓取任务真实场景与仿真环境夹爪指令分布对比}
+  \label{fig:action_dist_pickup_gripper}
+\end{figure}
+
+除了真实与仿真的差异，不同任务类型在动作维度的耦合关系上也表现出不同特征。图~\ref{fig:action_dist_corr}~展示了抓取任务与抽屉操作任务的动作维度相关系数热图。在抓取任务中，三个旋转分量之间呈现高度共线关系，且平移与旋转分量之间的相关系数接近0，说明该任务的旋转自由度退化，平移与旋转相对解耦。而在抽屉操作任务中，沿 $x$ 轴的平移与绕 $y$ 轴的旋转存在中等程度的负相关，反映了操作者在拉动抽屉时手臂前伸与腕部俯仰的协调配合。针对某一任务训练的策略在迁移至其他任务时，动作维度的耦合结构会发生根本性变化。这些分布特征的差异，是后续开展真实场景专项微调的直接动因。
+
+\begin{figure}[htbp]
+  \centering
+  \subfloat[抓取任务动作维度相关性]{\includegraphics[width=0.48\linewidth]{figures/content/action_dist_corr_pickup.png}}
   \hfill
-  \subfloat[抽屉任务X轴旋转分量分布对比]{\includegraphics[width=0.48\linewidth]{figures/content/action_dist_drawer_rx.png}}
-  
-  \subfloat[抓取任务七维动作总览分布对比]{\includegraphics[width=0.98\linewidth]{figures/content/action_dist_pickup_overview.png}}
-  \caption{自建数据集与LIBERO数据集动作分布对比}
-  \label{fig:action_distribution_compare}
+  \subfloat[抽屉操作任务动作维度相关性]{\includegraphics[width=0.48\linewidth]{figures/content/action_dist_corr_drawer.png}}
+  \caption{不同任务类型动作维度相关性对比}
+  \label{fig:action_dist_corr}
 \end{figure}
