@@ -2,9 +2,9 @@
 \label{chp:robot_system_integration}
 算法在仿真环境中的有效性并不能直接保证其在真实场景下的可用性，感知噪声、通信延迟与机械误差等因素均会对模型的实际表现产生影响。将模仿学习算法部署至真实机械臂平台，需要解决数据采集、模型推理与底层控制之间的系统集成问题。本章搭建总体框架如图~\ref{fig:real_system_integration}~所示，基于GELLO~\cite{wu2024gello}遥操作装置的真实场景数据采集平台，设计模型推理服务的远端部署方案与基于机器人操作系统（Robot Operating System, ROS）的真机控制接口，并在真实操作任务上对前述算法进行实验验证，考察其在真实场景下的实际应用价值。
 
-\begin{figure}
+\begin{figure}[!htb]
     \centering
-    \includegraphics[width=0.95\linewidth]{figures/content/real_robot_system}
+    \includegraphics[width=0.9\linewidth]{figures/content/real_robot_system}
     \caption{基于GELLO遥操作装置的机器人系统集成框架示意图}
     \label{fig:real_system_integration}
 \end{figure}
@@ -20,7 +20,7 @@
 遥操作硬件设计的核心难点在于如何消除操作者与目标机械臂之间的运动学差异。为了实现关节空间的直接映射控制，遥操臂必须与目标机械臂具有相同的运动学结构。为此，本平台选用了GELLO开源框架，通过3D打印结构件与Dynamixel智能舵机，构建了与UR5e机械臂运动学等价的缩比遥操臂。由于遥操臂与目标机械臂共享相同的运动学结构，操作者在转动遥操臂时，目标机械臂的对应关节产生同步的角位移，操作者自身的运动便受到相同的关节限制约束，所采集的轨迹天然满足机械臂的运动学可行性要求。
 
 
-\begin{figure}[htbp]
+\begin{figure}[htb]
   \centering
   \subfloat[UR5e机械臂]{\includegraphics[width=.2\textwidth]{figures/content/UR5e.jpg}}
   \quad
@@ -36,7 +36,7 @@
 参与数据采集的核心机电设备如图~\ref{fig:hardware_components}~所示。目标执行端采用UR5e六自由度协作机械臂，该机械臂具备5 kg的有效载荷与850 mm的最大工作半径，能够满足桌面级复杂操作任务的需求。末端执行器配备了大寰DH-AG95自适应平行夹爪，其最大开口宽度达到95 mm，满足多种物体的抓取需求。在感知端，系统部署了一个固定视角的RGB相机，用于捕获工作空间的图像信息。在控制端，GELLO遥操臂作为UR5e的缩比复制品，通过七个Dynamixel舵机实现对目标机械臂及末端夹爪的全状态控制。
 
 
-\begin{figure}[htbp]
+\begin{figure}[htb]
   \centering
   \includegraphics[width=0.8\linewidth]{figures/content/gello_pic.pdf}
   \caption{GELLO遥操臂实物图}
@@ -79,7 +79,7 @@
 \end{figure}
 
 
-如图~\ref{fig:data_collection}~所示，操作者通过观察RGB相机实时回传的图像画面，转动GELLO遥操臂来控制UR5e机械臂执行相应的操作任务。在遥操作过程中，PC控制中枢运行采集主控脚本，以30 Hz的频率同步记录相机的RGB图像帧以及机械臂当前的关节位置与夹爪状态。
+如图~\ref{fig:data_collection}~所示，操作者通过观察RGB相机实时回传的图像画面，转动GELLO遥操臂来控制UR5e机械臂执行相应的操作任务。在遥操作过程中，PC控制中枢运行采集主控程序，以30 Hz的频率同步记录相机的RGB图像帧以及机械臂当前的关节位置与夹爪状态。
 
 \begin{figure}[htb]
   \centering
@@ -113,7 +113,7 @@
   \end{tabular}
 \end{table}
 
-除了上述标准任务轨迹外，本章还专门采集了一定比例的纠错轨迹。本章采用扩散模型作为动作生成模型，若训练数据仅包含理想的专家运动轨迹，模型在推理时一旦因累积误差或外部干扰偏离了专家轨迹，便往往难以自主调整并恢复到正确的执行路径。为此，操作者在数据采集过程中，会故意引导机械臂向各个错误方向运动（例如偏离抓取目标或误触障碍物），随后再手动将其纠正回正确的操作路径。这部分纠错轨迹被补充到训练集中，占总数据量的10\%至15\%，使模型具备了在偏离专家轨迹后主动恢复的能力。图~\ref{fig:correction_trajectories_placeholder}~展示了纠错轨迹的典型样例。
+除了上述标准任务轨迹外，本章还专门采集了如图~\ref{fig:correction_trajectories_placeholder}~所示的纠错轨迹。本文采用扩散模型作为动作生成模型，若训练数据仅包含理想的专家运动轨迹，在实际过程中会发现模型在推理时一旦因累积误差或外部干扰偏离了专家轨迹，便往往难以自主调整并恢复到正确的执行路径。为此，操作者在数据采集过程中，采用故意引导机械臂向各个错误方向运动，例如往目标相反方向随机移动或旋转，随后再逐步纠正回正确的操作路径。这部分纠错轨迹被补充到训练集中，占总数据量的10\%至15\%，使模型具备了在偏离专家轨迹后主动恢复的能力。
 
 \begin{figure}[htbp]
   \centering
@@ -125,7 +125,7 @@
 
 原始采集数据以关节角序列的形式存储，在构建训练数据集前，需要先确定动作表征的形式。在模仿学习中，动作空间的表征方式对模型的学习效果与泛化能力具有重要影响。如果直接以关节角作为学习目标，模型无需经过逆运动学求解，能够直接输出底层控制指令。然而，关节角表征对机器人的初始状态存在强依赖，在不同起始位姿下执行相同语义的任务时，关节角的输出差异往往较大，导致模型难以泛化至未见过的初始状态。相比之下，以末端执行器位姿作为学习目标，能够使模型学到的动作表征更贴近任务层面的语义逻辑，提升跨场景的泛化能力。尽管这种方式在实际控制时需要依赖逆运动学求解，且扩散模型在推理时可能偶尔生成幅度较大的动作指令，但可以通过在逆运动学求解阶段引入安全保护机制来规避风险。因此，本章采用末端位姿差分作为动作表征。
 
-本章遵循机器人学习数据系统（RLDS，Robotics Learning Data System）的数据规范，开发了定制化的数据集构建脚本。脚本读取每帧记录的真实关节角度 $\theta_t \in \mathbb{R}^6$，利用式~\ref{eq:forward_kinematics}~的UR5e正运动学模型与DH参数，计算出末端法兰的齐次变换矩阵 $T_6^0$。由于夹爪安装在法兰末端，系统沿末端坐标系Z轴引入17 cm的工具中心点偏移。经过该偏移计算，最终得到包含夹爪末端位置 $p_t$ 与姿态旋转矩阵 $R_t$ 的完整位姿矩阵 $T_{\text{tcp}}$。
+本章遵循RLDS（Robotics Learning Data System，RLDS）的数据规范，开发了定制化的数据集构建方法。首先读取每帧图片对应的真实关节角度 $\theta_t \in \mathbb{R}^6$，利用式~\ref{eq:forward_kinematics}~的UR5e正运动学模型与DH参数，计算出末端法兰的齐次变换矩阵 $T_6^0$。由于夹爪安装在法兰末端，系统沿末端坐标系Z轴引入17 cm的工具中心点偏移。经过该偏移计算，最终得到包含夹爪末端位置 $p_t$ 与姿态旋转矩阵 $R_t$ 的完整位姿矩阵 $T_{\text{tcp}}$。
 
 通过计算相邻两帧末端位姿的差值，系统构建出动作标签。平移差值 $\Delta p$ 直接由相邻两帧的位置向量相减得到：
 
@@ -260,7 +260,7 @@
 \label{tab:real_world_results}
 \begin{tabular}{l|ccc|c}
 \toprule
-模型 & 单步抓取  & 抽屉操作  & 长时效任务  & 平均成功率  \\
+模型 & 简单抓取  & 抽屉操作  & 长时效任务  & 平均成功率  \\
 \midrule
 OpenVLA & 75 & 50 & 30 & 51.7 \\
 TemporalCacheVLA (Ours) & \textbf{85} & \textbf{70} & \textbf{65} & \textbf{73.3} \\
