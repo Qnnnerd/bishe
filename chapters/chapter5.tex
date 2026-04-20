@@ -19,7 +19,6 @@
 
 遥操作硬件设计的核心难点在于如何消除操作者与目标机械臂之间的运动学差异。为了实现关节空间的直接映射控制，遥操臂必须与目标机械臂具有相同的运动学结构。为此，本平台选用了GELLO开源框架，通过3D打印结构件与Dynamixel智能舵机，构建了与UR5e机械臂运动学等价的缩比遥操臂。由于遥操臂与目标机械臂共享相同的运动学结构，操作者在转动遥操臂时，目标机械臂的对应关节产生同步的角位移，操作者自身的运动便受到相同的关节限制约束，所采集的轨迹天然满足机械臂的运动学可行性要求。
 
-参与数据采集的核心机电设备如图~\ref{fig:hardware_components}~所示。目标执行端采用UR5e六自由度协作机械臂，该机械臂具备5 kg的有效载荷与850 mm的最大工作半径，能够满足桌面级复杂操作任务的需求。末端执行器配备了大寰DH-AG95自适应平行夹爪，其最大开口宽度达到95 mm，满足多种物体的抓取需求。在感知端，系统部署了一个固定视角的RGB相机，用于捕获工作空间的图像信息。在控制端，GELLO遥操臂作为UR5e的缩比复制品，通过七个Dynamixel舵机实现对目标机械臂及末端夹爪的全状态控制。
 
 \begin{figure}[htbp]
   \centering
@@ -33,6 +32,9 @@
   \caption{参与数据采集的核心机电设备}
   \label{fig:hardware_components}
 \end{figure}
+
+参与数据采集的核心机电设备如图~\ref{fig:hardware_components}~所示。目标执行端采用UR5e六自由度协作机械臂，该机械臂具备5 kg的有效载荷与850 mm的最大工作半径，能够满足桌面级复杂操作任务的需求。末端执行器配备了大寰DH-AG95自适应平行夹爪，其最大开口宽度达到95 mm，满足多种物体的抓取需求。在感知端，系统部署了一个固定视角的RGB相机，用于捕获工作空间的图像信息。在控制端，GELLO遥操臂作为UR5e的缩比复制品，通过七个Dynamixel舵机实现对目标机械臂及末端夹爪的全状态控制。
+
 
 \begin{figure}[htbp]
   \centering
@@ -69,9 +71,9 @@
 
 本平台参照LIBERO数据集的场景设置，搭建了如图~\ref{fig:real_robot_pic}~所示的机器人桌面操作场景。该场景主要划分为两个功能区域：左侧为抓取工作区，放置了多种供机器人操作的物体；右侧为抽屉操作区，放置了一个多层透明抽屉柜。在感知配置上，系统遵循LIBERO的单视角设定，在场景前方部署了一个固定视角的RGB相机，用于同时覆盖机器人本体与操作区域。
 
-\begin{figure}[htbp]
+\begin{figure}[htb]
   \centering
-  \includegraphics[width=0.8\linewidth]{figures/content/real_robot_pic.pdf}
+  \includegraphics[width=0.9\linewidth]{figures/content/real_robot_pic.pdf}
   \caption{真实机器人桌面操作场景}
   \label{fig:real_robot_pic}
 \end{figure}
@@ -79,16 +81,16 @@
 
 如图~\ref{fig:data_collection}~所示，操作者通过观察RGB相机实时回传的图像画面，转动GELLO遥操臂来控制UR5e机械臂执行相应的操作任务。在遥操作过程中，PC控制中枢运行采集主控脚本，以30 Hz的频率同步记录相机的RGB图像帧以及机械臂当前的关节位置与夹爪状态。
 
-\begin{figure}[htbp]
+\begin{figure}[htb]
   \centering
-  \includegraphics[width=0.6\linewidth]{figures/content/data_collection.pdf}
+  \includegraphics[width=0.5\linewidth]{figures/content/data_collection.pdf}
   \caption{基于GELLO的遥操作数据采集流程}
   \label{fig:data_collection}
 \end{figure}
 
 基于上述场景，本章按操作复杂度设计了如表~\ref{tab:dataset_statistics}~所示的三类任务，即如图~\ref{fig:task_trajectories_placeholder}~所示的简单抓取任务、抽屉操作任务以及长时效任务，系统共引入了10种不同外观的水果模型以及2种不同高度的抽屉作为操作目标。
 
-\begin{figure}[htbp]
+\begin{figure}[htb]
   \centering
   % 占位图：采集的不同类型任务的轨迹样例
   \includegraphics[width=0.9\linewidth]{example-image-a}
@@ -224,9 +226,9 @@
 
 系统的整体数据流转与节点配合机制如图~\ref{fig:ros_dataflow}~所示。在每次控制循环中，本地控制节点首先通过USB相机采集RGB图像，并将其与当前任务的语言指令、唯一的会话标识一同封装为HTTP请求发送至远端推理服务。推理服务在接收到请求后，先完成会话校验以确保当前图像与历史特征缓存的时序对齐，再将图像输入视觉语言动作模型，生成包含15步末端位姿差分的动作序列，并将其封装为标准格式的响应返回给控制节点。
 
-\begin{figure}[htbp]
+\begin{figure}[htb]
 \centering
-\includegraphics[width=0.9\linewidth]{figures/content/ros_dataflow.png}
+\includegraphics[width=0.8\linewidth]{figures/content/ros_dataflow}
 \caption{基于ROS的机械臂动作推理与控制数据流转图}
 \label{fig:ros_dataflow}
 \end{figure}
@@ -244,7 +246,7 @@
 
 实验共设计了三类复杂度递增的真实操作任务：第一类是单步抓取任务，用于评估模型的基础动作精度；第二类是抽屉操作任务，要求模型能够理解铰链机构的运动约束；第三类是长时效组合任务，要求模型具备跨阶段的状态记忆能力。每类任务在相同的初始场景下各进行20次测试，以成功完成语言指令指定的全部操作为成功标准。图~\ref{fig:real_success_traj}~展示了TemporalCacheVLA模型在三类任务中的成功执行轨迹。
 
-\begin{figure}[htbp]
+\begin{figure}[htb]
 \centering
 \includegraphics[width=0.9\linewidth]{example-image-c}
 \caption{TemporalCacheVLA模型在三类真实任务中的成功执行轨迹}
@@ -262,7 +264,6 @@
 模型 & 单步抓取  & 抽屉操作  & 长时效任务  & 平均成功率  \\
 \midrule
 OpenVLA & 75 & 50 & 30 & 51.7 \\
-\rowcolor{gray!20}
 TemporalCacheVLA (Ours) & \textbf{85} & \textbf{70} & \textbf{65} & \textbf{73.3} \\
 \bottomrule
 \end{tabular}
@@ -270,11 +271,11 @@ TemporalCacheVLA (Ours) & \textbf{85} & \textbf{70} & \textbf{65} & \textbf{73.3
 
 需要指出的是，即使是表现较好的TemporalCacheVLA模型，其在真实场景下的平均成功率也低于第四章在LIBERO仿真环境中的表现。这种性能衰减主要源于真实物理世界的复杂性，一方面，环境光照的微小变化与相机的细微视角偏移都会对视觉特征的提取造成干扰；另一方面，夹爪的物理磨损与被操作物体的表面摩擦系数在每次测试中都略有不同，这些在训练数据中未能充分覆盖的物理因素增加了动作执行的失败概率。
 
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\linewidth]{example-image-d}
-\caption{TemporalCacheVLA模型在真实场景中的典型失败案例}
-\label{fig:real_failure_traj}
-\end{figure}
+% \begin{figure}[htbp]
+% \centering
+% \includegraphics[width=0.9\linewidth]{example-image-d}
+% \caption{TemporalCacheVLA模型在真实场景中的典型失败案例}
+% \label{fig:real_failure_traj}
+% \end{figure}
 
 为了深入探究模型在真实场景下的局限性，图~\ref{fig:real_failure_traj}~展示了TemporalCacheVLA在三类任务中的典型失败案例。在单步抓取任务中，主要的失败原因在于深度感知误差，模型生成的夹爪闭合时机过早，导致未能完全包覆物体；在抽屉操作任务中，由于未考虑抽屉滑轨的阻力突变，模型在拉动过程中动作幅度过小，触发了控制系统的安全限幅机制而导致任务中断；在长时效组合任务中，失败往往发生在阶段切换的临界点，例如在成功打开抽屉后，由于目标物体被机械臂自身遮挡，模型在短暂丢失视觉特征的情况下未能依靠缓存记忆完成后续的放置动作。这些失败案例为未来引入力觉反馈与多视角感知提供了明确的改进方向。
