@@ -1,6 +1,6 @@
 \chapter{基于GELLO遥操作的机器人系统集成与验证}
 \label{chp:robot_system_integration}
-算法在仿真环境中的有效性并不能直接保证其在真实场景下的可用性，感知噪声、通信延迟与机械误差等因素均会对模型的实际表现产生影响。将模仿学习算法部署至真实机械臂平台，需要解决数据采集、模型推理与底层控制之间的系统集成问题。本章搭建总体框架如图~\ref{fig:real_system_integration}~所示，基于GELLO~\cite{wu2024gello}遥操作装置的真实场景数据采集平台，设计模型推理服务的远端部署方案与基于机器人操作系统（Robot Operating System, ROS）的真机控制接口，并在真实操作任务上对前述算法进行实验验证，考察其在真实场景下的实际应用价值。
+算法在仿真环境中的有效性并不能直接保证其在真实场景下的可用性，感知噪声、通信延迟与机械误差等因素均会对模型的实际表现产生影响。将模仿学习算法部署至真实机械臂平台，需要解决数据采集、模型推理与底层控制之间的系统集成问题。本章搭建总体框架如图~\ref{fig:real_system_integration}~所示，基于GELLO~\cite{wu2024gello}遥操作装置的真实场景数据采集平台，设计模型推理服务的远端部署方案与基于机器人操作系统（Robot Operating System， ROS）的真机控制接口，并在真实操作任务上对前述算法进行实验验证，考察其在真实场景下的实际应用价值。
 
 \begin{figure}[!htb]
     \centering
@@ -14,7 +14,7 @@
 
 在机器人模仿学习中，高质量的数据是训练有效策略的前提。由于前面提出的视觉语言动作模型都是通过扩散模型作为动作生成模型的，而扩散模型需要拟合具有多峰性的动作分布，传统的编程示教和拖动示教难以满足扩散模型对所学习数据的多峰性分布的要求。为了在真实环境中采集覆盖多种操作路径的模仿学习动作轨迹，本节采用遥操作作为数据采集的主要手段。这种方式使操作者能够通过自然的肢体运动直接驱动机械臂，所采集的轨迹天然覆盖多种操作路径，与扩散模型对多峰性数据分布的要求相契合；同时，遥操作装置在关节空间中与目标机械臂直接映射，采集到的关节角度与夹爪状态无需经过逆运动学转换，可直接作为模型的训练标签，避免了坐标变换引入的累积误差。
 
-\subsection{GELLO遥操平台硬件构成}
+\subsection{遥操平台硬件构成}
 \label{subsec:gello_hardware}
 
 遥操作硬件设计的核心难点在于如何消除操作者与目标机械臂之间的运动学差异。为了实现关节空间的直接映射控制，遥操臂必须与目标机械臂具有相同的运动学结构。为此，本平台选用了GELLO开源框架，通过3D打印结构件与Dynamixel智能舵机，构建了与UR5e机械臂运动学等价的缩比遥操臂。由于遥操臂与目标机械臂共享相同的运动学结构，操作者在转动遥操臂时，目标机械臂的对应关节产生同步的角位移，操作者自身的运动便受到相同的关节限制约束，所采集的轨迹天然满足机械臂的运动学可行性要求。
@@ -45,7 +45,7 @@
 
 在具体的关节映射关系与通信拓扑上，如图~\ref{fig:gello_pic}~所示，GELLO遥操臂的六个主干舵机与UR5e机械臂的六个旋转关节保持严格的对应关系。此外，遥操臂末端额外配置了第七个舵机，专门用于映射DH-AG95夹爪的开合状态。这七个Dynamixel舵机通过菊花链方式连接至一个串口通信模块，随后该模块的输出与夹爪的串口通信线共同接入一个USB集线器，最终统一连接至上位机PC。
 
-\subsection{软件驱动}
+\subsection{遥操平台软件驱动}
 \label{subsec:software_driver}
 
 硬件平台的搭建仅为遥操作提供了物理基础，要实现操作者意图向目标机械臂的可靠传递，还需要在软件层面解决设备间的通信协议差异与物理安装引入的固有误差。
@@ -57,50 +57,49 @@
 \end{equation}
 其中，$S$为遍历搜索的离散偏差集合，$s_i$为该关节的旋转方向符号，$\theta_i$为当前舵机的原始读数，$\theta_{i}^{\text{start}}$为预设的参考位姿角度。这些标定参数最终被写入配置文件中，在每次启动时自动加载，从而确保遥操臂的运动指令能够准确映射至目标机械臂的关节空间。
 
-为了实现低延迟的真机跟随运动，本平台利用了UR5e机械臂提供的实时数据交换（Real-Time Data Exchange, RTDE）接口。RTDE协议支持500 Hz的控制频率，可满足遥操作对低延迟响应的需求。在具体实现中，系统通过RTDE接口的伺服指令，将标定后的遥操臂关节角度下发至UR5e控制器。为了保证运动的平滑性与安全性，伺服指令的角速度与角加速度均被限制在0.5 rad/s及0.5 rad/s$^2$，同时设置了0.2 s的前瞻时间与100的比例增益。在该控制参数下，目标机械臂的关节跟随延迟控制在2 ms以内。
+为了实现低延迟的真机跟随运动，本平台利用了UR5e机械臂提供的RTDE（Real-Time Data Exchange， RTDE）接口。RTDE协议支持500 Hz的控制频率，可满足遥操作对低延迟响应的需求。在具体实现中，系统通过RTDE接口的伺服指令，将标定后的遥操臂关节角度下发至UR5e控制器。为了保证运动的平滑性与安全性，伺服指令的角速度与角加速度均被限制在0.5 rad/s及0.5 rad/s$^2$，同时设置了0.2 s的前瞻时间与100的比例增益。在该控制参数下，目标机械臂的关节跟随延迟控制在2 ms以内。
 
 在夹爪控制方面，由于DH-AG95夹爪的控制接口接受的是0至1000的位置指令，这与其他旋转关节的弧度制指令完全不同，因此需要建立两者之间的映射关系。为了实现精确的开合控制，系统首先需要获取夹爪电机的物理边界。操作者通过手动按动遥操臂末端的夹爪电机，分别记录其在全开与全闭状态下的绝对角度值。在运行期间，系统实时读取该电机的当前角度，并根据记录的边界值将其线性归一化至0至1的区间，其中0代表完全张开，1代表完全闭合。随后，该归一化变量按下式转换为目标夹爪的位置指令：
 \begin{equation}
   \label{eq:gripper_mapping}
   p_{\text{gripper}} = (1 - v_{\text{norm}}) \times 1000
 \end{equation}
-其中，$v_{\text{norm}}$为遥操臂夹爪舵机的归一化关节角，$p_{\text{gripper}}$为目标夹爪的位置指令。为了抑制操作者手部微小抖动对夹爪控制的干扰，系统在桥接节点中引入了滑动窗口滤波机制。该节点维护一个0.1 s的时间窗口，取窗口内指令的中位数作为当前时刻的有效输出，并设定了最小变化阈值。只有当新指令与上一有效指令的差值超过该阈值时，系统才会向夹爪发送更新命令，从而避免因手部微小抖动引发的夹爪频繁动作。
 
-\subsection{数据采集与处理}
-\label{subsec:data_collection_processing}
-
-本平台参照LIBERO数据集的场景设置，搭建了如图~\ref{fig:real_robot_pic}~所示的机器人桌面操作场景。该场景机器人的操作区域分为两个区域，左侧为抓取工作区，放置了多种供机器人操作的物体；右侧为抽屉操作区，放置了一个多层透明抽屉柜。在感知配置上，系统遵循LIBERO的单视角设定，在场景前方部署了一个固定视角的RGB相机，用于同时覆盖机器人本体与操作区域。
-
-\begin{figure}[htb]
+\begin{figure}[!htb]
   \centering
-  \includegraphics[width=0.9\linewidth]{figures/content/real_robot_pic.pdf}
+  \includegraphics[width=0.7\linewidth]{figures/content/real_robot_pic.pdf}
   \caption{真实机器人桌面操作场景}
   \label{fig:real_robot_pic}
 \end{figure}
 
+其中，$v_{\text{norm}}$为遥操臂夹爪舵机的归一化关节角，$p_{\text{gripper}}$为目标夹爪的位置指令。为了抑制操作者手部微小抖动对夹爪控制的干扰，系统在桥接节点中引入了滑动窗口滤波机制。该节点维护一个0.1 s的时间窗口，取窗口内指令的中位数作为当前时刻的有效输出，并设定了最小变化阈值。只有当新指令与上一有效指令的差值超过该阈值时，系统才会向夹爪发送更新命令，从而避免因手部微小抖动引发的夹爪频繁动作。
+
+\subsection{遥操数据采集}
+\label{subsec:data_collection_processing}
+
+本平台参照LIBERO数据集的场景设置，搭建了如图~\ref{fig:real_robot_pic}~所示的机器人桌面操作场景。该场景机器人的操作区域分为两个区域，左侧为抓取工作区，放置了多种供机器人操作的物体；右侧为抽屉操作区，放置了一个多层透明抽屉柜。在感知配置上，系统遵循LIBERO的单视角设定，在场景前方部署了一个固定视角的RGB相机，用于同时覆盖机器人本体与操作区域。
 
 如图~\ref{fig:data_collection}~所示，操作者通过观察RGB相机实时回传的图像画面，转动GELLO遥操臂来控制UR5e机械臂执行相应的操作任务。在遥操作过程中，PC控制中枢运行采集主控程序，以30 Hz的频率同步记录相机的RGB图像帧以及机械臂当前的关节位置与夹爪状态。
 
-\begin{figure}[htb]
+\begin{figure}[!htb]
   \centering
   \includegraphics[width=0.5\linewidth]{figures/content/data_collection.pdf}
   \caption{基于GELLO的遥操作数据采集流程}
   \label{fig:data_collection}
 \end{figure}
 
-基于上述场景，本章按操作复杂度设计了如表~\ref{tab:dataset_statistics}~所示的三类任务，即简单抓取任务、抽屉操作任务以及长时效任务，系统共引入了10种不同外观的水果模型以及2种不同高度的抽屉作为操作目标。图~\ref{fig:real_tasks_overview}~展示了这三类任务在真实环境中的执行过程。
-
 \begin{figure}[htb]
   \centering
-  \includegraphics[width=0.9\linewidth]{figures/content/real_tasks.pdf}
+  \includegraphics[width=0.8\linewidth]{figures/content/real_tasks.pdf}
   \caption{真实环境中的任务执行示意图}
   \label{fig:real_tasks_overview}
 \end{figure}
 
+基于上述场景，本章按操作复杂度设计了如表~\ref{tab:dataset_statistics}~所示的三类任务，即如图~\ref{fig:real_tasks_overview}~所示的执行过程，分为简单抓取任务、抽屉操作任务以及长时效任务，系统共引入了10种不同外观的水果模型以及2种不同高度的抽屉作为操作目标。
 
 \begin{table}[htbp]
   \centering
-  \caption{真实场景数据采集任务与轨迹数量统计}
+  \caption{真实场景数据采集轨迹数量}
   \label{tab:dataset_statistics}
   \begin{tabular}{lp{0.5\textwidth}cc}
     \toprule
@@ -113,21 +112,20 @@
   \end{tabular}
 \end{table}
 
-除了上述标准任务轨迹外，本章还专门采集了如图~\ref{fig:correction_trajectories_placeholder}~所示的纠错轨迹。本文采用扩散模型作为动作生成模型，若训练数据仅包含理想的专家运动轨迹，在实际过程中会发现模型在推理时一旦因累积误差或外部干扰偏离了专家轨迹，便往往难以自主调整并恢复到正确的执行路径。为此，操作者在数据采集过程中，采用故意引导机械臂向各个错误方向运动，例如往目标相反方向随机移动或旋转，随后再逐步纠正回正确的操作路径。这部分纠错轨迹被补充到训练集中，占总数据量的10\%至15\%，使模型具备了在偏离专家轨迹后主动恢复的能力。
+除了上述标准任务轨迹外，本章还专门采集了如图~\ref{fig:correction_trajectories_placeholder}~所示的纠错轨迹。本文采用扩散模型作为动作生成模型，若训练数据仅包含理想的专家运动轨迹，在实际过程中会发现模型在推理时一旦因累积误差或外部干扰偏离了专家轨迹，便往往难以自主调整并恢复到正确的执行路径。为此，在数据采集过程中，采用故意引导机械臂向各个错误方向运动，例如往目标相反方向随机移动或旋转，或者是在错误的位置操作夹爪，随后再逐步纠正回正确的操作路径。这部分纠错轨迹被补充到训练集中，占总数据量的10\%至15\%，相应的纠错轨迹的最大步数也更高，使模型具备了在偏离专家轨迹后主动恢复的能力。
 
-\begin{figure}[htbp]
+\begin{figure}[!htb]
   \centering
-  % 占位图：纠错轨迹的样例
-  \includegraphics[width=0.6\linewidth]{example-image-b}
+  \includegraphics[width=0.8\linewidth]{figures/content/real_traj_correction}
   \caption{纠错轨迹样例}
   \label{fig:correction_trajectories_placeholder}
 \end{figure}
 
-原始采集数据以关节角序列的形式存储，在构建训练数据集前，需要先确定动作表征的形式。在模仿学习中，动作空间的表征方式对模型的学习效果与泛化能力具有重要影响。如果直接以关节角作为学习目标，模型无需经过逆运动学求解，能够直接输出底层控制指令。然而，关节角表征对机器人的初始状态存在强依赖，在不同起始位姿下执行相同语义的任务时，关节角的输出差异往往较大，导致模型难以泛化至未见过的初始状态。相比之下，以末端执行器位姿作为学习目标，能够使模型学到的动作表征更贴近任务层面的语义逻辑，提升跨场景的泛化能力。尽管这种方式在实际控制时需要依赖逆运动学求解，且扩散模型在推理时可能偶尔生成幅度较大的动作指令，但可以通过在逆运动学求解阶段引入安全保护机制来规避风险。因此，本章采用末端位姿差分作为动作表征。
+\subsection{视觉语言动作数据集构建}
 
-本章遵循RLDS（Robotics Learning Data System，RLDS）的数据规范，开发了定制化的数据集构建方法。首先读取每帧图片对应的真实关节角度 $\theta_t \in \mathbb{R}^6$，利用式~\ref{eq:forward_kinematics}~的UR5e正运动学模型与DH参数，计算出末端法兰的齐次变换矩阵 $T_6^0$。由于夹爪安装在法兰末端，系统沿末端坐标系Z轴引入17 cm的工具中心点偏移。经过该偏移计算，最终得到包含夹爪末端位置 $p_t$ 与姿态旋转矩阵 $R_t$ 的完整位姿矩阵 $T_{\text{tcp}}$。
+原始采集数据以关节角序列的形式存储，在构建训练数据集前，需要先确定动作表征的形式。如果直接以关节角作为学习目标，模型无需经过逆运动学求解，能够直接输出底层控制指令，但是关节角表征对机器人的初始状态存在强依赖，在不同起始位姿下执行相同语义的任务时，关节角的输出差异往往较大，导致模型难以泛化至未见过的初始状态。相比之下，以末端执行器位姿作为学习目标，能够使模型学到的动作表征更贴近任务层面的语义逻辑，提升跨场景的泛化能力。尽管这种方式在实际控制时需要依赖逆运动学求解，且扩散模型在推理时可能偶尔生成幅度较大的动作指令，但可以通过在逆运动学求解阶段引入安全保护机制来规避风险。
 
-通过计算相邻两帧末端位姿的差值，系统构建出动作标签。平移差值 $\Delta p$ 直接由相邻两帧的位置向量相减得到：
+本章遵循RLDS（Robotics Learning Data System，RLDS）的数据规范，开发了定制化的数据集构建方法。首先读取每帧图片对应的真实关节角度 $\theta_t \in \mathbb{R}^6$，利用式~\ref{eq:forward_kinematics}~的UR5e正运动学模型与DH参数，计算出末端法兰的齐次变换矩阵 $T_6^0$。由于夹爪安装在法兰末端，系统沿末端坐标系Z轴引入17 cm的工具中心点偏移。经过该偏移计算，最终得到包含夹爪末端位置 $p_t$ 与姿态旋转矩阵 $R_t$ 的完整位姿矩阵 $T_{\text{tcp}}$。通过计算相邻两帧末端位姿的差值，系统构建出动作标签，平移差值 $\Delta p$ 直接由相邻两帧的位置向量相减得到：
 
 \begin{equation}
   \Delta p = p_{t+1} - p_t
@@ -145,43 +143,42 @@
   a_t = [\Delta p_x, \Delta p_y, \Delta p_z, \Delta r_x, \Delta r_y, \Delta r_z, g_{t+1}]^T
 \end{equation}
 
-构建完成的数据集在动作分布上呈现出显著的差异特征。如图~\ref{fig:pickup_curves}~所示，简单抓取任务的动作以垂直方向的平移为主。在该任务中，机械臂首先平移至目标水果上方，随后下降夹取并提升。各轴旋转变化极小，整体动作分布集中。
+构建完成的不同任务的数据集在动作变化特征上存在不同要点，如图~\ref{fig:pickup_curves}~所示，简单抓取任务的动作以垂直方向的平移为主。在该任务中，机械臂首先平移至目标水果上方，随后下降夹取并提升，各轴旋转变化较小，整体动作分布集中。
 
 \begin{figure}[htb]
   \centering
-  \subfloat[平移曲线]{\includegraphics[width=0.48\linewidth]{figures/content/plot_pickup_delta_xyz_curve.png}\label{fig:pickup_xyz_curve}}\hfill
-  \subfloat[旋转曲线]{\includegraphics[width=0.48\linewidth]{figures/content/plot_pick_up_delta_rpy_curve.png}\label{fig:pickup_rpy_curve}}
+  \subfloat[平移曲线]{\includegraphics[width=0.4\linewidth]{figures/content/plot_pickup_delta_xyz_curve.png}\label{fig:pickup_xyz_curve}}\hfill
+  \subfloat[旋转曲线]{\includegraphics[width=0.4\linewidth]{figures/content/plot_pick_up_delta_rpy_curve.png}\label{fig:pickup_rpy_curve}}
   \caption{抓取任务动作曲线}
   \label{fig:pickup_curves}
 \end{figure}
 
-抽屉操作任务的动作结构更为复杂。如图~\ref{fig:drawer_curves}~所示，该任务要求机械臂先翻转手腕至适应抽屉把手的姿态，再靠近并拉开抽屉。因此，在动作曲线的前期阶段，机械臂的旋转变化极为剧烈，而在后期拉开抽屉的过程中，动作则转变为平缓的小幅平移，呈现出前期剧烈、后期平缓的衰减特征。
+抽屉操作任务的动作结构更为复杂，如图~\ref{fig:drawer_curves}~所示，该任务要求机械臂先翻转手腕至适应抽屉把手的姿态，再靠近并拉开抽屉。因此，在动作曲线的前期阶段，机械臂的旋转变化更为明显，而在后期拉开抽屉的过程中，动作则转变为平缓的小幅平移，呈现出前期剧烈、后期平缓的特征。
 
-\begin{figure}[htb]
+\begin{figure}[!htb]
   \centering
-  \subfloat[平移曲线]{\includegraphics[width=0.48\linewidth]{figures/content/plot_drawer_delta_xyz_curve.png}\label{fig:drawer_xyz_curve}}\hfill
-  \subfloat[旋转曲线]{\includegraphics[width=0.48\linewidth]{figures/content/plot_drawer_delta_rpy_curve.png}\label{fig:drawer_rpy_curve}}
+  \subfloat[平移曲线]{\includegraphics[width=0.4\linewidth]{figures/content/plot_drawer_delta_xyz_curve.png}\label{fig:drawer_xyz_curve}}\hfill
+  \subfloat[旋转曲线]{\includegraphics[width=0.4\linewidth]{figures/content/plot_drawer_delta_rpy_curve.png}\label{fig:drawer_rpy_curve}}
   \caption{抽屉操作任务动作曲线}
   \label{fig:drawer_curves}
 \end{figure}
 
-长时效任务融合了上述两种操作，要求机械臂先打开抽屉，再将水果放入其中。如图~\ref{fig:long_curves}~所示，机械臂在前期需要翻转手腕以操作抽屉，随后必须再次翻转手腕恢复至抓取姿态，最后执行水果的夹取与放置。这种复合操作在动作曲线上表现为两次明显的旋转峰值与多段平移活跃区，动作分布最为多样，对模型的时序建模能力要求最高。
+长时效任务融合了上述两种操作，要求机械臂先打开抽屉，再将水果放入其中。如图~\ref{fig:long_curves}~所示，机械臂在前期需要翻转手腕以操作抽屉，随后需要再次翻转手腕恢复至抓取姿态，最后执行水果的夹取与放置。这种复合操作在动作曲线上表现为两次明显的旋转峰值与多段平移活跃区，动作分布最为多样，对模型的时序上下文理解的能力要求最高。
 
-\begin{figure}[htb]
+\begin{figure}[!htb]
   \centering
-  \subfloat[平移曲线]{\includegraphics[width=0.48\linewidth]{figures/content/plot_long_task_delta_xyz_curve.png}\label{fig:long_xyz_curve}}\hfill
-  \subfloat[旋转曲线]{\includegraphics[width=0.48\linewidth]{figures/content/plot_long_task_delta_rpy_curve.png}\label{fig:long_rpy_curve}}
+  \subfloat[平移曲线]{\includegraphics[width=0.4\linewidth]{figures/content/plot_long_task_delta_xyz_curve.png}\label{fig:long_xyz_curve}}\hfill
+  \subfloat[旋转曲线]{\includegraphics[width=0.4\linewidth]{figures/content/plot_long_task_delta_rpy_curve.png}\label{fig:long_rpy_curve}}
   \caption{长时效任务动作曲线}
   \label{fig:long_curves}
 \end{figure}
 
-真实场景采集的数据与仿真环境数据在动作分布上同样存在差异。如图~\ref{fig:action_dist_long_vs_libero}~所示，自建长时效任务数据集与LIBERO仿真数据集在平移和旋转幅值上的分布差异显著。在采集真实数据时，出于对机器人的安全保护，操作者倾向于以较小的步幅控制机械臂运动，因此真实数据的平移与旋转幅值分布在0附近更为密集。LIBERO仿真环境无需这一层安全考量，仿真模型可以按照任务要求执行较大幅度的动作。
+真实场景采集的数据与仿真环境数据在动作分布上同样存在差异。如图~\ref{fig:action_dist_long_vs_libero}~所示，自建长时效任务数据集与LIBERO仿真数据集在平移和旋转幅值上的也存在明显差异。在采集真实数据时，出于对机器人的安全保护，操作者倾向于以较小的步幅控制机械臂运动，因此真实数据的平移与旋转幅值分布在0附近更为密集，LIBERO仿真环境无需这一层安全考量，仿真模型可以按照任务要求执行较大幅度的动作。
 
-\begin{figure}[htbp]
+\begin{figure}[!htb]
   \centering
-  \subfloat[平移幅值分布对比]{\includegraphics[width=0.48\linewidth]{figures/content/action_dist_long_vs_libero_trans.png}\label{fig:action_dist_long_vs_libero_trans}}
-  \hfill
-  \subfloat[旋转幅值分布对比]{\includegraphics[width=0.48\linewidth]{figures/content/action_dist_long_vs_libero_rot.png}\label{fig:action_dist_long_vs_libero_rot}}
+  \subfloat[平移幅值分布对比]{\includegraphics[width=0.4\linewidth]{figures/content/action_dist_long_vs_libero_trans.png}\label{fig:action_dist_long_vs_libero_trans}}\hfill
+  \subfloat[旋转幅值分布对比]{\includegraphics[width=0.4\linewidth]{figures/content/action_dist_long_vs_libero_rot.png}\label{fig:action_dist_long_vs_libero_rot}}
   \caption{长时效任务真实场景与仿真环境动作幅值分布对比}
   \label{fig:action_dist_long_vs_libero}
 \end{figure}
@@ -196,31 +193,9 @@
 
 预训练模型在LIBERO等仿真环境中学习到的动作分布，往往难以直接迁移至真实物理世界。仿真环境与真实物理世界的差异主要集中在视觉层面，包括光照条件的变化、摄像头视角的偏移以及物理接触产生的视觉噪声；而语言指令所描述的任务语义在两个域之间差别不大。因此，本节在微调时确立了参数冻结策略，冻结LLM骨干的绝大部分参数，仅保留最后一层参与训练，同时视觉编码器和历史存储池相关模块全部开放更新。这一策略使可训练参数量的减少缩短了每步的反向传播路径，训练速度随之提升，而LLM骨干在预训练阶段建立的语义表征不会因梯度反传被破坏，为后续的稳定训练奠定了基础。
 
-除了视觉域的差异，真实遥操作数据在动作序列层面还天然携带着较高的人为噪声。操作者在执行任务时，由于视角受限或手部抖动，会频繁进行微小的位姿调整；同时，真实机械臂在接触桌面或物体时存在复杂的摩擦与碰撞反馈，导致采集到的动作序列在局部呈现出高频的振荡特征。这种数据分布的根本差异，使得模型在真实数据上微调时，如果直接沿用仿真阶段的超参数，会导致梯度更新方向在噪声样本中来回拉扯，表现为训练损失剧烈波动，模型难以收敛到稳定的局部最优解。
+除了视觉域的差异，真实遥操作数据在动作序列层面还天然携带着如前文所述的人为噪声，使得模型在真实数据上微调时，如果直接沿用仿真阶段的超参数，会导致梯度更新方向在噪声样本中来回拉扯，表现为训练损失波动，模型难以收敛到稳定的局部最优解。因此本节在上述冻结策略的基础上，对微调超参数进行了重新设计。基础学习率设为 $2 \times 10^{-6}$，以防止微调初期破坏预训练阶段建立的特征表示；学习率调度采用线性预热结合余弦衰减，预热比例0.02，使训练前期的梯度更新趋于平缓。为抑制可能出现的梯度爆炸，最大梯度裁剪范数限制在0.5，同时配合权重衰减系数0.001以防止过拟合。在上述配置下，模型在真实数据集上训练了4000步。
 
-为了应对真实数据高噪声带来的优化难题，本节在上述冻结策略的基础上，对微调超参数进行了重新设计。基础学习率设为 $2 \times 10^{-6}$，以防止微调初期破坏预训练阶段建立的特征表示；学习率调度采用线性预热结合余弦衰减，预热比例0.02，使训练前期的梯度更新趋于平缓。为抑制可能出现的梯度爆炸，最大梯度裁剪范数限制在0.5，同时配合权重衰减系数0.001以防止过拟合。在上述配置下，模型在真实数据集上训练了4000步。
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.8\linewidth]{example-image-a}
-\caption{不同超参数配置下的真实数据微调Loss对比}
-\label{fig:loss_comparison}
-\end{figure}
-
-不同配置下的训练损失对比如图~\ref{fig:loss_comparison}~所示。可以看出，采用仿真环境超参数进行微调时，Loss曲线在整个训练周期内呈现出剧烈的跳动，且收敛趋势不明显；而采用本文优化的超参数配置后，Loss曲线的波动幅度明显减小，整体呈现出稳定的下降趋势。
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.8\linewidth]{example-image-b}
-\caption{真实数据与仿真数据微调Loss波动特性对比}
-\label{fig:loss_sim_vs_real}
-\end{figure}
-
-然而，如图~\ref{fig:loss_sim_vs_real}~所示，即使采用了优化的超参数配置，模型在真实数据上的Loss曲线依然存在一定程度的局部跳动，无法像在仿真数据上那样平滑收敛。这正是由于自建数据集天然包含的人为噪声所决定的。优化后的超参数虽然不能彻底消除这种噪声带来的影响，但成功将其限制在了可控范围内，使得模型能够稳定地从噪声数据中提取出关键的任务语义与动作表征，完成了向真实操作分布的适配。
-
-微调完成后，模型需要被部署到实际控制系统中以进行在线推理。然而，视觉语言动作模型的参数量达到数十亿级别，难以在计算资源受限的边缘设备上进行本地推理；同时，模型加载与初始化的时间成本极高，无法满足机器人控制系统对实时性的严苛要求。
-
-针对这一问题，本节采用计算与控制分离的部署架构。将模型作为常驻服务部署在远端服务器上，并通过Flask框架封装为HTTP接口。控制端仅负责轻量级的图像采集与指令发送，通过网络请求获取推理结果。这种架构避免了每次执行任务时的模型加载开销，保障了推理服务的高可用性。
+微调完成后，模型需要被部署到实际控制系统中以进行在线推理。然而，视觉语言动作模型的参数量较大，难以在计算资源受限的边缘设备上进行本地推理，同时模型加载与初始化的时间成本较高，无法满足机器人控制系统对实时性的要求。针对这一问题，本节采用计算与控制分离的部署架构。将模型作为常驻服务部署在远端服务器上，并通过Flask框架封装为HTTP接口，控制端仅负责轻量级的图像采集与指令发送，通过网络请求获取推理结果。这种架构避免了每次执行任务时的模型加载开销，保障了推理服务的高可用性。
 
 在服务接口的具体设计上，为了适应真实场景的任务需求，本节对动作分块和时序缓存的参数进行了针对性调整。由于真实采集的动作步幅较小，部署时将动作分块长度设置为15步，即单次网络请求返回一段连续的15步动作序列，以保证物理执行的连贯性。同时，考虑到真实长时效任务的耗时远超仿真环境，系统将历史特征的缓存长度设定为256，以覆盖更长的时间跨度，避免任务后期的状态遗忘。
 
@@ -231,7 +206,7 @@
 
 远端推理服务解决了模型的计算与存储难题，但模型输出的动作序列仅为数值化的位姿差分，无法直接驱动物理机械臂。为了实现从高层语义动作到低层电机转角的安全转换，本节基于ROS Noetic，设计并实现了本地的机械臂动作控制系统。该系统不仅承担着数据路由与协议转换的任务，更通过逆运动学求解与多层安全限幅机制，在物理执行层面保障了人机交互的安全性。
 
-系统的整体数据流转与节点配合机制如图~\ref{fig:ros_dataflow}~所示。在每次控制循环中，本地控制节点首先通过USB相机采集RGB图像，并将其与当前任务的语言指令、唯一的会话标识一同封装为HTTP请求发送至远端推理服务。推理服务在接收到请求后，先完成会话校验以确保当前图像与历史特征缓存的时序对齐，再将图像输入视觉语言动作模型，生成包含15步末端位姿差分的动作序列，并将其封装为标准格式的响应返回给控制节点。
+系统的整体数据流转与节点配合机制如图~\ref{fig:ros_dataflow}~所示。在每次控制循环中，本地控制节点首先通过USB相机采集RGB图像，并将其与当前任务的语言指令、唯一的会话标识一同封装为HTTP请求发送至远端推理服务。推理服务在接收到请求后，先完成会话校验以确保当前图像与历史特征缓存的时序对齐，再将图像输入视觉语言动作模型生成动作序列，并将其封装为标准格式的响应返回给控制节点。
 
 \begin{figure}[htb]
 \centering
@@ -242,21 +217,25 @@
 
 在获取到物理尺度的动作序列后，系统必须将其转换为关节空间的轨迹才能下发给底层控制器。为此，控制节点实时读取UR5e机械臂当前的6个关节角度，利用DH参数进行正运动学计算，得到当前末端执行器在基坐标系下的位姿矩阵。在此基础上，将模型输出的平移与旋转差分叠加至当前位姿，生成目标位姿矩阵。最后，系统调用逆运动学求解算法计算出对应的目标关节角。
 
-然而，视觉语言模型在推理长时效任务时，由于累积误差或对未见场景的误判，偶尔会生成幅度过大或方向突变的错误动作。如果将这些动作直接交由逆运动学求解并执行，极易导致机械臂与桌面或周围环境发生剧烈碰撞。针对这一隐患，本节在控制节点中引入了三层安全限幅机制：单步平移距离不超过0.03米，单步姿态变化不超过0.15弧度；当逆运动学求解出的目标关节角与当前关节角之差超过0.5弧度时，系统主动丢弃该步动作并保持当前位姿。
+然而，视觉语言模型在推理长时效任务时，由于累积误差或对未见场景的误判，偶尔会生成幅度过大或方向突变的错误动作。如果将这些动作直接交由逆运动学求解并执行，容易导致机械臂与桌面或周围环境发生剧烈碰撞。针对这一隐患，本节在控制节点中引入安全限幅机制，单步平移距离不超过0.05米，单步姿态变化不超过5弧度。
 
-经过上述安全校验后的目标关节角序列会被封装为标准轨迹指令，并发送给底层机械臂驱动器；同时，夹爪状态指令同步下发至末端控制器。底层控制器在接收到轨迹指令后，驱动各关节电机完成物理执行，并将更新后的真实状态再次反馈给控制节点，从而形成了一个完整、安全的感知推理执行反馈闭环控制回路。
+经过上述安全校验后的目标关节角序列会被封装为标准轨迹指令，并发送给底层机械臂驱动器；同时，夹爪状态指令同步下发至末端控制器。底层控制器在接收到轨迹指令后，驱动各关节电机完成物理执行，并将更新后的真实状态再次反馈给控制节点，从而形成了一个完整感知推理执行反馈闭环控制回路。
 
-\subsection{真实场景对比实验}
+\section{实验结果与分析}
+
+在完成微调与系统部署后，本节在真实UR5e机械臂平台上开展对比实验。由于真实场景的复杂性与不可控因素较多，本文在设计实验时额外考量了对比实验的公平性，所有参与对比的模型均在相同的自建数据集上进行微调，以确保它们在训练阶段接触到的经验分布一致，同时推理执行过程中每类任务的执行次数均为20次，以降低偶然因素对结果的影响，并通过统计分析方法验证实验结果。
+
+\subsection{对比实验}
 \label{subsec:real_world_experiment}
 
-在完成微调与系统部署后，本节在真实UR5e机械臂平台上开展对比实验。本文提出的TemporalCacheVLA模型是在开源大模型OpenVLA的架构基础上，通过引入双通道特征时序缓存机制发展而来。因此，为了验证本文所提时序缓存机制在真实长时效任务中的有效性，本节选择在自建数据集上同样经过微调的OpenVLA作为基线模型进行严格对比。
+本文提出的TemporalCacheVLA模型是在开源大模型OpenVLA\cite{kim2024openvla}的架构基础上，通过引入双通道特征时序缓存机制并采用扩散动作生成模型而来。因此，为了验证本文所提视觉语言动作模型在真实任务中的有效性，本节选择在自建数据集上同样经过微调的OpenVLA作为基线模型进行对比。
 
 实验共设计了三类复杂度递增的真实操作任务：第一类是单步抓取任务，用于评估模型的基础动作精度；第二类是抽屉操作任务，要求模型能够理解铰链机构的运动约束；第三类是长时效组合任务，要求模型具备跨阶段的状态记忆能力。每类任务在相同的初始场景下各进行20次测试，以成功完成语言指令指定的全部操作为成功标准。图~\ref{fig:real_success_traj}~展示了TemporalCacheVLA模型在三类任务中的成功执行轨迹。
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=0.9\linewidth]{example-image-c}
-\caption{TemporalCacheVLA模型在三类真实任务中的成功执行轨迹}
+\includegraphics[width=0.8\linewidth]{figures/content/real_manipulation}
+\caption{真实推理的成功执行轨迹}
 \label{fig:real_success_traj}
 \end{figure}
 

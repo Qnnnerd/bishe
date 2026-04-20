@@ -233,7 +233,7 @@ UR5e 机械臂的腕部三轴交于一点，满足 Pieper 准则，因此其逆�
 \subsection{典型模仿学习算法}
 \label{subsec:typical_il_algorithms}
 
-在解决精细操作任务的模仿学习问题时，动作分块 Transformer 算法（Action Chunking with Transformers, ACT）\cite{zhao2023learning} 表现出了优异的性能。该算法摒弃了传统的单步动作预测范式，创新性地结合了条件变分自编码器（CVAE）和 Transformer 架构，将决策过程重塑为多步动作序列的高维生成问题。
+在解决精细操作任务的模仿学习问题时，动作分块 Transformer 算法（Action Chunking with Transformers， ACT）\cite{zhao2023learning} 表现出了优异的性能。该算法摒弃了传统的单步动作预测模式，结合了条件变分自编码器（CVAE）和 Transformer 架构，将决策过程重塑为多步动作序列的高维生成问题。
 
 为了有效表征同一观测状态下可能存在多种成功动作轨迹的多模态分布，ACT 引入了一个低维连续隐变量 $z$ 来显式编码演示数据中的风格特征。在给定当前观测序列 $o$ 的条件下，模型的核心目标是最大化未来 $k$ 步专家动作块 $a_{t:t+k-1}$ 的条件对数似然。由于直接积分难以计算，ACT 通过引入近似后验分布 $q_\phi(z|a, o)$ 来构建变分下界。假设隐变量的先验分布服从标准正态分布 $\mathcal{N}(0, I)$，其优化目标可转化为最小化包含重构损失与 KL 散度正则化项的联合损失函数：
 
@@ -256,7 +256,7 @@ UR5e 机械臂的腕部三轴交于一点，满足 Pieper 准则，因此其逆�
 
 其中，权重系数服从指数衰减规律 $w_i = \exp(-m \cdot i)$，$m$ 为衰减因子，$Z_t$ 为归一化常数，这种加权组合机制赋予最新观测生成的预测最高权重，同时保留较早历史时刻的平滑预测成分，提升了动作执行的连贯性。
 
-尽管 ACT 算法在精细操作任务中成效显著，但其通过高斯先验强制规范隐变量的方式，在处理存在严苛物理接触约束的多模态分布时仍显吃力。相比之下，扩散策略算法（Diffusion Policy）\cite{chi2023diffusion} 将机械臂动作序列的生成过程重构为去噪扩散概率模型（Denoising Diffusion Probabilistic Models, DDPM）\cite{ho2020denoising}的条件去噪演化过程，通过多步去噪从噪声中逐步恢复出符合物理约束的动作路径。
+尽管 ACT 算法在精细操作任务中成效显著，但其通过高斯先验强制规范隐变量的方式，在处理存在严苛物理接触约束的多模态分布时仍显吃力。相比之下，扩散策略算法（Diffusion Policy）\cite{chi2023diffusion} 将机械臂动作序列的生成过程重构为去噪扩散概率模型（Denoising Diffusion Probabilistic Models， DDPM）\cite{ho2020denoising}的条件去噪演化过程，通过多步去噪从噪声中逐步恢复出符合物理约束的动作路径。
 
 扩散策略的前向扩散过程是一个预设的马尔可夫链。如图\ref{fig:diffusion_process}所示，给定人类专家提供的干净示范动作序列 $A_t^0$，算法逐步向动作序列中注入方差随时间递增的高斯噪声。通过运用高斯分布的加法性质，可以直接得出从初始干净动作到任意第 $k$ 步带噪动作 $A_t^k$ 的闭式边缘分布：
 
