@@ -92,9 +92,8 @@
 
 \begin{figure}[htb]
   \centering
-  % 占位图：采集的不同类型任务的轨迹样例
-  \includegraphics[width=0.9\linewidth]{example-image-a}
-  \caption{不同类型任务的采集轨迹样例}
+  \includegraphics[width=0.9\linewidth]{figures/content/real_tasks}
+  \caption{真实环境中的任务示意图}
   \label{fig:task_trajectories_placeholder}
 \end{figure}
 
@@ -106,9 +105,9 @@
     \toprule
     \textbf{任务类型} & \textbf{任务描述} & \textbf{最大步数} & \textbf{轨迹数量} \\
     \midrule
-    简单抓取 & 拿起[水果] & 150 & 150 \\
-    抽屉操作 & 打开第[几]个抽屉 & 300 & 150 \\
-    长时效任务 & 打开第[几]个抽屉并把[水果]放在里面 & 500 & 200 \\
+    简单抓取 & 拿起[水果] & 300 & 150 \\
+    抽屉操作 & 打开第[几]个抽屉 & 500 & 150 \\
+    长时效任务 & 打开第[几]个抽屉并把[水果]放在里面 & 1000 & 200 \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -263,7 +262,7 @@
 模型 & 简单抓取  & 抽屉操作  & 长时效任务  & 平均成功率  \\
 \midrule
 OpenVLA & 75 & 50 & 30 & 51.7 \\
-TemporalCacheVLA (Ours) & \textbf{85} & \textbf{70} & \textbf{65} & \textbf{73.3} \\
+TemporalCacheVLA (本文) & \textbf{85} & \textbf{70} & \textbf{65} & \textbf{73.3} \\
 \bottomrule
 \end{tabular}
 \end{table}
