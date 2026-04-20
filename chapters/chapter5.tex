@@ -88,13 +88,67 @@
   \label{fig:data_collection}
 \end{figure}
 
-基于上述场景，本章按操作复杂度设计了如表~\ref{tab:dataset_statistics}~所示的三类任务，即如图~\ref{fig:task_trajectories_placeholder}~所示的简单抓取任务、抽屉操作任务以及长时效任务，系统共引入了10种不同外观的水果模型以及2种不同高度的抽屉作为操作目标。
+基于上述场景，本章按操作复杂度设计了如表~\ref{tab:dataset_statistics}~所示的三类任务，即简单抓取任务、抽屉操作任务以及长时效任务，系统共引入了10种不同外观的水果模型以及2种不同高度的抽屉作为操作目标。图~\ref{fig:real_tasks_overview}~展示了这三类任务在真实环境中的执行过程。
 
 \begin{figure}[htb]
   \centering
-  \includegraphics[width=0.9\linewidth]{figures/content/real_tasks}
-  \caption{真实环境中的任务示意图}
-  \label{fig:task_trajectories_placeholder}
+  \includegraphics[width=0.9\linewidth]{figures/content/real_tasks.pdf}
+  \caption{真实环境中的任务执行示意图}
+  \label{fig:real_tasks_overview}
+\end{figure}
+
+不同任务在动作分布上呈现出显著的差异特征。图~\ref{fig:pickup_xyz_curve}~和图~\ref{fig:pickup_rpy_curve}~分别展示了简单抓取任务的平移与旋转动作曲线。在该任务中，机械臂首先平移至目标水果上方，随后下降夹取并提升。抓取任务的动作以垂直方向的平移为主，各轴旋转变化极小，整体动作分布集中。
+
+\begin{figure}[htb]
+  \centering
+  \begin{minipage}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/content/plot_pickup_delta_xyz_curve.png}
+    \caption{抓取任务平移曲线}
+    \label{fig:pickup_xyz_curve}
+  \end{minipage}\hfill
+  \begin{minipage}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/content/plot_pick_up_delta_rpy_curve.png}
+    \caption{抓取任务旋转曲线}
+    \label{fig:pickup_rpy_curve}
+  \end{minipage}
+\end{figure}
+
+抽屉操作任务的动作结构更为复杂。如图~\ref{fig:drawer_xyz_curve}~和图~\ref{fig:drawer_rpy_curve}~所示，该任务要求机械臂先翻转手腕至适应抽屉把手的姿态，再靠近并拉开抽屉。因此，在动作曲线的前期阶段，机械臂的旋转变化极为剧烈，而在后期拉开抽屉的过程中，动作则转变为平缓的小幅平移，呈现出前期剧烈、后期平缓的衰减特征。
+
+\begin{figure}[htb]
+  \centering
+  \begin{minipage}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/content/plot_drawer_delta_xyz_curve.png}
+    \caption{抽屉任务平移曲线}
+    \label{fig:drawer_xyz_curve}
+  \end{minipage}\hfill
+  \begin{minipage}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/content/plot_drawer_delta_rpy_curve.png}
+    \caption{抽屉任务旋转曲线}
+    \label{fig:drawer_rpy_curve}
+  \end{minipage}
+\end{figure}
+
+长时效任务融合了上述两种操作，要求机械臂先打开抽屉，再将水果放入其中。图~\ref{fig:long_xyz_curve}~和图~\ref{fig:long_rpy_curve}~展示了该任务的动作轨迹。机械臂在前期需要翻转手腕以操作抽屉，随后必须再次翻转手腕恢复至抓取姿态，最后执行水果的夹取与放置。这种复合操作在动作曲线上表现为两次明显的旋转峰值与多段平移活跃区，动作分布最为多样，对模型的时序建模能力要求最高。
+
+\begin{figure}[htb]
+  \centering
+  \begin{minipage}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/content/plot_long_task_delta_xyz_curve.png}
+    \caption{长时效任务平移曲线}
+    \label{fig:long_xyz_curve}
+  \end{minipage}\hfill
+  \begin{minipage}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/content/plot_long_task_delta_rpy_curve.png}
+    \caption{长时效任务旋转曲线}
+    \label{fig:long_rpy_curve}
+  \end{minipage}
 \end{figure}
 
 \begin{table}[htbp]
