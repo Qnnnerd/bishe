@@ -97,35 +97,6 @@
   \label{fig:real_tasks_overview}
 \end{figure}
 
-不同任务在按照动作需求，在平移变化和旋转变化上存在着差异特征，如图~\ref{fig:pickup_curves}~所示，简单抓取任务中机械臂首先平移至目标水果上方，随后下降夹取并提升，抓取任务的动作以垂直方向的平移为主，各轴旋转变化极小，整体动作分布集中。
-
-\begin{figure}[htb]
-  \centering
-  \subfloat[平移曲线]{\includegraphics[width=0.48\linewidth]{figures/content/plot_pickup_delta_xyz_curve.png}\label{fig:pickup_xyz_curve}}\hfill
-  \subfloat[旋转曲线]{\includegraphics[width=0.48\linewidth]{figures/content/plot_pick_up_delta_rpy_curve.png}\label{fig:pickup_rpy_curve}}
-  \caption{抓取任务动作曲线}
-  \label{fig:pickup_curves}
-\end{figure}
-
-抽屉操作任务的动作特征表现更明显，如图~\ref{fig:drawer_curves}~所示，该任务要求机械臂先翻转手腕至适应抽屉把手的姿态，再靠近并拉开抽屉。因此，在动作曲线的前期阶段，在旋转变量上的变化更为明显，而在后期拉开抽屉的过程中，动作则转变为平缓的小幅平移，呈现出前期剧烈、后期平缓的衰减特征。
-
-\begin{figure}[htb]
-  \centering
-  \subfloat[平移曲线]{\includegraphics[width=0.48\linewidth]{figures/content/plot_drawer_delta_xyz_curve.png}\label{fig:drawer_xyz_curve}}\hfill
-  \subfloat[旋转曲线]{\includegraphics[width=0.48\linewidth]{figures/content/plot_drawer_delta_rpy_curve.png}\label{fig:drawer_rpy_curve}}
-  \caption{抽屉操作任务动作曲线}
-  \label{fig:drawer_curves}
-\end{figure}
-
-长时效任务融合了上述两种操作，要求机械臂先打开抽屉，再将水果放入其中。如图~\ref{fig:long_curves}~所示，机械臂在前期需要翻转手腕以操作抽屉，随后则需要再次翻转手腕恢复至抓取姿态，最后执行水果的夹取与放置。这种复合操作在动作曲线上表现为两次明显的旋转峰值与多段平移活跃区，动作分布最为多样，对模型的时序建模能力要求最高。
-
-\begin{figure}[htb]
-  \centering
-  \subfloat[平移曲线]{\includegraphics[width=0.48\linewidth]{figures/content/plot_long_task_delta_xyz_curve.png}\label{fig:long_xyz_curve}}\hfill
-  \subfloat[旋转曲线]{\includegraphics[width=0.48\linewidth]{figures/content/plot_long_task_delta_rpy_curve.png}\label{fig:long_rpy_curve}}
-  \caption{长时效任务动作曲线}
-  \label{fig:long_curves}
-\end{figure}
 
 \begin{table}[htbp]
   \centering
@@ -174,29 +145,37 @@
   a_t = [\Delta p_x, \Delta p_y, \Delta p_z, \Delta r_x, \Delta r_y, \Delta r_z, g_{t+1}]^T
 \end{equation}
 
-构建完成的数据集在动作分布上呈现出若干值得关注的特征。不同任务对动作的要求不同，导致其平移和旋转的分布存在差异。图~\ref{fig:action_dist_task_norm}~展示了抓取任务与抽屉操作任务在平移幅值和旋转幅值上的分布对比，其中平移幅值定义为单步末端位姿平移分量的二范数，旋转幅值定义为旋转向量的二范数。抽屉操作任务的平移幅值分布尾部更长，这与其需要持续拉动抽屉的运动特性有关；而抓取任务的旋转幅值更集中在0附近，因为在接近目标物体的过程中末端姿态通常保持相对固定。
+构建完成的数据集在动作分布上呈现出显著的差异特征。如图~\ref{fig:pickup_curves}~所示，简单抓取任务的动作以垂直方向的平移为主。在该任务中，机械臂首先平移至目标水果上方，随后下降夹取并提升。各轴旋转变化极小，整体动作分布集中。
 
-\begin{figure}[htbp]
+\begin{figure}[htb]
   \centering
-  \subfloat[平移幅值分布对比]{\includegraphics[width=0.48\linewidth]{figures/content/action_dist_task_trans_norm.png}\label{fig:action_dist_task_trans_norm}}
-  \hfill
-  \subfloat[旋转幅值分布对比]{\includegraphics[width=0.48\linewidth]{figures/content/action_dist_task_rot_norm.png}\label{fig:action_dist_task_rot_norm}}
-  \caption{抓取任务与抽屉操作任务动作幅值分布对比}
-  \label{fig:action_dist_task_norm}
+  \subfloat[平移曲线]{\includegraphics[width=0.48\linewidth]{figures/content/plot_pickup_delta_xyz_curve.png}\label{fig:pickup_xyz_curve}}\hfill
+  \subfloat[旋转曲线]{\includegraphics[width=0.48\linewidth]{figures/content/plot_pick_up_delta_rpy_curve.png}\label{fig:pickup_rpy_curve}}
+  \caption{抓取任务动作曲线}
+  \label{fig:pickup_curves}
 \end{figure}
 
-除动作幅值外，各动作维度的相关性同样存在差异。图~\ref{fig:action_dist_corr}~展示了抓取任务与抽屉操作任务的动作维度相关系数热图。在抓取任务中，三个旋转分量之间呈现高度共线关系，且平移与旋转分量之间的相关系数接近0，说明该任务的平移与旋转相对解耦。而在抽屉操作任务中，沿 $x$ 轴的平移与绕 $y$ 轴的旋转存在中等程度的负相关，反映了操作者在拉动抽屉时手臂前伸与腕部俯仰的协调配合。两类任务在动作维度耦合结构上的差异，决定了各自策略的学习难点不同。
+抽屉操作任务的动作结构更为复杂。如图~\ref{fig:drawer_curves}~所示，该任务要求机械臂先翻转手腕至适应抽屉把手的姿态，再靠近并拉开抽屉。因此，在动作曲线的前期阶段，机械臂的旋转变化极为剧烈，而在后期拉开抽屉的过程中，动作则转变为平缓的小幅平移，呈现出前期剧烈、后期平缓的衰减特征。
 
-\begin{figure}[htbp]
+\begin{figure}[htb]
   \centering
-  \subfloat[抓取任务动作维度相关性]{\includegraphics[width=0.48\linewidth]{figures/content/action_dist_corr_pickup.png}}
-  \hfill
-  \subfloat[抽屉操作任务动作维度相关性]{\includegraphics[width=0.48\linewidth]{figures/content/action_dist_corr_drawer.png}}
-  \caption{不同任务类型动作维度相关性对比}
-  \label{fig:action_dist_corr}
+  \subfloat[平移曲线]{\includegraphics[width=0.48\linewidth]{figures/content/plot_drawer_delta_xyz_curve.png}\label{fig:drawer_xyz_curve}}\hfill
+  \subfloat[旋转曲线]{\includegraphics[width=0.48\linewidth]{figures/content/plot_drawer_delta_rpy_curve.png}\label{fig:drawer_rpy_curve}}
+  \caption{抽屉操作任务动作曲线}
+  \label{fig:drawer_curves}
 \end{figure}
 
-真实场景采集的数据与仿真环境数据在动作分布上同样存在差异。图~\ref{fig:action_dist_long_vs_libero}~展示了自建长时效任务数据集与LIBERO仿真数据集在平移和旋转幅值上的分布对比。在采集真实数据时，出于对机器人的安全保护，操作者倾向于以较小的步幅控制机械臂运动，因此真实数据的平移与旋转幅値分布在0附近更为密集。LIBERO仿真环境无需这一层安全考量，仿真模型可以按照任务要求执行较大幅度的动作。
+长时效任务融合了上述两种操作，要求机械臂先打开抽屉，再将水果放入其中。如图~\ref{fig:long_curves}~所示，机械臂在前期需要翻转手腕以操作抽屉，随后必须再次翻转手腕恢复至抓取姿态，最后执行水果的夹取与放置。这种复合操作在动作曲线上表现为两次明显的旋转峰值与多段平移活跃区，动作分布最为多样，对模型的时序建模能力要求最高。
+
+\begin{figure}[htb]
+  \centering
+  \subfloat[平移曲线]{\includegraphics[width=0.48\linewidth]{figures/content/plot_long_task_delta_xyz_curve.png}\label{fig:long_xyz_curve}}\hfill
+  \subfloat[旋转曲线]{\includegraphics[width=0.48\linewidth]{figures/content/plot_long_task_delta_rpy_curve.png}\label{fig:long_rpy_curve}}
+  \caption{长时效任务动作曲线}
+  \label{fig:long_curves}
+\end{figure}
+
+真实场景采集的数据与仿真环境数据在动作分布上同样存在差异。如图~\ref{fig:action_dist_long_vs_libero}~所示，自建长时效任务数据集与LIBERO仿真数据集在平移和旋转幅值上的分布差异显著。在采集真实数据时，出于对机器人的安全保护，操作者倾向于以较小的步幅控制机械臂运动，因此真实数据的平移与旋转幅值分布在0附近更为密集。LIBERO仿真环境无需这一层安全考量，仿真模型可以按照任务要求执行较大幅度的动作。
 
 \begin{figure}[htbp]
   \centering
