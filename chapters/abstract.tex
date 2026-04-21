@@ -4,19 +4,19 @@
 \begin{abstract}{机械臂操作, 模仿学习, 扩散模型, 视觉语言动作模型, 时序缓存}
 随着人工智能与机器人技术的不断发展，具身智能正成为科技发展的重点领域。然而，真实世界非结构化环境中的复杂因素以及长视野任务中的时序上下文依赖，严重影响了机械臂在复杂操作任务中的成功率。因此，本文针对多模态动作生成与决策依赖难题，提出了一种基于特征时序缓存的视觉语言动作模型TemporalCacheVLA。本文的主要研究工作如下：
 
-针对机械臂运动映射问题，研究了基于运动学理论与典型模仿学习算法的机器人操作基础理论。采用Denavit-Hartenberg参数法对Franka Panda与UR5e进行运动学建模，推导正逆运动学方程，基于自建数据集计算真实场景动作标签，为后续算法提供了正运动学支撑。
+（1）针对机械臂运动映射问题，研究了基于运动学理论与典型模仿学习算法的机器人操作基础理论。采用Denavit-Hartenberg参数法对Franka Panda与UR5e进行运动学建模，推导正逆运动学方程，基于自建数据集计算真实场景动作标签，为后续算法提供了正运动学支撑。
 
-针对传统行为克隆难以拟合多模态动作分布的问题，提出了一种基于扩散模型的模仿学习动作生成算法。采用迭代DiT为核心，利用EfficientViT提取视觉特征，并设计非对称跨模态注意力机制融合多模态特征，采用DDIM策略加速采样。在RoboMimic数据集上的实验表明，本文方法在Transport ph和Tool Hang ph任务上分别将成功率提升至$0.862$和$0.791$，在Transport mh任务上由$0.643$提高至$0.801$，有效平衡了生成质量与推理效率。
+（2）针对传统行为克隆难以拟合多模态动作分布的问题，提出了一种基于扩散模型的模仿学习动作生成算法。采用迭代DiT（Diffusion Transformer， DiT）为核心，利用EfficientViT提取视觉特征，并设计非对称跨模态注意力机制融合多模态特征，采用去噪扩散隐式模型（Denoising Diffusion Implicit Models， DDIM）加速采样。在RoboMimic数据集上的实验表明，本文方法在Transport ph和Tool Hang ph任务上分别将成功率提升至$0.862$和$0.791$，在Transport mh任务上由$0.643$提高至$0.801$，有效平衡了生成质量与推理效率。
 
-针对长时序任务中的状态混淆与上下文遗忘问题，提出了一种基于特征时序缓存的视觉语言动作模型TemporalCacheVLA。采用DINOv2/SigLIP双分支视觉编码器与LLaMA 2提取特征，设计双通道特征时序缓存机制，通过交叉注意力检索与可学习门控动态融合历史上下文，并引入余弦相似度缓存压缩策略。在LIBERO基准数据集上的实验表明，本文方法在Goal与LIBERO-100子集上分别取得$95.9$和$94.9$的平均成功率，消融实验进一步验证了缓存检索与门控融合等机制的有效性。
+（3）针对长时序任务中的状态混淆与上下文遗忘问题，提出了一种基于特征时序缓存的视觉语言动作模型TemporalCacheVLA。采用双分支视觉编码器与LLaMA 2 大语言模型提取特征，设计双通道特征时序缓存机制，通过交叉注意力检索与可学习门控动态融合历史上下文，并引入余弦相似度缓存压缩策略。在LIBERO基准数据集上的实验表明，本文方法在Goal与LIBERO-100子集上分别取得$95.9$和$94.9$的平均成功率，消融实验进一步验证了缓存检索与门控融合等机制的有效性。
 
-针对模型向真实物理世界迁移面临的系统集成难题，搭建了基于GELLO遥操臂的真实物理平台并完成部署验证。利用缩比遥操臂采集示教数据进行参数冻结微调，基于ROS框架开发本地控制节点并部署为Flask远端服务。实机评估表明，TemporalCacheVLA在简单抓取、抽屉操作及长时效组合任务中分别取得$85$、$65$和$40$的成功率，其中长时效组合任务较OpenVLA基线提升了$30$个百分点，证明了所提框架在真实环境中的可行性。
+（4）针对模型向真实物理世界迁移面临的系统集成难题，搭建了基于GELLO遥操臂的真实物理平台并完成部署验证。利用缩比遥操臂采集示教数据进行参数冻结微调，基于ROS框架开发本地控制节点并部署为Flask远端服务。实机评估表明，TemporalCacheVLA在简单抓取、抽屉操作及长时效组合任务中分别取得$85$、$65$和$40$的成功率，其中长时效组合任务较基线提升了$30$个百分点，证明了所提框架在真实环境中的可行性。
 
 \end{abstract}
 
 %% ----------------------------------------------------------------------------
 %%                              English Abstract
 %% ----------------------------------------------------------------------------
-\begin{englishabstract}{Robotic Manipulation, Imitation Learning, Diffusion Model, Vision-Language-Action Model, Temporal Cache}
+\begin{englishabstract}{Robot Manipulation, Imitation Learning, Diffusion Model, Vision-Language-Action Model, Temporal Cache}
 This article proposes a new Southeast University master degree thesis \LaTeX ~template and explains how to elegantly write an article which is beautiful but full of shit.
 \end{englishabstract}
