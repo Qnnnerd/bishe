@@ -90,7 +90,7 @@
 
 \begin{figure}[htb]
   \centering
-  \includegraphics[width=0.8\linewidth]{figures/content/real_tasks.pdf}
+  \includegraphics[width=0.9\linewidth]{figures/content/real_tasks.pdf}
   \caption{真实环境中的任务执行示意图}
   \label{fig:real_tasks_overview}
 \end{figure}
@@ -116,7 +116,7 @@
 
 \begin{figure}[!htb]
   \centering
-  \includegraphics[width=0.8\linewidth]{figures/content/real_traj_correction}
+  \includegraphics[width=0.9\linewidth]{figures/content/real_traj_correction}
   \caption{纠错轨迹样例}
   \label{fig:correction_trajectories_placeholder}
 \end{figure}
@@ -173,7 +173,7 @@
   \label{fig:long_curves}
 \end{figure}
 
-真实场景采集的数据与仿真环境数据在动作分布上同样存在差异。如图~\ref{fig:action_dist_long_vs_libero}~所示，自建长时效任务数据集与LIBERO仿真数据集在平移和旋转幅值上的也存在明显差异。在采集真实数据时，出于对机器人的安全保护，操作者倾向于以较小的步幅控制机械臂运动，因此真实数据的平移与旋转幅值分布在0附近更为密集，LIBERO仿真环境无需这一层安全考量，仿真模型可以按照任务要求执行较大幅度的动作。
+真实场景采集的数据与仿真环境数据在动作分布上同样存在差异。如图~\ref{fig:action_dist_long_vs_libero}~所示，自建长时效任务数据集与LIBERO仿真数据集在平移和旋转幅值上的也存在明显差异。在采集真实数据时，出于对机器人的安全保护，操作者倾向于以较小的步幅控制机械臂运动，因此真实数据的平移与旋转幅值分布在0附近更为密集，LIBERO仿真环境无需这一层安全考量，仿真模型可以按照任务要求执行较大幅度的动作，所以动作分布更为平均。
 
 \begin{figure}[!htb]
   \centering
@@ -230,7 +230,7 @@
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=0.8\linewidth]{figures/content/real_manipulation}
+\includegraphics[width=0.9\linewidth]{figures/content/real_manipulation}
 \caption{真实推理的成功执行轨迹}
 \label{fig:real_success_traj}
 \end{figure}
@@ -267,7 +267,7 @@
   \label{fig:inference_long_curves}
 \end{figure}
 
-对比实验的具体成功率如表~\ref{tab:real_world_results}~所示。从结果可以看出，在单步抓取任务中，两者的成功率差距较小，这表明在无需历史上下文的简单任务中，OpenVLA本身已经具备了较好的动作生成能力。然而，随着任务复杂度的提升，特别是在需要跨阶段状态记忆的长时效组合任务中，OpenVLA的成功率急剧下降至10\%，而TemporalCacheVLA依然保持了40\%的成功率。这一差异表明，时序缓存机制在真实长时效任务中同样能够发挥作用。
+对比实验的具体成功率如表~\ref{tab:real_world_results}~所示。从结果可以看出，在单步抓取任务中，两者的成功率差距较小，这表明在无需历史上下文的简单任务中，OpenVLA本身已经具备了较好的动作生成能力。然而，随着任务复杂度的提升，特别是在需要跨阶段状态记忆的长时效组合任务中，OpenVLA的成功率急剧下降至10，而TemporalCacheVLA依然保持了40的成功率。这一差异表明，时序缓存机制在真实长时效任务中同样能够发挥作用。
 
 \begin{table}[htb]
 \centering
@@ -275,9 +275,9 @@
 \label{tab:real_world_results}
 \begin{tabular}{lcccc}
 \toprule
-模型 & 简单抓取 (\%) & 抽屉操作 (\%) & 长时效任务 (\%) & 平均成功率 (\%) \\
+模型 & 简单抓取  & 抽屉操作  & 长时效任务  & 平均成功率 \\
 \midrule
-OpenVLA & 75 & 40 & 10 & 41.7 \\
+OpenVLA\cite{kim2024openvla} & 75 & 40 & 10 & 41.7 \\
 TemporalCacheVLA（本文） & \textbf{85} & \textbf{65} & \textbf{40} & \textbf{63.3} \\
 \bottomrule
 \end{tabular}
