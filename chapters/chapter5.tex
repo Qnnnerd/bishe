@@ -229,7 +229,7 @@
 \label{fig:real_success_traj}
 \end{figure}
 
-后续图~\ref{fig:inference_pickup_curves}、图~\ref{fig:inference_drawer_curves}与图~\ref{fig:inference_long_curves}中的真实推理动作曲线显示，模型输出的末端动作序列存在较明显的波动噪声。如前文图~\ref{fig:action_dist_long_vs_libero}~所示，真实采集数据的动作幅值极小且集中在零点附近，扩散模型在去噪过程中难以将真实的微小动作与随机噪声进行有效区分，进而无法生成平滑的动作序列。尽管推理输出中混入了随机波动，但这些波动并未改变动作序列的整体走向，在不同任务的执行过程中，模型生成的动作趋势与采集阶段的数据特征依然保持一致。
+如图~\ref{fig:action_dist_long_vs_libero}~所示，真实采集数据的动作幅值小且集中在零点附近，这将导致扩散模型在训练和推理的去噪过程中，难以将真实的微小动作与随机噪声进行有效区分，进而无法生成平滑的动作序列。尽管推理输出中混入了随机波动，但如图~\ref{fig:inference_pickup_curves}、图~\ref{fig:inference_drawer_curves}与图~\ref{fig:inference_long_curves}所示，真实推理动作曲线存在较明显的波动噪声的同时，并未改变动作序列的整体走向，在不同任务的执行过程中，模型生成的动作趋势与采集阶段的数据特征依然保持一致。
 
 在抓取任务中，如图~\ref{fig:inference_pickup_curves}~所示，模型的平移输出在目标位置附近呈现出密集的小幅调整，姿态旋转则维持在较小范围内波动。抓取任务以末端移动至目标位置为主，姿态变化幅度较小，模型输出的平移波动和较小的旋转变化与这一操作过程相符。
 
