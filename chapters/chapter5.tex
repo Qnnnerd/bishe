@@ -235,6 +235,38 @@
 \label{fig:real_success_traj}
 \end{figure}
 
+为进一步分析模型在真实环境下的动作生成特性，本节提取了推理过程中的末端动作序列，并与采集阶段的数据进行对比。如前文图~\ref{fig:action_dist_long_vs_libero}~所示，真实采集数据的动作幅值集中在零点附近，这使扩散模型在推理时难以生成平滑的动作序列，输出中混入了一定程度的随机波动。局部波动并不影响动作的宏观走向，模型生成的动作在整体趋势上与采集数据的运动模式保持一致。
+
+在抓取任务中，如图~\ref{fig:inference_pickup_curves}~所示，模型的平移输出在目标位置附近呈现出密集的小幅调整，姿态旋转则维持在较小范围内波动。这一动作模式与抓取任务的操作特点相符——该任务主要依赖末端的精确定位，姿态调整幅度较小。
+
+\begin{figure}[htb]
+  \centering
+  \subfloat[平移曲线]{\includegraphics[width=0.4\linewidth]{figures/content/pick_up_banana_succsess_1.png}\label{fig:inference_pickup_xyz_curve}}\quad
+  \subfloat[旋转曲线]{\includegraphics[width=0.4\linewidth]{figures/content/pick_up_banana_success_rpy.png}\label{fig:inference_pickup_rpy_curve}}
+  \caption{抓取任务真实推理动作曲线}
+  \label{fig:inference_pickup_curves}
+\end{figure}
+
+在抽屉操作任务中，如图~\ref{fig:inference_drawer_curves}~所示，动作曲线呈现出明显的两阶段特征。任务初期旋转曲线波动较大，对应机械臂翻转手腕以适应抽屉把手的姿态；随着任务推进，旋转趋于平稳，平移曲线出现持续的小幅变化，对应缓慢拉开抽屉的过程。这一先翻转后拉动的趋势与图~\ref{fig:drawer_curves}~中的采集数据动作模式一致，说明模型在微调后保留了对该任务操作顺序的正确理解。
+
+\begin{figure}[!htb]
+  \centering
+  \subfloat[平移曲线]{\includegraphics[width=0.4\linewidth]{figures/content/plot_inference_drawer_delta_xyz_curve.png}\label{fig:inference_drawer_xyz_curve}}\quad
+  \subfloat[旋转曲线]{\includegraphics[width=0.4\linewidth]{figures/content/plot_inference_drawer_delta_rpy_curve.png}\label{fig:inference_drawer_rpy_curve}}
+  \caption{抽屉操作任务真实推理动作曲线}
+  \label{fig:inference_drawer_curves}
+\end{figure}
+
+在长时效任务中，如图~\ref{fig:inference_long_curves}~所示，动作序列在不同阶段出现了多次姿态调整与平移活跃区间，依次对应打开抽屉、调整抓取姿态并夹取物体、最终放置等操作阶段。模型在整个动作序列中依次切换了不同的操作模式，这与时序缓存机制在长时效任务中保留历史状态的设计目标相符。
+
+\begin{figure}[!htb]
+  \centering
+  \subfloat[平移曲线]{\includegraphics[width=0.4\linewidth]{figures/content/plot_inference_long_delta_xyz_curve.png}\label{fig:inference_long_xyz_curve}}\quad
+  \subfloat[旋转曲线]{\includegraphics[width=0.4\linewidth]{figures/content/plot_inference_long_delta_rpy_curve.png}\label{fig:inference_long_rpy_curve}}
+  \caption{长时效任务真实推理动作曲线}
+  \label{fig:inference_long_curves}
+\end{figure}
+
 对比实验的具体成功率如表~\ref{tab:real_world_results}~所示。从结果可以看出，在单步抓取任务中，两者的成功率差距较小，这表明在无需历史上下文的简单任务中，OpenVLA本身已经具备了较好的动作生成能力。然而，随着任务复杂度的提升，特别是在需要跨阶段状态记忆的长时效组合任务中，OpenVLA的成功率急剧下降至10\%，而TemporalCacheVLA依然保持了40\%的成功率。这一差异表明，时序缓存机制在真实长时效任务中同样能够发挥作用。
 
 \begin{table}[htb]
