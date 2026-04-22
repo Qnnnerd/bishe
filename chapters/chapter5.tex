@@ -261,7 +261,7 @@
   \label{fig:inference_long_curves}
 \end{figure}
 
-对比实验的具体成功率如表~\ref{tab:real_world_results}~所示。从结果可以看出，在简单抓取任务中，两者的成功率差距相对较小，这说明在无需显式历史上下文建模的简单任务中，OpenVLA 本身也能够取得较为可观的动作生成效果。然而，随着任务复杂度提升，尤其是在需要跨阶段状态记忆的长时序组合任务中，OpenVLA 的成功率下降至 10，而 TemporalCacheVLA 在该任务上的成功率为 40，较基线模型有明显提升。这一差异表明，时序缓存机制在真实长时序任务中同样能够发挥作用。
+对比实验的具体成功率如表~\ref{tab:real_world_results}~所示。从结果可以看出，在简单抓取任务中，两者的成功率差距相对较小，这说明在无需显式历史上下文建模的简单任务中，OpenVLA 本身也能够取得较为可观的动作生成效果。然而，随着任务复杂度提升，尤其是在需要跨阶段状态记忆的长时序组合任务中，OpenVLA 的成功率下降至 0.10，而 TemporalCacheVLA 在该任务上的成功率为 0.40，较基线模型有明显提升。这一差异表明，时序缓存机制在真实长时序任务中同样能够发挥作用。
 
 \begin{table}[htb]
 \centering
@@ -271,8 +271,8 @@
 \toprule
 模型 & 简单抓取  & 抽屉操作  & 长时效任务  & 平均成功率 \\
 \midrule
-OpenVLA\cite{kim2024openvla} & 75 & 40 & 10 & 41.7 \\
-TemporalCacheVLA（本文） & \textbf{85} & \textbf{65} & \textbf{40} & \textbf{63.3} \\
+OpenVLA\cite{kim2024openvla} & 0.75 & 0.40 & 0.10 & 0.417 \\
+TemporalCacheVLA（本文） & \textbf{0.85} & \textbf{0.65} & \textbf{0.40} & \textbf{0.633} \\
 \bottomrule
 \end{tabular}
 \end{table}
