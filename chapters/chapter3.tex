@@ -8,7 +8,7 @@
 
 基于扩散模型的模仿学习动作生成算法的核心在于构建一个能够融合多模态感知信息并输出连续动作序列的条件生成模型。该算法的整体架构如图\ref{fig:action_model}所示，主要由特征编码器、特征融合模块和扩散动作生成模块三部分组成。
 
-\begin{figure}[htbp]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.95\linewidth]{figures/content/action_model}
   \caption{基于扩散模型的模仿学习动作生成算法整体架构}
@@ -24,7 +24,7 @@
 在本文提出的基于扩散模型的动作生成算法中，模型需要结合多步的历史观察序列来预测未来的动作序列。由于每一时间步的视觉观测都需要经过编码器处理，计算延迟和显存占用会随着观察窗口步数的增加而线性增长。如果在视觉编码阶段产生过高的延迟或占用过多的显存，将制约整个动作生成算法的实时性。为了在保证特征提取质量的同时满足对推理速度的要求，本算法采用EfficientViT\cite{cai2023efficientvit}作为视觉编码器的骨干网络，通过引入多尺度线性注意力机制，在保持全局感受野和多尺度学习能力的同时，降低了计算复杂度和内存消耗，从而更适用于对推理效率有要求的动作生成场景。
 
 
-\begin{figure}[htbp]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.65\linewidth]{figures/content/efficent_vit}
   \caption{EfficientViT视觉编码器网络结构}
@@ -38,7 +38,7 @@ EfficientViT模块内部采用轻量级的多尺度注意力机制，特征首�
 多尺度注意力图在通道维度上进行拼接后，再通过线性层进行特征融合。同时，网络在不同阶段之间引入了上采样操作，以便在不同分辨率层级之间进行特征融合，从而捕获丰富的空间细节和全局语义信息。这种机制上的协同配合，使得EfficientViT在提取高质量视觉特征的同时，降低了多步观察序列带来的显存压力和计算延迟。最终，视觉编码器输出一组具有高表征能力的视觉特征向量，用于后续的特征融合与动作生成。
 
 对于机器人状态编码，由于各关节当前角度、末端执行器位姿以及夹爪开合状态等信息通常表示为低维向量，因此可采用多层感知机（Multi-Layer Perceptron, MLP）作为状态编码器，如图\ref{fig:state_encoder}所示。该编码器首先通过三个全连接层和 GeLU 激活函数，将低维原始状态向量映射到与视觉特征相同维度的高维潜在空间中；随后对其进行标准化处理，并引入可学习的位置编码。由于状态特征需要作为序列 token 与视觉特征共同送入后续注意力模块，因此通过位置编码可以统一不同模态特征的表示形式，使其能够在特征融合模块中进行有效交互与对齐。
-\begin{figure}[htbp]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.8\linewidth]{figures/content/state_encoder}
   \caption{状态编码器结构示意图}
@@ -60,19 +60,19 @@ EfficientViT模块内部采用轻量级的多尺度注意力机制，特征首�
 
 在获得融合后的条件特征后，扩散动作生成模块负责以此为条件，通过迭代去噪的方式生成连续的动作序列。本算法以DiT\cite{peebles2023scalable} 作为去噪网络的骨干，并在此基础上针对机器人动作序列生成任务进行了适配设计。为了缓解误差累积并保证动作的连贯性，本算法采用动作分块（Action Chunk）机制进行动作建模。如图\ref{fig:action_chunk}所示，模型在每个时间步接收最近 $T_o$ 步的观测序列 $O_t = \{o_{t-T_o+1}, \ldots, o_t\}$ 作为条件输入，并一次性预测未来 $T_a$ 步的动作序列 $A_0 = \{a_t, a_{t+1}, \ldots, a_{t+T_a-1}\}$，其中每步动作 $a \in \mathbb{R}^{d_a}$，$d_a$ 为单步动作的维度。机械臂执行完当前动作块后，模型基于新的观测序列生成下一个动作块，从而构成闭环控制。
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.5\linewidth]{figures/content/action_chunk}
-  \caption{动作分块机制示意图}
-  \label{fig:action_chunk}
-\end{figure}
-
 在训练阶段，前向扩散过程依据余弦噪声调度策略，向动作块序列中逐步注入高斯噪声。本算法采用的余弦调度方案，其累积方差 $\bar{\alpha}_k$ 随时间步 $k$ 按余弦曲线单调递减，相较于线性调度在扩散过程的初期和末期均具有更为平缓的噪声变化速率，有助于模型在去噪过程的各阶段均能获得有效的学习信号。由此，前向过程的采样可以写为：
 \begin{equation}
   A_k = \sqrt{\bar{\alpha}_k}\, A_0 + \sqrt{1 - \bar{\alpha}_k}\, \epsilon, \quad \epsilon \sim \mathcal{N}(0, \mathbf{I})
 \end{equation}
 
 在输入编码与条件注入阶段，带噪动作序列 $A_k$ 经由一个全连接层映射至隐层维度空间，得到动作向量序列 $\mathbf{X} \in \mathbb{R}^{T_a \times d_h}$，其中 $d_h$ 为模型的隐层维度。扩散时间步 $k$ 通过正弦位置编码后，经由两层带有 SiLU 激活函数的全连接层转化为时间步嵌入向量 $\mathbf{t} \in \mathbb{R}^{d_h}$。来自特征融合模块的条件特征 $\mathbf{z}$ 经由全连接层投影至相同的隐层维度，得到条件向量 $\mathbf{c}_z \in \mathbb{R}^{1 \times d_h}$。时间步嵌入与条件向量相加后，拼接至动作向量序列的首位，并叠加可学习的位置编码矩阵 $\mathbf{E}_{\text{pos}} \in \mathbb{R}^{(T_a+1) \times d_h}$，形成完整的输入序列。这种将时间步与条件信息直接拼接至序列首位的设计，使得后续每个 DiT Block 中的自注意力机制均能在全局范围内感知当前的扩散步骤与观测条件，从而实现隐式的条件调制。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.5\linewidth]{figures/content/action_chunk}
+  \caption{动作分块机制示意图}
+  \label{fig:action_chunk}
+\end{figure}
 
 去噪网络的主体由 $N$ 个串联的 DiT Block 组成，每个 DiT Block 包含自注意力层、跨模态注意力层以及前馈网络层，各子模块均采用残差连接与层归一化的标准结构。自注意力子模块使输入序列中的动作向量与条件向量建立全局依赖关系。在跨模态交叉注意力层中，DiT Block 以当前序列特征作为 Q 向量，以来自特征融合模块的条件向量序列作为 K 向量和 V 向量进行交叉注意力计算，以提取与当前动作生成相关的条件信息。为了确保在训练初期该分支不对主干网络产生干扰，跨模态交叉注意力层的输出投影权重被初始化为零。前馈网络子模块由两层全连接层构成，隐层维度扩展为 $4d_h$，并采用 GELU 的 tanh 近似形式作为激活函数。经过所有 DiT Block 处理后，序列经由最终的层归一化与线性投影层映射回动作维度空间，并截取对应动作向量的部分，得到预测的噪声 $\hat{\epsilon} \in \mathbb{R}^{T_a \times d_a}$。
 
@@ -82,7 +82,7 @@ EfficientViT模块内部采用轻量级的多尺度注意力机制，特征首�
 \end{equation}
 其中 $\hat{\epsilon}_\theta$ 为 DiT 网络的噪声预测输出。最终，模型在条件特征的引导下逐步去噪以生成干净的动作块 $A_0$，并将其下发给机械臂执行。
 
-\begin{figure}[htbp]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.5\linewidth]{figures/content/ddim}
   \caption{DDPM 与 DDIM 采样过程示意图}
@@ -112,7 +112,7 @@ DDIM 从时间步 $k$ 到时间步 $k-1$ 的更新公式被重新推导为：
 
 RoboMimic是一个包含多种操作任务的机器人示教数据集，用于评估模仿学习与离线强化学习算法。该数据集统一采用具有七个自由度的Franka Emika Panda机械臂作为执行主体，为了测试算法在不同复杂度场景下的性能，RoboMimic设计了五种不同难度的仿真操作任务，涵盖了从基础抓取到高精度装配的多种技能需求。
 
-\begin{figure}[htbp]
+\begin{figure}[H]
   \centering
   \subfloat[Lift]{\includegraphics[width=.19\linewidth]{figures/content/robomimic_lift}}\hfill
   \subfloat[Can]{\includegraphics[width=.19\linewidth]{figures/content/robomimic_can}}\hfill
@@ -127,7 +127,7 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
 
 如表~\ref{tab:robomimic_summary}~所示，RoboMimic收集由人类操作员遥操生成的示教轨迹，根据操作员的熟练程度与数据生成方式，数据集被划分为两种主要类型，分别是专家演示轨迹（Proficient-Human demonstrations， PH）与多人演示轨迹（Multi-Human demonstrations， MH）。专家演示轨迹由一名熟练的操作员采集，每项任务均包含二百条成功的示教轨迹，数据具有较高的一致性。多人演示轨迹则由六名不同操作水平的操作员共同采集，每名操作员提供五十条轨迹，每项任务总计包含三百条成功轨迹。这种混合质量的数据集能够测试算法从次优示教中学习的能力。
 
-\begin{table}[htbp]
+\begin{table}[H]
   \centering
   \caption{RoboMimic数据集各任务属性汇总表}
   \label{tab:robomimic_summary}
@@ -168,7 +168,8 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
 
 表~\ref{tab:comparative_results_ph}和表~\ref{tab:comparative_results_mh}分别展示了本文方法与各基线方法在RoboMimic ph 和 mh 数据子集上的成功率对比结果。
 
-\begin{table}[htbp]
+
+\begin{table}[H]
   \centering
   \caption{不同方法在RoboMimic ph 数据集上的任务成功率对比}
   \label{tab:comparative_results_ph}
@@ -185,7 +186,9 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
   \end{tabular}
 \end{table}
 
-\begin{table}[htbp]
+从表中的结果可以看出，IBC在简单的 Lift 任务上能取得一定成功率，但在 Square、Transport 和 Tool Hang 等复杂任务上成功率接近于零。这是因为 IBC 在推理时依赖迭代优化来搜索最优动作，而复杂任务的动作分布具有高度多模态性，能量函数优化容易陷入局部极值，导致方法在这类任务上基本失效。LSTM-GMM 的混合高斯分量数量有限，对高度复杂的多模态分布的拟合能力不足，加之 LSTM 的隐状态递归传递在长时序任务中容易积累误差，因此在 Tool Hang 等需要多阶段精确规划的任务上成功率较低。基于扩散模型的方法通过迭代去噪逐步逼近真实动作分布，能够覆盖多模态动作空间中的多个模式，在长视距和高精度任务上相较于上述两类方法表现出更高的成功率。
+
+\begin{table}[H]
   \centering
   \caption{不同方法在RoboMimic mh 数据集上的任务成功率对比}
   \label{tab:comparative_results_mh}
@@ -202,27 +205,26 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
   \end{tabular}
 \end{table}
 
-从表中的结果可以看出，IBC在简单的 Lift 任务上能取得一定成功率，但在 Square、Transport 和 Tool Hang 等复杂任务上成功率接近于零。这是因为 IBC 在推理时依赖迭代优化来搜索最优动作，而复杂任务的动作分布具有高度多模态性，能量函数优化容易陷入局部极值，导致方法在这类任务上基本失效。LSTM-GMM 的混合高斯分量数量有限，对高度复杂的多模态分布的拟合能力不足，加之 LSTM 的隐状态递归传递在长时序任务中容易积累误差，因此在 Tool Hang 等需要多阶段精确规划的任务上成功率较低。基于扩散模型的方法通过迭代去噪逐步逼近真实动作分布，能够覆盖多模态动作空间中的多个模式，在长视距和高精度任务上相较于上述两类方法表现出更高的成功率。
 
-图~\ref{fig:robomimic_comparation_short}~和图~\ref{fig:robomimic_comparation_long}~分别展示了本文方法与 Diffusion Policy 在四项任务上的末端执行器轨迹对比，所有轨迹均取自 ph 子集中的成功示例。各图中边框颜色用于区分任务，每个任务的上行为本文方法的轨迹，下行为 Diffusion Policy 的轨迹，轨迹颜色由橙红渐变至浅蓝，对应时间序列的起点与终点。
-
-\begin{figure}[htbp]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.95\linewidth]{figures/content/robomimic_comparation_short}
   \caption{Can 和 Lift 任务上的轨迹对比图}
   \label{fig:robomimic_comparation_short}
 \end{figure}
 
+图~\ref{fig:robomimic_comparation_short}~和图~\ref{fig:robomimic_comparation_long}~分别展示了本文方法与 Diffusion Policy 在四项任务上的末端执行器轨迹对比，所有轨迹均取自 ph 子集中的成功示例。各图中边框颜色用于区分任务，每个任务的上行为本文方法的轨迹，下行为 Diffusion Policy 的轨迹，轨迹颜色由橙红渐变至浅蓝，对应时间序列的起点与终点。
+
 Can 和 Lift 均为简单的单目标抓放任务，从表~\ref{tab:comparative_results_ph}和表~\ref{tab:comparative_results_mh}中可以看出两种方法均以满分率完成，图~\ref{fig:robomimic_comparation_short}~中两条轨迹的整体形态也较为相近。在 Can 任务中可以看出，Diffusion Policy 的轨迹在接近目标容器时有小幅折返，本文方法的轨迹相对平滑，这与 EfficientViT 对目标位置的感知相对较好有关，使末端执行器在接近阶段无需过多修正。
 
-\begin{figure}[htbp]
+Square 任务要求末端执行器将螺母精确对准并插入方形柱，整个过程对横向定位精度要求较高，从图~\ref{fig:robomimic_comparation_long}~中可以看出，Diffusion Policy 在下压插入阶段轨迹有一定横向摇摆，路径相对分散，而本文方法在该阶段的轨迹较为收敛，末端执行器能够较直接地完成插入；Tool Hang 任务需要末端执行器在较大的空间跨度内完成钩子的定位与挂接，对路径的方向连续性要求较高，Diffusion Policy 在接近钩子时轨迹弧度较大，路径有一定迂回，而本文方法的轨迹弧度相对平缓，路径更为直接。这两项任务均要求模型对目标位置进行较为准确的判断，结合定量结果与轨迹可视化可以看出，本文所设计的跨模态融合方式有助于提升目标定位稳定性，并增强长时序动作执行过程中的运动方向一致性。
+
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.95\linewidth]{figures/content/robomimic_comparation_long}
   \caption{Square 和 Tool Hang 任务上的轨迹对比图}
   \label{fig:robomimic_comparation_long}
 \end{figure}
-
-Square 任务要求末端执行器将螺母精确对准并插入方形柱，整个过程对横向定位精度要求较高，从图~\ref{fig:robomimic_comparation_long}~中可以看出，Diffusion Policy 在下压插入阶段轨迹有一定横向摇摆，路径相对分散，而本文方法在该阶段的轨迹较为收敛，末端执行器能够较直接地完成插入；Tool Hang 任务需要末端执行器在较大的空间跨度内完成钩子的定位与挂接，对路径的方向连续性要求较高，Diffusion Policy 在接近钩子时轨迹弧度较大，路径有一定迂回，而本文方法的轨迹弧度相对平缓，路径更为直接。这两项任务均要求模型对目标位置进行较为准确的判断，结合定量结果与轨迹可视化可以看出，本文所设计的跨模态融合方式有助于提升目标定位稳定性，并增强长时序动作执行过程中的运动方向一致性。
 
 \subsection{消融实验}
 \label{subsec:ablation_study}
@@ -231,7 +233,7 @@ Square 任务要求末端执行器将螺母精确对准并插入方形柱，整�
 
 对于模型结构的消融实验，主要针对视觉编码器的选择、特征融合机制的设计以及状态特征残差注入路径三个方面进行对比。具体而言，本节设计了三种模型变体与完整模型进行对比。第一种变体将本文采用的 EfficientViT 视觉编码器替换为常规的 ResNet，第二种变体在特征融合模块中移除了非对称跨模态注意力机制而改用直接拼接的简单融合方式，第三种变体保留了跨模态注意力机制但去除了状态特征的残差注入路径。各模型变体的配置及对应的成功率结果如表~\ref{tab:ch3_ablation_modules}~所示。
 
-\begin{table}[htb]
+\begin{table}[H]
   \centering
   \caption{不同模型模块配置在各任务上的成功率}
   \label{tab:ch3_ablation_modules}
@@ -249,17 +251,17 @@ Square 任务要求末端执行器将螺母精确对准并插入方形柱，整�
   \end{tabular}
 \end{table}
 
-
-从表~\ref{tab:ch3_ablation_modules}~的数据可以看出，本文引入的各个模块在多数任务上均对最终性能具有正向贡献。当使用 ResNet 替换 EfficientViT 后，模型在 Transport mh 任务上的成功率由 $0.801$ 下降至 $0.746$，在 Tool Hang ph 任务上由 $0.791$ 下降至 $0.764$。这一结果表明，相较于常规卷积视觉编码器，面向多步视觉输入的高效多尺度特征建模方式更有利于长时序机器人操作任务中的目标感知与动作生成。
-
-\begin{figure}[htb]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.95\linewidth]{figures/content/robomimic_ablation_square}
   \caption{Square 任务消融实验轨迹对比图}
   \label{fig:ablation_comparation_square}
 \end{figure}
 
-\begin{figure}[htb]
+
+从表~\ref{tab:ch3_ablation_modules}~的数据可以看出，本文引入的各个模块在多数任务上均对最终性能具有正向贡献。当使用 ResNet 替换 EfficientViT 后，模型在 Transport mh 任务上的成功率由 $0.801$ 下降至 $0.746$，在 Tool Hang ph 任务上由 $0.791$ 下降至 $0.764$。这一结果表明，相较于常规卷积视觉编码器，面向多步视觉输入的高效多尺度特征建模方式更有利于长时序机器人操作任务中的目标感知与动作生成。
+
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.95\linewidth]{figures/content/robomimic_ablation_toolhang}
   \caption{Tool Hang 任务消融实验轨迹对比图}
@@ -275,7 +277,7 @@ Square 任务要求末端执行器将螺母精确对准并插入方形柱，整�
 
 在扩散动作生成模型中，扩散步数的设定对最终动作序列的生成质量具有决定性作用。充足的扩散步数能够保证模型充分拟合复杂的多模态动作分布，但同时也会带来较长的推理延迟。尽管本文在推理阶段引入了DDIM加速采样算法以提升系统的响应速度，去噪步数的减少仍不可避免地会对模型的动作生成质量产生影响。为了系统评估这一影响并验证本文默认配置的合理性，本节对不同推理去噪步数下的任务成功率进行了对比分析。实验测试了从十步到一百步的多种推理去噪步数配置，在此配置中，一百步等价于不跳步的完整去噪过程，而十步则为本文的默认加速配置。具体的成功率变化如表~\ref{tab:ablation_ddim}~所示。
 
-\begin{table}[htb]
+\begin{table}[H]
   \centering
   \caption{不同推理去噪步数在各任务上的成功率对比}
   \label{tab:ablation_ddim}

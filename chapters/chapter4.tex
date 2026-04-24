@@ -2,6 +2,14 @@
 \label{chp:temporal_cache_vla}
 动作生成模型能够拟合机械臂操作中的多模态动作分布，但在动态环境下完成长时序复杂任务时，仍需要借助自然语言指令提供高级语义引导。视觉语言动作模型（Vision-Language-Action models，VLA）通过联合融合视觉观测与语言指令，使机器人具备场景理解与任务规划能力。然而，现有VLA方在处理多阶段长时序任务时，往往难以持续维护历史操作上下文，容易出现状态混淆、指令遗忘等问题。若直接堆叠多帧历史特征，又会增加计算与存储开销，并引入较强的时序冗余。为解决上述问题，本章提出一种基于双通道时序缓存机制的视觉语言动作模型 TemporalCacheVLA，将感知细节表示与语义摘要表示分离存储，并在每次决策时从历史存储池中检索与当前状态相关的上下文信息进行动态融合，从而在控制计算开销的同时增强模型对长时序任务状态的持理解能力。最后，本文在 LIBERO~\cite{liu2023libero} 基准上对所提方法进行了系统验证。
 
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\linewidth]{figures/content/temporal_cache_vla}
+  \caption{TemporalCacheVLA框架整体架构图}
+  \label{fig:temporal_cache_vla}
+\end{figure}
+
 \section{TemporalCacheVLA框架设计}
 \label{sec:chap4_perception_memory}
 
@@ -9,12 +17,6 @@
 
 TemporalCacheVLA提出了一种基于双通道时序缓存的解决方案，其整体架构如图~\ref{fig:temporal_cache_vla}~所示。系统首先利用预训练的视觉编码器与大语言模型将当前时间步的视觉观测与语言指令进行编码，提取出低层级的感知向量与高层级的语义向量，这两者共同构成当前决策的缓存区。
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.9\linewidth]{figures/content/temporal_cache_vla}
-  \caption{TemporalCacheVLA框架整体架构图}
-  \label{fig:temporal_cache_vla}
-\end{figure}
 
 为了管理历史信息，系统维护了一个双通道的历史存储池，分别独立保存历史时间步的细粒度视觉细节与高层级语义摘要。在每次决策时，系统使用当前缓存区的内容作为查询条件，从历史存储池中检索相关的上下文信息，并通过可学习的门控机制进行融合。同时，存储池会根据相邻帧的特征相似度对冗余信息进行合并压缩，以维持长时序下的紧凑表示。最后，经过历史上下文增强的感知与语义向量被输入至扩散动作生成模型中，输出符合任务目标的连续机器人动作轨迹。
 
@@ -40,7 +42,7 @@ TemporalCacheVLA提出了一种基于双通道时序缓存的解决方案，其�
   \mathbf{h}^{\text{sem}}_t = \text{LLM}([\mathbf{V}_t; \mathbf{E}^{\text{lang}}])_{\text{last}}
 \end{equation}
 该向量综合编码了当前场景的语义信息与任务意图。
-\begin{figure}[tbp]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.6\linewidth]{figures/content/se}
   \caption{SE模块示意图}
@@ -56,7 +58,7 @@ TemporalCacheVLA提出了一种基于双通道时序缓存的解决方案，其�
 \label{subsec:chap4_memory_pool}
 
 在长时序机器人操作任务中，单一时间步的观测往往无法提供完整的状态信息，模型需要依赖历史上下文来消除状态混淆。然而直接拼接多帧历史图像或特征会导致计算复杂度显著增长，且相邻帧之间存在冗余信息，给长时序上下文记忆带来了较大的计算与显存压力。此外，感知向量与语义向量在特征维度和表达内容上存在明显差异，若将二者混合存储，容易削弱感知细节在后续检索与融合过程中的作用。
-\begin{figure}[htbp]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.5\linewidth]{figures/content/cache_retrieval}
   \caption{缓存检索模块示意图}
@@ -74,7 +76,7 @@ TemporalCacheVLA提出了一种基于双通道时序缓存的解决方案，其�
 
 对于任一缓存通道，记当前时刻输入该通道的特征向量为当前工作向量 $\mathbf{h}^{\text{curr}}_t$。在每个时间步，系统通过基于交叉注意力的检索模块从对应的历史存储池中提取相关的上下文信息。如图~\ref{fig:cache_retrieval}~所示，系统将当前工作向量作为 Q 向量，将历史存储池中的全部历史记录作为 K 向量和 V 向量。检索模块由 2 个交叉注意力块串联堆叠而成，前一个注意力块的输出作为后一个注意力块的 Q 向量输入，而 K 向量和 V 向量始终来自同一批历史特征，即历史存储池中的全部记录。这种设计使得模型能够在保持历史上下文不变的前提下，逐步提炼并聚焦与当前状态最相关的历史信息。每个交叉注意力块采用缩放点积注意力机制计算当前查询与全部历史记录的全局关联度。该模块不施加因果掩码，允许当前查询关注所有历史帧。注意力输出经过残差连接、层归一化以及前馈网络处理后，得到检索到的历史上下文向量 $\mathbf{h}^{\text{hist}}_t \in \mathbb{R}^{D}$。当历史存储池为空时，系统直接将当前工作向量作为检索结果。
 
-\begin{figure}
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.5\linewidth]{figures/content/fuse_gate}
   \caption{门控融合模块示意图}
@@ -90,7 +92,7 @@ TemporalCacheVLA提出了一种基于双通道时序缓存的解决方案，其�
   \mathbf{h}^{\text{fuse}}_t = g_t \odot \mathbf{h}^{\text{curr}}_t + (1 - g_t) \odot \mathbf{h}^{\text{hist}}_t
 \end{equation}
 这种门控机制允许模型在不同任务阶段动态调整当前状态与历史经验的依赖比例。线性层的参数以极小的标准差进行初始化，使得训练初期门控权重接近 $0.5$，保证了训练的稳定性。
-\begin{figure}
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.5\linewidth]{figures/content/cache_compress}
   \caption{相似度合并的压缩策略示意图}
@@ -135,7 +137,7 @@ TemporalCacheVLA提出了一种基于双通道时序缓存的解决方案，其�
 
 如图\ref{fig:libero_tasks}所示，LIBERO 是一个专门用于评估机器人操作模型在多样化任务和长时序场景下性能的基准数据集。该数据集共包含四个子集，分别侧重于评估机器人操作能力的不同维度，各子集的具体任务描述如表\ref{tab:libero_tasks}所示。空间子集（Spatial）包含十个任务，主要测试机器人在不同空间布局下的推理与操作能力；物体子集（Object）包含十个任务，侧重于评估模型对不同视觉外观、形状和纹理物体的泛化能力；目标子集（Goal）包含十个任务，要求机器人在相同的初始场景下，根据不同的语言指令完成不同的目标状态；综合子集（LIBERO-100）共包含一百个多样化任务，其中九十个用于训练、十个用于验证，用于全面考察模型在大规模任务集合上的综合表现与容量上限。在实验中，每个任务包含五十条人类专家示教轨迹，模型仅使用第三人称视角的单帧 RGB 图像和自然语言指令作为输入，不依赖任何腕部相机视图。
 
-\begin{figure}[htbp]
+\begin{figure}[H]
   \centering
   \setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.5pt}%
   \subfloat[Spatial]{\fbox{\includegraphics[width=.15\linewidth]{figures/content/libero_spatial}}}\quad
@@ -146,7 +148,14 @@ TemporalCacheVLA提出了一种基于双通道时序缓存的解决方案，其�
   \label{fig:libero_tasks}
 \end{figure}
 
-\begin{table}[htb]
+\subsection{实验细节}
+\label{subsec:chap4_training_details}
+
+本章所有的实验均在搭载六张NVIDIA A800（80GB显存版本）显卡的服务器上进行，操作系统为Ubuntu 22.04，采用PyTorch 2.2.0作为主要深度学习框架，并依赖CUDA 12.1进行训练和验证。为了支持大参数量的模型的训练，实验采用了完全分片数据并行（Fully Sharded Data Parallel， FSDP）\cite{zhao2023pytorch}技术，通过将模型权重平摊在多张显卡上来降低单张显卡的显存峰值压力。
+
+模型采用 AdamW 优化器，初始学习率设定为 $2 \times 10^{-5}$，梯度裁剪阈值设定为 $1.0$。每张显卡的批次大小设定为 32，训练时共启用四张显卡，因此全局总批次大小为 128。简单子集和复杂子集的最大训练步数分别设定为 20000 步和 40000 步。未来动作预测窗口大小设定为 16 步，扩散模型在训练时重复执行 4 次前向过程。在特征感知模块中，大语言模型骨干的嵌入空间维度 $d_{\text{llm}}$ 为 $4096$，感知压缩模块输出的感知向量维度 $d_{\text{per}}$ 设定为 $256$。在分类器自由引导机制中，训练阶段的条件置空概率 $p_{\text{drop}}$ 设定为 $10\%$，推理阶段的引导尺度 $w$ 默认设定为 $1.5$。推理阶段采用 DDIM 算法进行加速采样，默认 DDIM 采样步数设定为 10 步。
+
+\begin{table}[H]
   \centering
   \caption{LIBERO数据集任务细节}
   \label{tab:libero_tasks}
@@ -162,29 +171,26 @@ TemporalCacheVLA提出了一种基于双通道时序缓存的解决方案，其�
   \end{tabular}
 \end{table}
 
-\subsection{实验细节}
-\label{subsec:chap4_training_details}
-
-本章所有的实验均在搭载六张NVIDIA A800（80GB显存版本）显卡的服务器上进行，操作系统为Ubuntu 22.04，采用PyTorch 2.2.0作为主要深度学习框架，并依赖CUDA 12.1进行训练和验证。为了支持大参数量的模型的训练，实验采用了完全分片数据并行（Fully Sharded Data Parallel， FSDP）\cite{zhao2023pytorch}技术，通过将模型权重平摊在多张显卡上来降低单张显卡的显存峰值压力。
-
-模型采用 AdamW 优化器，初始学习率设定为 $2 \times 10^{-5}$，梯度裁剪阈值设定为 $1.0$。每张显卡的批次大小设定为 32，训练时共启用四张显卡，因此全局总批次大小为 128。简单子集和复杂子集的最大训练步数分别设定为 20000 步和 40000 步。未来动作预测窗口大小设定为 16 步，扩散模型在训练时重复执行 4 次前向过程。在特征感知模块中，大语言模型骨干的嵌入空间维度 $d_{\text{llm}}$ 为 $4096$，感知压缩模块输出的感知向量维度 $d_{\text{per}}$ 设定为 $256$。在分类器自由引导机制中，训练阶段的条件置空概率 $p_{\text{drop}}$ 设定为 $10\%$，推理阶段的引导尺度 $w$ 默认设定为 $1.5$。推理阶段采用 DDIM 算法进行加速采样，默认 DDIM 采样步数设定为 10 步。
-
 模型在训练过程中每5000步进行一次验证，每个任务均进行50次独立评估，记录最佳验证步下的成功率作为最终结果。本章采用任务成功率作为评估指标，其定义与第三章一致，即成功完成任务的回合数占总测试回合数的比例。
 \subsection{对比实验}
 \label{subsec:chap4_comparison}
 
 TemporalCacheVLA在LIBERO四个子集上的实验结果如图~\ref{fig:libero_results}~所示，图中每一行对应一个完整的动作执行过程，下方的中文为该动作语言指令的翻译。每行的前四张图片展示了该次动作的均匀采样帧，图中标注的轨迹线表示机械臂末端执行器从当前轨迹起点运动到终点的路径，每行的最后一张图片则展示了该次动作的完整轨迹。
-\begin{figure}[htb]
+
+为了验证有效性，本文将与当前领域内的主流视觉语言动作模型进行了对比，各方法在LIBERO四个子集上的成功率对比结果如表~\ref{tab:libero_results}~所示，表中加粗部分表示该方法在相应子集上的最佳表现。
+
+从表~\ref{tab:libero_results} 的结果可以看出，TemporalCacheVLA 在四个子集上整体表现稳定，并在 Goal 与 LIBERO-100 两个更强调任务阶段切换与长时序依赖的子集上取得了最优结果。具体而言，在 Spatial 子集上，TemporalCacheVLA 取得了 $0.970$ 的成功率，略低于 CogACT 的 $0.972$。由于该子集中的任务多为短序列空间关系操作，模型主要依赖当前观测完成局部空间推理，因此显式历史上下文建模带来的增益相对有限。在 Object 子集上，TemporalCacheVLA 取得了 $0.981$ 的成功率，略低于 $\pi_0$ 的 $0.988$。这说明在以细粒度物体外观识别与抓取泛化为主的任务中，本文方法虽能保持较高性能，但其优势尚未被充分释放。
+
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.75\linewidth]{figures/content/libero-datasets}
   \caption{在LIBERO数据集四个子集上的成功动作样本示例图}
   \label{fig:libero_results}
 \end{figure}
 
-为了验证有效性，本文将与当前领域内的主流视觉语言动作模型进行了对比，各方法在LIBERO四个子集上的成功率对比结果如表~\ref{tab:libero_results}~所示，表中加粗部分表示该方法在相应子集上的最佳表现。
+相比之下，在 Goal 与 LIBERO-100 子集上，本文方法分别取得了 $0.959$ 与 $0.949$ 的最高成功率，表现出更明显的优势。其原因在于，这两类任务通常包含更强的阶段状态依赖：模型不仅需要理解当前场景与语言指令，还需要结合先前已完成的操作阶段判断当前所处的任务进度。尤其是在 LIBERO-100 子集中，任务往往包含多个子目标的顺序执行，若缺乏对历史上下文的有效维护，模型容易在阶段切换处出现状态遗忘或动作波动。本文通过双通道时序缓存机制分别保留历史感知细节与语义摘要，并在当前决策时检索相关历史信息进行融合，从而增强了模型对任务阶段的辨识能力与长时序决策稳定性。因此，TemporalCacheVLA 的性能提升主要体现在对长时序、多阶段任务的适应能力上，这也与本文方法的设计目标保持一致。
 
-
-\begin{table}[htb]
+\begin{table}[H]
   \centering
   \caption{不同方法在LIBERO基准数据集上的成功率}
   \label{tab:libero_results}
@@ -207,12 +213,6 @@ TemporalCacheVLA在LIBERO四个子集上的实验结果如图~\ref{fig:libero_re
   \end{tabular}
 \end{table}
 
-
-
-从表~\ref{tab:libero_results} 的结果可以看出，TemporalCacheVLA 在四个子集上整体表现稳定，并在 Goal 与 LIBERO-100 两个更强调任务阶段切换与长时序依赖的子集上取得了最优结果。具体而言，在 Spatial 子集上，TemporalCacheVLA 取得了 $0.970$ 的成功率，略低于 CogACT 的 $0.972$。由于该子集中的任务多为短序列空间关系操作，模型主要依赖当前观测完成局部空间推理，因此显式历史上下文建模带来的增益相对有限。在 Object 子集上，TemporalCacheVLA 取得了 $0.981$ 的成功率，略低于 $\pi_0$ 的 $0.988$。这说明在以细粒度物体外观识别与抓取泛化为主的任务中，本文方法虽能保持较高性能，但其优势尚未被充分释放。
-
-相比之下，在 Goal 与 LIBERO-100 子集上，本文方法分别取得了 $0.959$ 与 $0.949$ 的最高成功率，表现出更明显的优势。其原因在于，这两类任务通常包含更强的阶段状态依赖：模型不仅需要理解当前场景与语言指令，还需要结合先前已完成的操作阶段判断当前所处的任务进度。尤其是在 LIBERO-100 子集中，任务往往包含多个子目标的顺序执行，若缺乏对历史上下文的有效维护，模型容易在阶段切换处出现状态遗忘或动作波动。本文通过双通道时序缓存机制分别保留历史感知细节与语义摘要，并在当前决策时检索相关历史信息进行融合，从而增强了模型对任务阶段的辨识能力与长时序决策稳定性。因此，TemporalCacheVLA 的性能提升主要体现在对长时序、多阶段任务的适应能力上，这也与本文方法的设计目标保持一致。
-
 \subsection{消融实验}
 \label{subsec:chap4_ablation}
 
@@ -220,7 +220,7 @@ TemporalCacheVLA在LIBERO四个子集上的实验结果如图~\ref{fig:libero_re
 
 本章工作的核心在于提出双通道特征时序缓存机制。为了验证该机制中各关键组成部分的有效性，本文首先针对缓存检索、门控融合与缓存压缩三个模块进行了消融实验。在实验设置中，通过逐一移除特定模块构建不同模型变体：当移除缓存检索机制时，系统不再通过交叉注意力从历史存储池中选择相关上下文，而是将当前缓存向量、历史存储特征与时间步嵌入直接输入 MLP 进行融合；当移除门控融合模块时，历史向量与当前向量直接在特征维度上进行拼接，不再通过可学习门控权重进行自适应融合；当取消缓存压缩机制时，历史存储池退化为简单的先进先出队列，超出容量上限时直接丢弃最早的记录。不同模块配置及对应的成功率结果如表~\ref{tab:ablation_modules}~所示。
 
-\begin{table}[htb]
+\begin{table}[H]
   \centering
   \caption{不同模块构成对模型性能的影响}
   \label{tab:ablation_modules}
@@ -228,10 +228,10 @@ TemporalCacheVLA在LIBERO四个子集上的实验结果如图~\ref{fig:libero_re
     \toprule
     缓存检索 &  & 门控融合 &  & 缓存压缩 &  & 平均成功率 \\
     \midrule
-             &  & \checkmark &  & \checkmark &  & 86.2 \\
-    \checkmark &  &            &  & \checkmark &  & 83.5 \\
-    \checkmark &  & \checkmark &  &            &  & 82.3 \\
-    \checkmark &  & \checkmark &  & \checkmark &  & \textbf{94.9} \\
+             &  & \checkmark &  & \checkmark &  & 0.862 \\
+    \checkmark &  &            &  & \checkmark &  & 0.835 \\
+    \checkmark &  & \checkmark &  &            &  & 0.823 \\
+    \checkmark &  & \checkmark &  & \checkmark &  & \textbf{0.949} \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -253,7 +253,7 @@ TemporalCacheVLA在LIBERO四个子集上的实验结果如图~\ref{fig:libero_re
   \end{tabular}
 \end{table}
 
-\begin{figure}[htb]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.75\linewidth]{figures/content/cache_type}
   \caption{不同缓存类型的成功轨迹对比}
@@ -264,14 +264,14 @@ TemporalCacheVLA在LIBERO四个子集上的实验结果如图~\ref{fig:libero_re
 
 为了统一可视化对比效果，后续所有消融实验的轨迹可视化均在“关上顶部的抽屉并把黑色的碗放在里面”这一任务场景下进行。图~\ref{fig:cache_type}~和图~\ref{fig:cache_type_failure}~分别展示了不同缓存类型变体在该场景下的成功轨迹对比与典型失败案例。后续消融实验的轨迹图均沿用与图~\ref{fig:libero_results}~一致的绘制方式。
 
-\begin{figure}[htb]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.75\linewidth]{figures/content/cache_type_failure}
   \caption{不同缓存类型导致的典型失败案例分析}
   \label{fig:cache_type_failure}
 \end{figure}
 
-\begin{figure}[htb]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.75\linewidth]{figures/content/cache_length}
   \caption{不同缓存存储长度下的成功轨迹对比}
@@ -284,7 +284,7 @@ TemporalCacheVLA在LIBERO四个子集上的实验结果如图~\ref{fig:libero_re
 
 
 如图~\ref{fig:cache_length}~所示，除了缓存类型，历史存储池的存储长度也就是容量上限，也是影响模型上下文保留能力的重要超参数。过小的存储长度可能导致任务早期的状态被丢弃，而过大的存储长度则可能引入冗余信息，增加特征融合难度与显存开销。为了探究不同存储长度对模型性能的影响，本节设置了存储长度分别为4、16和64的三种模型配置，不同存储长度下的任务成功率对比见表~\ref{tab:ablation_cache_length}~。
-\begin{table}[!hb]
+\begin{table}[H]
   \centering
   \caption{不同缓存存储长度对模型性能的影响}
   \label{tab:ablation_cache_length}
@@ -299,18 +299,19 @@ TemporalCacheVLA在LIBERO四个子集上的实验结果如图~\ref{fig:libero_re
   \end{tabular}
 \end{table}
 
-\begin{figure}[!htb]
+从表~\ref{tab:ablation_cache_length}~的数据可以看出，存储长度对模型成功率的总体影响相对平缓，不同配置下的表现较为接近，但过长或过短都会导致性能下降。当存储长度设定为 4 时，成功率为 $0.893$。这与本文提出的相似度合并缓存压缩策略有关，该策略使存储池中保留的多为能够明确表征状态变化的关键信息，因此即使在较短的存储长度下，模型仍能够保持较好的性能。当存储长度增加至 16 时，模型能够较充分地覆盖任务执行过程中的有效上下文，从而达到 $0.949$ 的最佳性能。然而，当存储长度进一步扩大至 64 时，模型性能并未继续提升，成功率反而回落至 $0.923$。这说明过长的存储序列会引入更多冗余历史帧，增加交叉注意力检索模块聚焦关键上下文的难度，使有效信息在长序列中被稀释。因此，适中的存储长度能够在保留有效历史上下文与抑制信息冗余之间取得较好的平衡。
+
+最后，为了探究 CFG 机制中引导强度系数 $w$ 对模型语言遵循程度与动作灵活性的具体影响，本节开展了针对不同 $w$ 取值的消融实验。在扩散动作生成阶段，$w$ 的大小直接决定了模型在多大程度上依赖于语言指令提取出的语义向量。本实验设置了 $w$ 分别为 $0.1$、$0.5$、$1.5$、$2.0$ 和 $5.0$ 五种组别，并以 $1.5$ 作为基准配置进行对比，不同引导强度下的成功轨迹如图~\ref{fig:cfg_ablation}~所示，成功率见表~\ref{tab:ablation_cfg}~。
+
+
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.75\linewidth]{figures/content/cfg_ablation}
   \caption{不同CFG引导强度下的成功轨迹对比}
   \label{fig:cfg_ablation}
 \end{figure}
 
-从表~\ref{tab:ablation_cache_length}~的数据可以看出，存储长度对模型成功率的总体影响相对平缓，不同配置下的表现较为接近，但过长或过短都会导致性能下降。当存储长度设定为 4 时，成功率为 $0.893$。这与本文提出的相似度合并缓存压缩策略有关，该策略使存储池中保留的多为能够明确表征状态变化的关键信息，因此即使在较短的存储长度下，模型仍能够保持较好的性能。当存储长度增加至 16 时，模型能够较充分地覆盖任务执行过程中的有效上下文，从而达到 $0.949$ 的最佳性能。然而，当存储长度进一步扩大至 64 时，模型性能并未继续提升，成功率反而回落至 $0.923$。这说明过长的存储序列会引入更多冗余历史帧，增加交叉注意力检索模块聚焦关键上下文的难度，使有效信息在长序列中被稀释。因此，适中的存储长度能够在保留有效历史上下文与抑制信息冗余之间取得较好的平衡。
-
-最后，为了探究 CFG 机制中引导强度系数 $w$ 对模型语言遵循程度与动作灵活性的具体影响，本节开展了针对不同 $w$ 取值的消融实验。在扩散动作生成阶段，$w$ 的大小直接决定了模型在多大程度上依赖于语言指令提取出的语义向量。本实验设置了 $w$ 分别为 $0.1$、$0.5$、$1.5$、$2.0$ 和 $5.0$ 五种组别，并以 $1.5$ 作为基准配置进行对比，不同引导强度下的成功轨迹如图~\ref{fig:cfg_ablation}~所示，成功率见表~\ref{tab:ablation_cfg}~。
-
-\begin{table}[htb]
+\begin{table}[H]
   \centering
   \caption{不同引导强度系数对模型性能的影响}
   \label{tab:ablation_cfg}
@@ -327,16 +328,16 @@ TemporalCacheVLA在LIBERO四个子集上的实验结果如图~\ref{fig:libero_re
   \end{tabular}
 \end{table}
 
-\begin{figure}[!htb]
+从表~\ref{tab:ablation_cfg}~的数据与相关图示可以看出，引导强度系数 $w$ 在语言指令服从性与动作灵活性之间起着关键的调节作用。当 $w=1.5$ 时，模型取得了 $0.949$ 的最高成功率，说明该配置能够较好地平衡两者之间的关系。从机制上看，$w$ 越大，语言指令对动作生成的约束作用越强，模型输出更倾向于严格遵循语义条件；反之，$w$ 越小，模型动作表现更灵活，但也更容易产生曲折或冗余的轨迹。
+
+如图~\ref{fig:cfg_failure}~所示，当 $w=0.1$ 时，虽然机器人的动作相对平滑灵活，但由于语言引导过弱，模型在任务后期更容易偏离目标指令，导致其在“把黑色的碗放在里面”这一步骤中拿错目标物品；而当 $w=5.0$ 时，过强的语言引导使动作过于僵化，模型在面对未见过的场景布局时难以灵活调整姿态并恢复至正常执行流程，因此无法完成后续操作。这表明，合理设置引导强度是保证模型既能准确遵循指令意图，又能灵活应对复杂环境变化的重要前提。
+
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.75\linewidth]{figures/content/cfg_failure}
   \caption{极端CFG引导强度配置下的典型失败案例}
   \label{fig:cfg_failure}
 \end{figure}
-
-从表~\ref{tab:ablation_cfg}~的数据与相关图示可以看出，引导强度系数 $w$ 在语言指令服从性与动作灵活性之间起着关键的调节作用。当 $w=1.5$ 时，模型取得了 $0.949$ 的最高成功率，说明该配置能够较好地平衡两者之间的关系。从机制上看，$w$ 越大，语言指令对动作生成的约束作用越强，模型输出更倾向于严格遵循语义条件；反之，$w$ 越小，模型动作表现更灵活，但也更容易产生曲折或冗余的轨迹。
-
-如图~\ref{fig:cfg_failure}~所示，当 $w=0.1$ 时，虽然机器人的动作相对平滑灵活，但由于语言引导过弱，模型在任务后期更容易偏离目标指令，导致其在“把黑色的碗放在里面”这一步骤中拿错目标物品；而当 $w=5.0$ 时，过强的语言引导使动作过于僵化，模型在面对未见过的场景布局时难以灵活调整姿态并恢复至正常执行流程，因此无法完成后续操作。这表明，合理设置引导强度是保证模型既能准确遵循指令意图，又能灵活应对复杂环境变化的重要前提。
 
 \section{本章小结}
 \label{sec:chap4_summary}
