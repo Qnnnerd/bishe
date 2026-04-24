@@ -131,16 +131,15 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
   \centering
   \caption{RoboMimic数据集各任务属性汇总表}
   \label{tab:robomimic_summary}
-  \small
-  \begin{tabular}{lcccccc}
+  \begin{tabular}{lccccccc} 
     \toprule
-    任务 & PH & MH & 机器人 & 操作对象 & 动作维度 & 动作最大步数 \\
+    任务 &  & PH & MH & 机器人 & 操作对象 & 动作维度 & 动作最大步数 \\ % 任务后加 & 表示空白列
     \midrule
-    罐头       & 200 & 300 & 1 & 1 &  7 & 400 \\
-    提升      & 200 & 300 & 1 & 1 &  7 & 400 \\
-    方形螺母    & 200 & 300 & 1 & 1 &  7 & 400 \\
-    运输 & 200 & 300 & 2 & 3 & 14 & 700 \\
-    工具悬挂 & 200 & --  & 1 & 2 &  7 & 700 \\
+    罐头       &  & 200 & 300 & 1 & 1 &  7 & 400 \\
+    提升      &  & 200 & 300 & 1 & 1 &  7 & 400 \\
+    方形螺母    &  & 200 & 300 & 1 & 1 &  7 & 400 \\
+    运输 &  & 200 & 300 & 2 & 3 & 14 & 700 \\
+    工具悬挂 &  & 200 & --  & 1 & 2 &  7 & 700 \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -173,7 +172,6 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
   \centering
   \caption{不同方法在RoboMimic ph 数据集上的任务成功率对比}
   \label{tab:comparative_results_ph}
-  \small
   \begin{tabular}{lccccc}
     \toprule
     方法 & Can ph & Lift ph & Square ph & Transport ph & Tool Hang ph \\
@@ -181,6 +179,7 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
     LSTM-GMM\cite{mandlekar2021matters} & 0.714 & 0.978 & 0.643 & 0.656 & 0.460 \\
     IBC\cite{florence2022implicit} & 0.103 & 0.709 & 0.102 & 0.032 & 0.014 \\
     Diffusion Policy\cite{chi2023diffusion} & \textbf{1.000} & \textbf{1.000} & \textbf{0.935} & 0.859 & 0.772 \\
+    \midrule     
     本文方法 & \textbf{1.000} & \textbf{1.000} & 0.934 & \textbf{0.862} & \textbf{0.791} \\
     \bottomrule
   \end{tabular}
@@ -190,7 +189,6 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
   \centering
   \caption{不同方法在RoboMimic mh 数据集上的任务成功率对比}
   \label{tab:comparative_results_mh}
-  \small
   \begin{tabular}{lcccc}
     \toprule
     方法 & Can mh & Lift mh & Square mh & Transport mh \\
@@ -198,6 +196,7 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
     LSTM-GMM\cite{mandlekar2021matters} & 0.887 & 0.992 & 0.491 & 0.254 \\
     IBC\cite{florence2022implicit} & 0.061 & 0.222 & 0.000 & 0.000 \\
     Diffusion Policy\cite{chi2023diffusion} & \textbf{1.000} & \textbf{1.000} & 0.858 & 0.643 \\
+    \midrule        
     本文方法 & \textbf{1.000} & \textbf{1.000} & \textbf{0.878} & \textbf{0.801} \\
     \bottomrule
   \end{tabular}
@@ -236,10 +235,9 @@ Square 任务要求末端执行器将螺母精确对准并插入方形柱，整�
   \centering
   \caption{不同模型模块配置在各任务上的成功率}
   \label{tab:ch3_ablation_modules}
-  \small
   \begin{tabular}{ccccccc}
     \toprule
-    \multicolumn{3}{c}{模型配置} & \multirow{2}{*}{Square mh} & \multirow{2}{*}{Transport ph} & \multirow{2}{*}{Transport mh} & \multirow{2}{*}{Tool Hang ph} \\
+    \multicolumn{3}{c}{模型配置} & \multirow{2}{*}{Square mh} & \multirow{2}{*}{Trans. ph} & \multirow{2}{*}{Trans. mh} & \multirow{2}{*}{Tool Hang ph} \\
     \cmidrule(r){1-3}
     EfficientViT & 跨模态注意力 & 状态残差 & & & & \\
     \midrule
@@ -281,22 +279,21 @@ Square 任务要求末端执行器将螺母精确对准并插入方形柱，整�
   \centering
   \caption{不同推理去噪步数在各任务上的成功率对比}
   \label{tab:ablation_ddim}
-  \small
-  \begin{tabular}{lcccccc}
+  \begin{tabular}{lccccccc} % 增加一列，变成 7 列
     \toprule
-    任务 & 10步 & 20步 & 40步 & 60步 & 80步 & 100步 \\
+    任务 &  & 10步 & 20步 & 40步 & 60步 & 80步 & 100步 \\ % 任务后加空白列
     \midrule
-    Square mh & 0.501 & 0.752 & 0.871 & 0.880 & \textbf{0.880} & 0.878 \\
-    Transport ph & 0.552 & 0.721 & 0.842 & 0.861 & 0.863 & \textbf{0.864} \\
-    Transport mh & 0.503 & 0.651 & 0.762 & 0.794 & 0.800 & \textbf{0.801} \\
-    Tool Hang ph & 0.301 & 0.552 & 0.721 & 0.752 & 0.787 & \textbf{0.791} \\
+    Square mh      &  & 0.501 & 0.752 & 0.871 & 0.880 & \textbf{0.880} & 0.878 \\
+    Transport ph   &  & 0.552 & 0.721 & 0.842 & 0.861 & 0.863 & \textbf{0.864} \\
+    Transport mh   &  & 0.503 & 0.651 & 0.762 & 0.794 & 0.800 & \textbf{0.801} \\
+    Tool Hang ph   &  & 0.301 & 0.552 & 0.721 & 0.752 & 0.787 & \textbf{0.791} \\
     \bottomrule
   \end{tabular}
 \end{table}
 
 当推理去噪步数低于40步时，生成的动作序列质量出现明显下降，导致各项任务的成功率大幅降低。在 Tool Hang ph 任务中，当步数从40步降至20步时，成功率从$0.721$减至$0.552$，降至10步时进一步降至$0.301$。这种现象的原因在于过少的去噪步数会导致 DDIM 采样时的离散化近似误差显著增加，模型难以在极少的迭代内将高斯噪声精确映射回复杂的多模态动作分布，从而产生不连贯或偏离目标的动作轨迹。
 
-对于较为复杂的任务，其成功率在去噪步数低于60步时就已经开始出现下降趋势，在 Transport mh 和 Tool Hang ph 任务中，当步数从60步减少至40步时，成功率分别下降了$0.032$和$0.031$。Transport mh 任务包含多名操作员的示教数据，动作分布更具有多峰特性，模型需要更多的去噪步数来准确捕捉和还原这种复杂的分布。Tool Hang 任务涉及长视距的多阶段操作以及极高的操作精度要求，任何微小的动作偏差都会在长序列执行中累积并导致任务失败，因此对去噪步数的减少更为敏感。相比之下，Square 任务的动作模式相对单一，即使在40步时也能保持$0.871$的较高成功率。综合考虑生成质量与推理延迟，本文将默认推理去噪步数设定为十步，以在实时控制场景下保持可接受的响应速度。
+对于较为复杂的任务，其成功率在去噪步数低于60步时就已经开始出现下降趋势，在 Transport mh 和 Tool Hang ph 任务中，当步数从60步减少至40步时，成功率分别下降了$0.032$和$0.031$。Transport mh 动作分布更具有多峰特性，模型需要更多的去噪步数来准确捕捉和还原这种复杂的分布。Tool Hang 任务涉及长视距的多阶段操作以及更高的操作精度要求，微小的动作偏差都可能在执行中累积并导致任务失败，因此对去噪步数的减少更为敏感。相比之下，Square 任务的动作模式相对单一，即使在40步时也能保持$0.871$的较高成功率。
 \section{本章小结}
 \label{sec:chapter3_summary}
 本章针对机械臂操作任务中专家示教数据呈现多模态分布的问题，提出了一种基于扩散模型的模仿学习动作生成算法。该方法构建了由视觉与状态特征编码、跨模态特征融合以及去噪动作生成组成的整体框架，并通过非对称跨模态注意力与状态残差注入机制实现异构模态信息的有效对齐与融合。为满足机器人实时控制需求，本文进一步引入动作分块机制与 DDIM 加速采样策略，在降低推理开销的同时保持较好的动作生成能力。基于 RoboMimic 数据集的对比实验表明，本文方法在多项复杂任务上取得了优于现有基线方法的性能；消融实验进一步验证了视觉编码器、特征融合设计以及 DDIM 采样步数等关键因素对模型性能的影响。

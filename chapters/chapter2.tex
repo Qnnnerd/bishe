@@ -46,16 +46,22 @@ Denavit-Hartenberg 参数法是一种建立机械臂各连杆坐标系并描述�
   \centering
   \caption{标准D-H参数定义}
   \label{tab:dh_parameters}
-  \begin{tabular}{cl}
-    \toprule
-    参数 & 定义 \\
-    \midrule
-    $a_{i-1}$ & 沿 $x_{i-1}$ 轴，从 $z_{i-1}$ 移动到 $z_i$ 的距离 \\
-    $\alpha_{i-1}$ & 绕 $x_{i-1}$ 轴，从 $z_{i-1}$ 旋转到 $z_i$ 的角度 \\
-    $d_i$ & 沿 $z_i$ 轴，从 $x_{i-1}$ 移动到 $x_i$ 的距离 \\
-    $\theta_i$ & 绕 $z_i$ 轴，从 $x_{i-1}$ 旋转到 $x_i$ 的角度 \\
-    \bottomrule
-  \end{tabular}
+  \begin{tabular}{c l c c c c l}
+        \toprule
+        \multicolumn{1}{c}{参数} & 
+        \multicolumn{1}{c}{} & 
+        \multicolumn{1}{c}{} & 
+        \multicolumn{1}{c}{} &
+        \multicolumn{1}{c}{} & 
+        \multicolumn{1}{c}{} &  
+        \multicolumn{1}{c}{定义} \\
+        \midrule
+        $a_{i-1}$   & & & & & & 沿 $x_{i-1}$ 轴，从 $z_{i-1}$ 移动到 $z_i$ 的距离 \\
+        $\alpha_{i-1}$ & & & & & & 绕 $x_{i-1}$ 轴，从 $z_{i-1}$ 旋转到 $z_i$ 的角度 \\
+        $d_i$       & & & & & & 沿 $z_i$ 轴，从 $x_{i-1}$ 移动到 $x_i$ 的距离 \\
+        $\theta_i$  & & & & & & 绕 $z_i$ 轴，从 $x_{i-1}$ 旋转到 $x_i$ 的角度 \\
+        \bottomrule
+    \end{tabular}
 \end{table}
 
 根据D-H参数的定义，从坐标系\{i-1\}到坐标系\{i\}的变换可以分解为四次基本变换的乘积，其对应的齐次变换矩阵 $A_i$ 如式\ref{eq:dh_transform}所示。
@@ -113,17 +119,17 @@ Franka Emika Panda 是一款七自由度的冗余机械臂，其结构紧凑、�
   \centering
   \caption{Franka Panda 机械臂改进D-H参数}
   \label{tab:panda_dh_parameters}
-  \begin{tabular}{ccccc}
+  \begin{tabular}{cccc}
     \toprule
-    关节 $i$ & 连杆扭转角 $\alpha_{i-1}$ (rad) & 连杆长度 $a_{i-1}$ (m) & 连杆偏距 $d_i$ (m) & 关节角 $\theta_i$ (rad) \\
+    关节 & 连杆扭转角(rad) & 连杆长度(m) & 连杆偏距(m)  \\
     \midrule
-    1 & 0 & 0 & 0.333 & $\theta_1$ \\
-    2 & $-\pi/2$ & 0 & 0 & $\theta_2$ \\
-    3 & $\pi/2$ & 0 & 0.316 & $\theta_3$ \\
-    4 & $\pi/2$ & 0.0825 & 0 & $\theta_4$ \\
-    5 & $-\pi/2$ & -0.0825 & 0.384 & $\theta_5$ \\
-    6 & $\pi/2$ & 0 & 0 & $\theta_6$ \\
-    7 & $\pi/2$ & 0.088 & 0.107 & $\theta_7$ \\
+    1 & 0 & 0 & 0.333 \\
+    2 & $-\pi/2$ & 0 & 0 \\
+    3 & $\pi/2$ & 0 & 0.316 \\
+    4 & $\pi/2$ & 0.0825 & 0 \\
+    5 & $-\pi/2$ & -0.0825 & 0.384 \\
+    6 & $\pi/2$ & 0 & 0 \\
+    7 & $\pi/2$ & 0.088 & 0.107 \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -149,14 +155,14 @@ Universal Robots UR5e 是一款经典的六自由度协作机械臂，本研究�
   \label{tab:ur5_dh_parameters}
   \begin{tabular}{ccccc}
     \toprule
-    关节 $i$ & 连杆扭转角 $\alpha_{i-1}$ (rad) & 连杆长度 $a_{i-1}$ (m) & 连杆偏距 $d_i$ (m) & 关节角 $\theta_i$ (rad) \\
+    关节 & 连杆扭转角(rad) & 连杆长度(m) & 连杆偏距(m)  \\
     \midrule
-    1 & $\pi/2$ & 0 & 0.089159 & $\theta_1$ \\
-    2 & 0 & -0.42500 & 0 & $\theta_2$ \\
-    3 & 0 & -0.39225 & 0 & $\theta_3$ \\
-    4 & $\pi/2$ & 0 & 0.10915 & $\theta_4$ \\
-    5 & $-\pi/2$ & 0 & 0.09465 & $\theta_5$ \\
-    6 & 0 & 0 & 0.08230 & $\theta_6$ \\
+    1 & $\pi/2$ & 0 & 0.089159 \\
+    2 & 0 & -0.42500 & 0 \\
+    3 & 0 & -0.39225 & 0 \\
+    4 & $\pi/2$ & 0 & 0.10915 \\
+    5 & $-\pi/2$ & 0 & 0.09465 \\
+    6 & 0 & 0 & 0.08230 \\
     \bottomrule
   \end{tabular}
 \end{table}

@@ -1,6 +1,6 @@
 \chapter{基于特征时序缓存的视觉语言动作模型}
 \label{chp:temporal_cache_vla}
-动作生成模型能够拟合机械臂操作中的多模态动作分布，但在动态环境下完成长时序复杂任务时，仍需要借助自然语言指令提供高级语义引导。视觉语言动作模型（Vision-Language-Action models，VLA）通过联合融合视觉观测与语言指令，使机器人具备场景理解与任务规划能力。然而，现有VLA方在处理多阶段长时序任务时，往往难以持续维护历史操作上下文，容易在阶段切换处出现状态混淆、指令遗忘与决策波动。若直接堆叠多帧图像或历史特征，又会增加计算与存储开销，并引入较强的时序冗余。为解决上述问题，本章提出一种基于双通道时序缓存机制的视觉语言动作模型 TemporalCacheVLA。该模型将感知细节表示与语义摘要表示分离存储，并在每次决策时从历史存储池中检索与当前状态相关的上下文信息进行动态融合，从而在控制计算开销的同时增强模型对长时序任务状态的持续建模能力。最后，本文在 LIBERO~\cite{liu2023libero} 基准上对所提方法进行了系统验证。
+动作生成模型能够拟合机械臂操作中的多模态动作分布，但在动态环境下完成长时序复杂任务时，仍需要借助自然语言指令提供高级语义引导。视觉语言动作模型（Vision-Language-Action models，VLA）通过联合融合视觉观测与语言指令，使机器人具备场景理解与任务规划能力。然而，现有VLA方在处理多阶段长时序任务时，往往难以持续维护历史操作上下文，容易出现状态混淆、指令遗忘等问题。若直接堆叠多帧历史特征，又会增加计算与存储开销，并引入较强的时序冗余。为解决上述问题，本章提出一种基于双通道时序缓存机制的视觉语言动作模型 TemporalCacheVLA，将感知细节表示与语义摘要表示分离存储，并在每次决策时从历史存储池中检索与当前状态相关的上下文信息进行动态融合，从而在控制计算开销的同时增强模型对长时序任务状态的持理解能力。最后，本文在 LIBERO~\cite{liu2023libero} 基准上对所提方法进行了系统验证。
 
 \section{TemporalCacheVLA框架设计}
 \label{sec:chap4_perception_memory}
@@ -11,20 +11,20 @@ TemporalCacheVLA提出了一种基于双通道时序缓存的解决方案，其�
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.95\linewidth]{figures/content/temporal_cache_vla}
+  \includegraphics[width=0.9\linewidth]{figures/content/temporal_cache_vla}
   \caption{TemporalCacheVLA框架整体架构图}
   \label{fig:temporal_cache_vla}
 \end{figure}
 
-为了管理历史信息，系统维护了一个双通道的历史存储池，分别独立保存历史时间步的细粒度视觉细节与高层级语义摘要。在每次决策时，系统使用当前缓存区的内容作为查询条件，从历史存储池中检索相关的上下文信息，并通过可学习的门控机制进行融合。同时，为了控制显存占用，存储池会根据相邻帧的特征相似度对冗余信息进行合并压缩，以维持长时序下的紧凑表示。最后，经过历史上下文增强的感知与语义向量被输入至前文所述的动作生成模型中，输出符合任务目标的连续机器人动作轨迹。
+为了管理历史信息，系统维护了一个双通道的历史存储池，分别独立保存历史时间步的细粒度视觉细节与高层级语义摘要。在每次决策时，系统使用当前缓存区的内容作为查询条件，从历史存储池中检索相关的上下文信息，并通过可学习的门控机制进行融合。同时，存储池会根据相邻帧的特征相似度对冗余信息进行合并压缩，以维持长时序下的紧凑表示。最后，经过历史上下文增强的感知与语义向量被输入至扩散动作生成模型中，输出符合任务目标的连续机器人动作轨迹。
 
 
 \subsection{视觉语言特征感知}
 \label{subsec:chap4_perception}
 
-视觉语言动作模型，旨在使机器人能够理解复杂指令并执行精确操作。在这一目标下，视觉语言特征感知模块作为系统的前端，负责将原始的图像与文本输入转化为高表征能力的特征向量。而在实际的机器人操作场景中，模型不仅需要准确理解如“把红色方块放到蓝色碗里”这样的语言指引以明确任务意图，还必须敏锐捕捉物体的边缘、位姿等局部空间细节以确保物理交互的精确性。传统的单一模态或浅层融合方法难以同时满足这两种需求，本章引入大规模预训练的视觉语言模型，分别从视觉编码与多模态融合两个层面解决上述问题。
+视觉语言动作模型，旨在使机器人能够理解当前观测与自然语言指令并执行操作。在这一目标下，视觉语言特征感知模块作为系统的前端，负责将原始的图像与文本输入转化为高表征能力的特征向量。而在实际的机器人操作场景中，模型不仅需要准确理解如“把红色方块放到蓝色碗里”这样的语言指引以明确任务意图，还必须捕捉物体的边缘、位姿等局部空间细节以确保物理交互的精确性。传统的单一模态或浅层融合方法难以同时满足这两种需求，本章引入大规模预训练的视觉语言模型，分别从视觉编码与多模态融合两个层面解决上述问题。
 
-在视觉编码阶段，如何从高维图像中同时提取几何结构信息与语义概念，是一个核心难点。单一类型的视觉模型通常存在一定的能力偏向。基于自监督学习的方法更倾向于捕捉细粒度的空间几何特征和局部纹理信息，但在与语言语义的对齐方面仍显不足；而基于图文对比学习的模型在理解图像语义以及建立图文对应关系方面表现更强，却往往难以保留操作所需的底层空间细节。为了克服这一局限，本章延续了OpenVLA\cite{kim2024openvla}的工作，采用双分支的视觉骨干网络，将DINOv2\cite{oquab2023dinov2}与SigLIP\cite{zhai2023sigmoid}结合使用。给定当前时间步 $t$ 的输入图像 $\mathbf{I}_t \in \mathbb{R}^{H \times W \times 3}$，这两个视觉编码器分别将其处理为图像块（Patch）序列。具体而言，DINOv2 输出特征序列 $\mathbf{F}^{\text{dino}}_t \in \mathbb{R}^{N \times d_1}$，SigLIP 输出特征序列 $\mathbf{F}^{\text{sig}}_t \in \mathbb{R}^{N \times d_2}$，其中 $N$ 为图像块的数量，$d_1$ 和 $d_2$ 分别为两个模型的特征维度。随后如图~\ref{fig:temporal_cache_vla}~所示，将这两种特征在通道维度上进行拼接，形成融合的高维原始视觉特征张量：
+在视觉编码阶段，如何从高维图像中同时提取几何结构信息与语义概念，是一个核心难点。单一类型的视觉模型通常存在一定的能力偏向，基于自监督学习的方法更倾向于捕捉细粒度的空间几何特征和局部纹理信息，但在与语言语义的对齐方面仍显不足；而基于图文对比学习的模型在理解图像语义以及建立图文对应关系方面表现更强，却往往难以保留操作所需的底层空间细节。为了克服这一局限，本章延续了OpenVLA\cite{kim2024openvla}的工作，采用双分支的视觉骨干网络，将DINOv2\cite{oquab2023dinov2}与SigLIP\cite{zhai2023sigmoid}结合使用。给定当前时间步 $t$ 的输入图像 $\mathbf{I}_t \in \mathbb{R}^{H \times W \times 3}$，这两个视觉编码器分别将其处理为图像块（Patch）序列。具体而言，DINOv2 输出特征序列 $\mathbf{F}^{\text{dino}}_t \in \mathbb{R}^{N \times d_1}$，SigLIP 输出特征序列 $\mathbf{F}^{\text{sig}}_t \in \mathbb{R}^{N \times d_2}$，其中 $N$ 为图像块的数量，$d_1$ 和 $d_2$ 分别为两个模型的特征维度。随后如图~\ref{fig:temporal_cache_vla}~所示，将这两种特征在通道维度上进行拼接，形成融合的高维原始视觉特征张量：
 \begin{equation}
   \mathbf{F}^{\text{vis}}_t = [\mathbf{F}^{\text{dino}}_t; \mathbf{F}^{\text{sig}}_t] \in \mathbb{R}^{N \times (d_1+d_2)}
 \end{equation}
@@ -33,9 +33,9 @@ TemporalCacheVLA提出了一种基于双通道时序缓存的解决方案，其�
   \mathbf{V}_t = \text{MLP}(\mathbf{F}^{\text{vis}}_t) \in \mathbb{R}^{N \times d_{\text{llm}}}
 \end{equation}
 
-在获取了视觉与语言的独立表征后，如何将异构的多模态信息进行深度融合，并提取出指导动作生成的统一表示，是特征感知模块需要解决的另一核心问题。简单的特征拼接或浅层注意力机制往往难以捕捉视觉场景与语言指令之间复杂的逻辑关联。为此，本章选用 LLaMA 2 7B\cite{touvron2023llama} 作为大语言模型骨干来进行多模态融合。这一选择主要得益于其因果语言模型（Causal Language Model）的架构特性。该架构不仅在纯文本推理上表现优异，其单向注意力机制使得模型能够以自回归方式处理视觉模型输出的序列化特征，从而实现视觉上下文与当前语言指令的有效融合。
+在获取了视觉与语言的独立表征后，如何将异构的多模态信息进行深度融合，并提取出指导动作生成的统一表示，是特征感知模块需要解决的另一核心问题。简单的特征拼接或浅层注意力机制往往难以捕捉视觉场景与语言指令之间复杂的逻辑关联。为此，本章选用 LLaMA 2 7B\cite{touvron2023llama} 作为大语言模型骨干来进行多模态融合。LLaMA 模型为因果语言模型（Causal Language Model），该架构不仅在纯文本推理上表现优异，其单向注意力机制使得模型能够以自回归方式处理视觉模型输出的序列化特征，从而实现视觉上下文与当前语言指令的有效融合。
 
-自然语言指令 $\ell$ 首先经过分词器（Tokenizer）处理，转化为离散的文本 token 序列 $\mathbf{T} = [t_1, t_2, \ldots, t_L]$，其中 $L$ 为指令长度。随后，文本 token 序列通过嵌入层映射为连续的语言嵌入序列 $\mathbf{E}^{\text{lang}} \in \mathbb{R}^{L \times d_{\text{llm}}}$。接着，视觉向量序列 $\mathbf{V}_t$ 与语言嵌入序列 $\mathbf{E}^{\text{lang}}$ 在序列维度上进行拼接，形成完整的多模态输入序列 $[\mathbf{V}_t; \mathbf{E}^{\text{lang}}]$。该序列被输入至大语言模型中进行自回归前向传播。系统根据注意力掩码定位最后一个非填充 token，并取其在最后一层的隐藏状态作为高层级语义向量 $\mathbf{h}^{\text{sem}}_t \in \mathbb{R}^{d_{\text{llm}}}$：
+自然语言指令 $\ell$ 首先经过分词器（Tokenizer）处理，转化为离散的文本 token 序列 $\mathbf{T} = [t_1, t_2, \ldots, t_L]$，其中 $L$ 为指令长度。文本 token 序列通过嵌入层映射为连续的语言嵌入序列 $\mathbf{E}^{\text{lang}} \in \mathbb{R}^{L \times d_{\text{llm}}}$。接着，视觉向量序列 $\mathbf{V}_t$ 与语言嵌入序列 $\mathbf{E}^{\text{lang}}$ 在序列维度上进行拼接，形成完整的多模态输入序列 $[\mathbf{V}_t; \mathbf{E}^{\text{lang}}]$。该序列被输入至大语言模型中进行自回归前向传播。系统根据注意力掩码定位最后一个非填充 token，并取其在最后一层的隐藏状态作为高层级语义向量 $\mathbf{h}^{\text{sem}}_t \in \mathbb{R}^{d_{\text{llm}}}$：
 \begin{equation}
   \mathbf{h}^{\text{sem}}_t = \text{LLM}([\mathbf{V}_t; \mathbf{E}^{\text{lang}}])_{\text{last}}
 \end{equation}
@@ -46,7 +46,7 @@ TemporalCacheVLA提出了一种基于双通道时序缓存的解决方案，其�
   \caption{SE模块示意图}
   \label{fig:se}
 \end{figure}
-与此同时，为了保留用于操作的低层级空间信息，拼接后的原始视觉特征 $\mathbf{F}^{\text{vis}}_t$ 还会被送入一个如图~\ref{fig:se}~所示的基于SE（Squeeze-and-Excitation，SE）瓶颈结构的感知压缩模块。该模块首先在序列维度上对 patch 特征进行聚合，得到紧凑的全局视觉表示；随后通过 SE 结构对通道特征进行自适应重标定，并进一步完成维度压缩，最终输出维度为 $d_{\text{per}}$ 的感知向量 $\mathbf{h}^{\text{per}}_t \in \mathbb{R}^{d_{\text{per}}}$：
+与此同时，为了保留用于操作的低层级空间信息，拼接后的原始视觉特征 $\mathbf{F}^{\text{vis}}_t$ 还会被送入一个如图~\ref{fig:se}~所示的基于SE（Squeeze-and-Excitation，SE）瓶颈结构的感知压缩模块。该模块首先在序列维度上对 patch 特征进行聚合，得到紧凑的全局视觉表示，随后通过 SE 结构对通道特征进行自适应重标定，并进一步完成维度压缩，最终输出维度为 $d_{\text{per}}$ 的感知向量 $\mathbf{h}^{\text{per}}_t \in \mathbb{R}^{d_{\text{per}}}$：
 \begin{equation}
   \mathbf{h}^{\text{per}}_t = \text{SE}(\mathbf{F}^{\text{vis}}_t)
 \end{equation}
@@ -55,7 +55,7 @@ TemporalCacheVLA提出了一种基于双通道时序缓存的解决方案，其�
 \subsection{感知语义双通道历史存储池}
 \label{subsec:chap4_memory_pool}
 
-在长时序机器人操作任务中，单一时间步的观测往往无法提供完整的状态信息，模型需要依赖历史上下文来消除状态混淆。然而，直接拼接多帧历史图像或特征会导致计算复杂度显著增长，且相邻帧之间存在大量冗余信息，给长时序上下文建模带来了较大的计算与显存压力。此外，感知向量与语义向量在特征维度和表达内容上存在明显差异，若将二者混合存储，容易削弱感知细节在后续检索与融合过程中的作用。
+在长时序机器人操作任务中，单一时间步的观测往往无法提供完整的状态信息，模型需要依赖历史上下文来消除状态混淆。然而直接拼接多帧历史图像或特征会导致计算复杂度显著增长，且相邻帧之间存在冗余信息，给长时序上下文记忆带来了较大的计算与显存压力。此外，感知向量与语义向量在特征维度和表达内容上存在明显差异，若将二者混合存储，容易削弱感知细节在后续检索与融合过程中的作用。
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.5\linewidth]{figures/content/cache_retrieval}
@@ -72,11 +72,8 @@ TemporalCacheVLA提出了一种基于双通道时序缓存的解决方案，其�
 \end{equation}
 其中，$t$ 为时间步索引，$D$ 为特征维度，$i$ 为维度索引。频率嵌入随后经过~MLP~映射至与特征向量相同的维度空间。在检索时，位置嵌入仅叠加至检索过程中的 K 向量，而不叠加至 V 向量，使得注意力权重的计算能够感知历史帧的时序位置，而检索到的内容本身不受位置编码的干扰。
 
-对于任一缓存通道，记当前时刻输入该通道的特征向量为当前工作向量 $\mathbf{h}^{\text{curr}}_t$。在每个时间步，系统通过基于交叉注意力的检索模块从对应的历史存储池中提取相关的上下文信息。如图~\ref{fig:cache_retrieval}~所示，系统将当前工作向量作为 Q 向量，将历史存储池中的全部历史记录作为 K 向量和 V 向量。检索模块由 2 个交叉注意力块串联堆叠而成，前一个注意力块的输出作为后一个注意力块的 Q 向量输入，而 K 向量和 V 向量始终来自同一批历史特征，即历史存储池中的全部记录。这种设计使得模型能够在保持历史上下文不变的前提下，逐步提炼并聚焦与当前状态最相关的历史信息。每个交叉注意力块采用缩放点积注意力机制计算当前查询与全部历史记录的全局关联度，其计算过程可表示为：
-\begin{equation}
-  \text{Attention}(\mathbf{Q}, \mathbf{K}, \mathbf{V}) = \text{softmax}\left(\frac{\mathbf{Q}\mathbf{K}^\top}{\sqrt{D}}\right)\mathbf{V}
-\end{equation}
-该模块不施加因果掩码，允许当前查询关注所有历史帧。注意力输出经过残差连接、层归一化以及前馈网络处理后，得到检索到的历史上下文向量 $\mathbf{h}^{\text{hist}}_t \in \mathbb{R}^{D}$。当历史存储池为空时，系统直接将当前工作向量作为检索结果。
+对于任一缓存通道，记当前时刻输入该通道的特征向量为当前工作向量 $\mathbf{h}^{\text{curr}}_t$。在每个时间步，系统通过基于交叉注意力的检索模块从对应的历史存储池中提取相关的上下文信息。如图~\ref{fig:cache_retrieval}~所示，系统将当前工作向量作为 Q 向量，将历史存储池中的全部历史记录作为 K 向量和 V 向量。检索模块由 2 个交叉注意力块串联堆叠而成，前一个注意力块的输出作为后一个注意力块的 Q 向量输入，而 K 向量和 V 向量始终来自同一批历史特征，即历史存储池中的全部记录。这种设计使得模型能够在保持历史上下文不变的前提下，逐步提炼并聚焦与当前状态最相关的历史信息。每个交叉注意力块采用缩放点积注意力机制计算当前查询与全部历史记录的全局关联度。该模块不施加因果掩码，允许当前查询关注所有历史帧。注意力输出经过残差连接、层归一化以及前馈网络处理后，得到检索到的历史上下文向量 $\mathbf{h}^{\text{hist}}_t \in \mathbb{R}^{D}$。当历史存储池为空时，系统直接将当前工作向量作为检索结果。
+
 \begin{figure}
   \centering
   \includegraphics[width=0.5\linewidth]{figures/content/fuse_gate}
@@ -141,10 +138,10 @@ TemporalCacheVLA提出了一种基于双通道时序缓存的解决方案，其�
 \begin{figure}[htbp]
   \centering
   \setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.5pt}%
-  \subfloat[Spatial]{\fbox{\includegraphics[width=.19\linewidth]{figures/content/libero_spatial}}}\hfill
-  \subfloat[Object]{\fbox{\includegraphics[width=.19\linewidth]{figures/content/libero_object}}}\hfill
-  \subfloat[Goal]{\fbox{\includegraphics[width=.19\linewidth]{figures/content/libero_goal}}}\hfill
-  \subfloat[LIBERO-100]{\fbox{\includegraphics[width=.19\linewidth]{figures/content/libero-90}}}
+  \subfloat[Spatial]{\fbox{\includegraphics[width=.15\linewidth]{figures/content/libero_spatial}}}\quad
+  \subfloat[Object]{\fbox{\includegraphics[width=.15\linewidth]{figures/content/libero_object}}}\quad
+  \subfloat[Goal]{\fbox{\includegraphics[width=.15\linewidth]{figures/content/libero_goal}}}\quad
+  \subfloat[LIBERO-100]{\fbox{\includegraphics[width=.15\linewidth]{figures/content/libero-90}}}
   \caption{LIBERO数据集子集典型场景示意图}
   \label{fig:libero_tasks}
 \end{figure}
@@ -160,7 +157,7 @@ TemporalCacheVLA提出了一种基于双通道时序缓存的解决方案，其�
     Spatial & 拿起[物体]并将其放置在[目标]的[空间关系]处 & 10 \\
     Object & 拿起[食物]并将其放入[容器]中 & 10 \\
     Goal & 打开/关闭[容器]；打开抽屉并将[物体]放入其中；将[物体]放在[目标]上/中；将[物体]推到[目标]的位置；打开[电器] & 10 \\
-    LIBERO-100 & 打开/关闭[容器/电器][并将物体放在上面/里面；可选地与另一个打开/关闭动作排序]；打开[容器]并将[物体]放入其中；将[物体]放入/放在[目标]中/上/下或在[相对位置]处；将[物体1]堆叠在[物体2]上[可选地将它们放入容器中]；拿起[物体]并将其放入[容器]（篮子/托盘）中；将马克杯放在左/右盘子上，或将书放在收纳盒中/架子上/架子下；打开/关闭[电器][可选地将物体放在上面] & 100 \\
+    LIBERO-100 & 打开/关闭[容器/电器]并将[物体放在上面/里面]；打开[容器]并将[物体]放入其中；将[物体]放入/放在[相对位置]处；将[物体1]堆叠在[物体2]上将它们放入[容器]中；拿起[物体]并将其放入[容器]中；打开/关闭[电器]将[物体]放在上面 & 100 \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -179,7 +176,7 @@ TemporalCacheVLA提出了一种基于双通道时序缓存的解决方案，其�
 TemporalCacheVLA在LIBERO四个子集上的实验结果如图~\ref{fig:libero_results}~所示，图中每一行对应一个完整的动作执行过程，下方的中文为该动作语言指令的翻译。每行的前四张图片展示了该次动作的均匀采样帧，图中标注的轨迹线表示机械臂末端执行器从当前轨迹起点运动到终点的路径，每行的最后一张图片则展示了该次动作的完整轨迹。
 \begin{figure}[htb]
   \centering
-  \includegraphics[width=0.8\linewidth]{figures/content/libero-datasets}
+  \includegraphics[width=0.75\linewidth]{figures/content/libero-datasets}
   \caption{在LIBERO数据集四个子集上的成功动作样本示例图}
   \label{fig:libero_results}
 \end{figure}
@@ -191,8 +188,7 @@ TemporalCacheVLA在LIBERO四个子集上的实验结果如图~\ref{fig:libero_re
   \centering
   \caption{不同方法在LIBERO基准数据集上的成功率}
   \label{tab:libero_results}
-  \resizebox{\textwidth}{!}{
-  \begin{tabular}{lcccccc}
+  \begin{tabular}{lccccc}
     \toprule
     方法 & Spatial & Object & Goal & LIBERO-100 & 平均成功率 \\
     \midrule
@@ -209,7 +205,6 @@ TemporalCacheVLA在LIBERO四个子集上的实验结果如图~\ref{fig:libero_re
     TemporalCacheVLA (本文) & 0.970 & 0.981 & \textbf{0.959} & \textbf{0.949} & \textbf{0.965} \\
     \bottomrule
   \end{tabular}
-  }
 \end{table}
 
 
@@ -229,14 +224,14 @@ TemporalCacheVLA在LIBERO四个子集上的实验结果如图~\ref{fig:libero_re
   \centering
   \caption{不同模块构成对模型性能的影响}
   \label{tab:ablation_modules}
-  \begin{tabular}{cccc}
+  \begin{tabular}{c c c c c c c}  % 插入空白列，加宽表格
     \toprule
-    缓存检索 & 门控融合 & 缓存压缩 & 平均成功率 \\
+    缓存检索 &  & 门控融合 &  & 缓存压缩 &  & 平均成功率 \\
     \midrule
-     & \checkmark & \checkmark & 86.2 \\
-    \checkmark &  & \checkmark & 83.5 \\
-    \checkmark & \checkmark &  & 82.3 \\
-    \checkmark & \checkmark & \checkmark & \textbf{94.9} \\
+             &  & \checkmark &  & \checkmark &  & 86.2 \\
+    \checkmark &  &            &  & \checkmark &  & 83.5 \\
+    \checkmark &  & \checkmark &  &            &  & 82.3 \\
+    \checkmark &  & \checkmark &  & \checkmark &  & \textbf{94.9} \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -247,20 +242,20 @@ TemporalCacheVLA在LIBERO四个子集上的实验结果如图~\ref{fig:libero_re
   \centering
   \caption{不同缓存类型对模型性能的影响}
   \label{tab:ablation_cache_type}
-  \begin{tabular}{ccc}
+  \begin{tabular}{c c c c c}  % 多加空白列，表格更宽
     \toprule
-    感知缓存 & 语义缓存 & 平均成功率 \\
+    感知缓存 &  & 语义缓存 &  & 平均成功率 \\
     \midrule
-    \checkmark &  & 0.852 \\
-     & \checkmark & 0.837 \\
-    \checkmark & \checkmark & \textbf{0.949} \\
+    \checkmark &  &            &  & 0.852 \\
+               &  & \checkmark &  & 0.837 \\
+    \checkmark &  & \checkmark &  & \textbf{0.949} \\
     \bottomrule
   \end{tabular}
 \end{table}
 
 \begin{figure}[htb]
   \centering
-  \includegraphics[width=0.8\linewidth]{figures/content/cache_type}
+  \includegraphics[width=0.75\linewidth]{figures/content/cache_type}
   \caption{不同缓存类型的成功轨迹对比}
   \label{fig:cache_type}
 \end{figure}
@@ -271,81 +266,78 @@ TemporalCacheVLA在LIBERO四个子集上的实验结果如图~\ref{fig:libero_re
 
 \begin{figure}[htb]
   \centering
-  \includegraphics[width=0.8\linewidth]{figures/content/cache_type_failure}
+  \includegraphics[width=0.75\linewidth]{figures/content/cache_type_failure}
   \caption{不同缓存类型导致的典型失败案例分析}
   \label{fig:cache_type_failure}
 \end{figure}
 
 \begin{figure}[htb]
   \centering
-  \includegraphics[width=0.8\linewidth]{figures/content/cache_length}
+  \includegraphics[width=0.75\linewidth]{figures/content/cache_length}
   \caption{不同缓存存储长度下的成功轨迹对比}
   \label{fig:cache_length}
 \end{figure}
 
 从表~\ref{tab:ablation_cache_type}~的数据与图示分析可以看出，任一缓存通道的缺失都会导致模型性能下降。当仅保留感知缓存时，成功率为 $0.852$。由于缺少高层语义信息的持续指导，模型在多阶段任务中更容易偏离全局任务意图；从图~\ref{fig:cache_type}~中可以看出，其整体轨迹相较于完整模型更为曲折。仅保留语义缓存时，成功率进一步降至 $0.837$。由于缺乏感知特征的历史记录，模型难以精确定位当前阶段的操作目标，该变体在从关闭抽屉到拿起碗的状态切换过程中消耗了更多执行步数。
 
-图~\ref{fig:cache_type_failure}~所示的失败案例进一步体现了两类缓存的作用差异。缺乏感知缓存的模型由于缺少视觉细节的历史校准，在接近目标时难以实现精确对齐，最终无法顺利拿起碗；而缺乏语义缓存的模型虽然在局部动作执行上仍具有一定能力，但由于缺少任务意图的持续约束，更容易执行错误的动作。这表明，感知缓存与语义缓存的双通道设计能够在长时序操作任务中实现更好的性能。
+如图~\ref{fig:cache_type_failure}~所示，缺乏感知缓存的模型由于缺少视觉细节的历史校准，在接近目标时难以实现精确对齐，最终无法顺利拿起碗；而缺乏语义缓存的模型虽然在局部动作执行上仍具有一定能力，但由于缺少任务意图的持续约束，更容易执行错误的动作。这表明，感知缓存与语义缓存的双通道设计能够在长时序操作任务中实现更好的性能。
 
-\begin{table}[b]
+
+如图~\ref{fig:cache_length}~所示，除了缓存类型，历史存储池的存储长度也就是容量上限，也是影响模型上下文保留能力的重要超参数。过小的存储长度可能导致任务早期的状态被丢弃，而过大的存储长度则可能引入冗余信息，增加特征融合难度与显存开销。为了探究不同存储长度对模型性能的影响，本节设置了存储长度分别为4、16和64的三种模型配置，不同存储长度下的任务成功率对比见表~\ref{tab:ablation_cache_length}~。
+\begin{table}[!hb]
   \centering
   \caption{不同缓存存储长度对模型性能的影响}
   \label{tab:ablation_cache_length}
-  \begin{tabular}{cc}
+  \begin{tabular}{cccccc}  % 中间空 3 列，整体更宽
     \toprule
-    存储长度 & 平均成功率 \\
+    存储长度 &  &  &  &  & 平均成功率 \\
     \midrule
-    4 & 0.893 \\
-    16 & \textbf{0.949} \\
-    64 & 0.923 \\
+    4        &  &  &  &  & 0.893 \\
+    16       &  &  &  &  & \textbf{0.949} \\
+    64       &  &  &  &  & 0.923 \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-除了缓存类型，历史存储池的存储长度也就是容量上限，也是影响模型上下文保留能力的重要超参数。过小的存储长度可能导致任务早期的状态被丢弃，而过大的存储长度则可能引入冗余信息，增加特征融合难度与显存开销。为了探究不同存储长度对模型性能的影响，本节设置了存储长度分别为4、16和64的三种模型配置。不同存储长度下的任务成功率对比见表~\ref{tab:ablation_cache_length}~，相应的动作表现对比图如图~\ref{fig:cache_length}~所示。
-
 \begin{figure}[!htb]
   \centering
-  \includegraphics[width=0.8\linewidth]{figures/content/cfg_ablation}
+  \includegraphics[width=0.75\linewidth]{figures/content/cfg_ablation}
   \caption{不同CFG引导强度下的成功轨迹对比}
   \label{fig:cfg_ablation}
 \end{figure}
 
 从表~\ref{tab:ablation_cache_length}~的数据可以看出，存储长度对模型成功率的总体影响相对平缓，不同配置下的表现较为接近，但过长或过短都会导致性能下降。当存储长度设定为 4 时，成功率为 $0.893$。这与本文提出的相似度合并缓存压缩策略有关，该策略使存储池中保留的多为能够明确表征状态变化的关键信息，因此即使在较短的存储长度下，模型仍能够保持较好的性能。当存储长度增加至 16 时，模型能够较充分地覆盖任务执行过程中的有效上下文，从而达到 $0.949$ 的最佳性能。然而，当存储长度进一步扩大至 64 时，模型性能并未继续提升，成功率反而回落至 $0.923$。这说明过长的存储序列会引入更多冗余历史帧，增加交叉注意力检索模块聚焦关键上下文的难度，使有效信息在长序列中被稀释。因此，适中的存储长度能够在保留有效历史上下文与抑制信息冗余之间取得较好的平衡。
 
-最后，为了探究 CFG 机制中引导强度系数 $w$ 对模型语言遵循程度与动作灵活性的具体影响，本节开展了针对不同 $w$ 取值的消融实验。在扩散动作生成阶段，$w$ 的大小直接决定了模型在多大程度上依赖于语言指令提取出的语义向量。本实验设置了 $w$ 分别为 $0.1$、$0.5$、$1.5$、$2.0$ 和 $5.0$ 五种组别，并以 $1.5$ 作为基准配置进行对比。不同引导强度下的成功率见表~\ref{tab:ablation_cfg}~。
+最后，为了探究 CFG 机制中引导强度系数 $w$ 对模型语言遵循程度与动作灵活性的具体影响，本节开展了针对不同 $w$ 取值的消融实验。在扩散动作生成阶段，$w$ 的大小直接决定了模型在多大程度上依赖于语言指令提取出的语义向量。本实验设置了 $w$ 分别为 $0.1$、$0.5$、$1.5$、$2.0$ 和 $5.0$ 五种组别，并以 $1.5$ 作为基准配置进行对比，不同引导强度下的成功轨迹如图~\ref{fig:cfg_ablation}~所示，成功率见表~\ref{tab:ablation_cfg}~。
 
 \begin{table}[htb]
   \centering
   \caption{不同引导强度系数对模型性能的影响}
   \label{tab:ablation_cfg}
-  \begin{tabular}{cc}
+  \begin{tabular}{cccccc}  % 中间空3列
     \toprule
-     $w$ & 平均成功率 \\
+     $w$ &  &  &  &  & 平均成功率 \\
     \midrule
-    0.1 & 0.915 \\
-    0.5 & 0.911 \\
-    1.5 & \textbf{0.949} \\
-    2.0 & 0.936 \\
-    5.0 & 0.921 \\
+    0.1 &  &  &  &  & 0.915 \\
+    0.5 &  &  &  &  & 0.911 \\
+    1.5 &  &  &  &  & \textbf{0.949} \\
+    2.0 &  &  &  &  & 0.936 \\
+    5.0 &  &  &  &  & 0.921 \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-
-图~\ref{fig:cfg_ablation}~和图~\ref{fig:cfg_failure}~分别展示了不同引导强度配置下的成功轨迹对比与极端配置下的典型失败案例。
-
 \begin{figure}[!htb]
   \centering
-  \includegraphics[width=0.8\linewidth]{figures/content/cfg_failure}
+  \includegraphics[width=0.75\linewidth]{figures/content/cfg_failure}
   \caption{极端CFG引导强度配置下的典型失败案例}
   \label{fig:cfg_failure}
 \end{figure}
 
 从表~\ref{tab:ablation_cfg}~的数据与相关图示可以看出，引导强度系数 $w$ 在语言指令服从性与动作灵活性之间起着关键的调节作用。当 $w=1.5$ 时，模型取得了 $0.949$ 的最高成功率，说明该配置能够较好地平衡两者之间的关系。从机制上看，$w$ 越大，语言指令对动作生成的约束作用越强，模型输出更倾向于严格遵循语义条件；反之，$w$ 越小，模型动作表现更灵活，但也更容易产生曲折或冗余的轨迹。
 
-图~\ref{fig:cfg_failure}~中展示的两个极端配置的失败案例进一步验证了这一现象：当 $w=0.1$ 时，虽然机器人的动作相对平滑灵活，但由于语言引导过弱，模型在任务后期更容易偏离目标指令，导致其在“把黑色的碗放在里面”这一步骤中拿错目标物品；而当 $w=5.0$ 时，过强的语言引导使动作过于僵化，模型在面对未见过的场景布局时难以灵活调整姿态并恢复至正常执行流程，因此无法完成后续操作。这表明，合理设置引导强度是保证模型既能准确遵循指令意图，又能灵活应对复杂环境变化的重要前提。
+如图~\ref{fig:cfg_failure}~所示，当 $w=0.1$ 时，虽然机器人的动作相对平滑灵活，但由于语言引导过弱，模型在任务后期更容易偏离目标指令，导致其在“把黑色的碗放在里面”这一步骤中拿错目标物品；而当 $w=5.0$ 时，过强的语言引导使动作过于僵化，模型在面对未见过的场景布局时难以灵活调整姿态并恢复至正常执行流程，因此无法完成后续操作。这表明，合理设置引导强度是保证模型既能准确遵循指令意图，又能灵活应对复杂环境变化的重要前提。
 
 \section{本章小结}
 \label{sec:chap4_summary}
-针对长时序机器人操作任务中由于非马尔可夫特性所带来的状态混淆与上下文遗忘问题，本章提出了一种基于双通道特征时序缓存的视觉语言动作模型 TemporalCacheVLA。该模型构建了从视觉语言特征感知、感知语义双通道历史存储、历史上下文检索融合到扩散动作生成的完整处理流程，系统利用双分支视觉编码器与大语言模型分别提取低层级感知细节表示与高层级语义摘要表示，并将二者分离维护于双通道历史存储池中；通过交叉注意力检索、可学习门控融合以及基于余弦相似度的压缩更新策略，实现了对长时序历史上下文的有效保留与动态利用。在 LIBERO 基准上的实验结果表明，本文方法在 Goal 与 LIBERO-100 等更强调任务阶段切换与长时序依赖的复杂子集上取得了优于主流视觉语言动作模型的性能，消融实验进一步验证了缓存检索、门控融合与缓存压缩等关键模块的有效性。这说明所提出的双通道时序缓存机制能够在控制额外计算与存储开销的同时，提高模型对长时序操作任务的状态建模能力与决策稳定性。
+针对机器人操作任务中非马尔可夫特性所带来的状态混淆与上下文遗忘问题，本章提出了一种基于特征时序缓存的视觉语言动作模型 TemporalCacheVLA。该模型构建了从视觉语言特征感知、感知语义双通道历史存储、历史上下文检索融合到扩散动作生成的完整处理流程，系统利用预训练视觉和语言模型分别提取低层级感知特征与高层级语义特征，并将二者分离维护于历史存储池中；通过缓存检索、门控融合以及压缩更新策略，实现了对长时序历史上下文的有效保留与动态利用。在 LIBERO 基准上的实验结果表明，本文方法在 Goal 与 LIBERO-100 等更强调长时序依赖的子集上取得了优于主流视觉语言动作模型的性能，消融实验进一步验证了缓存检索、门控融合与缓存压缩等关键模块的有效性。这说明所提出的双通道时序缓存机制能够提高模型对长时序操作任务的状态建模能力与决策稳定性。
