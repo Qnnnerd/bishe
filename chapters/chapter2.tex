@@ -207,141 +207,214 @@ UR5e 机械臂的腕部三轴交于一点，满足 Pieper 准则，因此其逆�
   \theta_4 = \text{arctan2}(R_{3,2}^6, R_{3,1}^6)
 \end{equation}
 
-由于三角函数的周期性和对称性，UR5e 的逆运动学通常存在八组不同的关节角配置，均可使末端达到同一目标位姿。该解析解能够计算出所有可能的关节角配置，为实时控制提供确定性的候选解集。然而，多组解析解并不天然保证关节轨迹的连续性；在实际部署中，若末端期望位姿在相邻时间步发生较大波动，求解器可能在不同解析解之间切换，从而导致关节配置突变。这一特点也构成了后续真实机器人实验中逆运动学异常分析的重要理论基础。
+由于三角函数的周期性和对称性，UR5e 的逆运动学通常存在八组不同的关节角配置，均可使末端达到同一目标位姿。该解析解能够计算出所有可能的关节角配置，为实时控制提供确定性的候选解集。
 
-\section{模仿学习理论}
-\label{sec:imitation_learning}
-
-\subsection{模仿学习原理}
-\label{subsec:il_principles}
-
-模仿学习的核心目标是让模型通过观察专家的示范数据，隐式地学习并内化专家的行为策略，从而使其在面对相似的状态与场景时，能够自主做出与专家一致的决策。与高度依赖奖励函数工程和大量试错探索的强化学习相比，模仿学习能够更自然高效地从人类操作中提取高维任务特征，降低了策略学习的样本复杂度与安全风险。
-
-在模仿学习中，机械臂与环境的交互过程通常被视为离散时间的部分可观察马尔可夫决策过程。该过程可以用一个多元组 $\mathcal{M} = \langle \mathcal{S}, \mathcal{A}, \mathcal{P}, \mathcal{R}, \Omega, \mathcal{O}, \gamma, \rho_0 \rangle$ 来进行形式化定义。具体而言，$\mathcal{S}$ 表示系统的状态空间，在机械臂任务中通常包含机械臂各关节角度、夹爪状态以及环境中物体的真实位姿；$\mathcal{A}$ 表示动作空间，定义了机器人能够执行的连续控制指令集合。在本文后续研究中，动作空间将具体化为末端执行器的位置增量、姿态增量以及夹爪开合状态构成的七维连续动作表示；$\mathcal{P}(s_{t+1}|s_t, a_t)$ 是环境的状态转移概率分布，描述了在状态 $s_t$ 下执行动作 $a_t$ 后系统状态演化的动力学机制。由于传感器噪声和视觉遮挡，机械臂无法获取完整的真实状态，只能获得观测空间 $\Omega$ 中的观测值 $o_t$，这一过程由观测概率分布 $\mathcal{O}(o_t|s_t)$ 决定。$\mathcal{R}(s_t, a_t)$ 为潜在的真实奖励函数，而模仿学习的根本特征即在于不依赖与环境交互来获取此显式奖励；$\gamma$ 为折扣因子，$\rho_0(s_1)$ 则是初始状态分布。
-
-在标准设定中，假定存在一个具有极高任务完成率的专家策略，表示为条件概率分布 $\pi_E(a|s)$。在训练阶段，算法接收一组由专家提供的演示轨迹集合 $\mathcal{D} = \{\tau_1, \tau_2, \dots, \tau_N\}$。其中，每一条轨迹 $\tau_i$ 记录了从初始状态到终止状态的完整序列交互，可表示为 $\tau_i = \{(o_1, a_1), (o_2, a_2), \dots, (o_T, a_T)\}$。模仿学习的最终目的，是在给定的参数化策略空间中，寻找一个由神经网络参数化的最优策略 $\pi_\theta(a|o)$，使其最大程度地逼近专家策略。
-
-传统行为克隆是模仿学习中最基础方法，它将序列决策学习过程直接转化为一个标准的监督学习问题，摒弃了对时间依赖性和环境动力学的假设。行为克隆的目标是最大化专家演示数据在参数化策略下的对数似然期望，其优化目标为：
-
-\begin{equation}
-  \theta^* = \arg\max_\theta \mathbb{E}_{(o,a) \sim \mathcal{D}} \left[ \log \pi_\theta(a|o) \right]
-\end{equation}
-
-在实际的机械臂连续控制任务中，动作空间是连续且高维的。若假设学习到的策略服从各向同性的高斯分布，即 $\pi_\theta(a|o) = \mathcal{N}(\mu_\theta(o), \Sigma)$，其中均值 $\mu_\theta(o)$ 由深度神经网络输出，$\Sigma = \sigma^2 I$ 为固定的协方差矩阵。根据高斯分布的概率密度函数，最大化对数似然目标可以等价转换为最小化网络预测动作与专家真实动作之间的均方误差：
-
-\begin{equation}
-  \mathcal{L}_{\text{BC}}(\theta) = \frac{1}{|\mathcal{D}|} \sum_{(o,a) \in \mathcal{D}} \| a - \mu_\theta(o) \|^2
-\end{equation}
-
-尽管行为克隆凭借其实现上的简单性与直接性，在诸多视觉控制任务中取得了初步成功，但其独立同分布的强假设在马尔可夫决策过程中通常难以成立。当机械臂根据当前学习到的策略在物理环境中实际执行动作时，任一时刻的微小预测误差都可能改变下一时刻的环境状态，从而破坏测试时状态分布与训练时专家状态分布的一致性。这种由局部误差引发的连锁偏移，正是限制行为克隆在复杂长时序任务中应用的核心理论瓶颈。
-\subsection{典型模仿学习算法}
-\label{subsec:typical_il_algorithms}
-
-在解决精细操作任务的模仿学习问题时，动作分块 Transformer 算法（Action Chunking with Transformers， ACT）\cite{zhao2023learning} 表现出了优异的性能。该算法摒弃了传统的单步动作预测模式，结合了条件变分自编码器（Conditional Variational Autoencoder，CVAE）和 Transformer 架构，将决策过程重塑为多步动作序列的高维生成问题。
-
-为了有效表征同一观测状态下可能存在多种成功动作轨迹的多模态分布，ACT 引入了一个低维连续隐变量 $z$ 来显式编码演示数据中的风格特征。在给定当前观测序列 $o$ 的条件下，模型的核心目标是最大化未来 $k$ 步专家动作块 $a_{t:t+k-1}$ 的条件对数似然。由于直接积分难以计算，ACT 通过引入近似后验分布 $q_\phi(z|a, o)$ 来构建变分下界。假设隐变量的先验分布服从标准正态分布 $\mathcal{N}(0, I)$，其优化目标可转化为最小化包含重构损失与 KL 散度正则化项的联合损失函数：
-
-\begin{equation}
-  \mathcal{L}_{\text{ACT}}(\theta, \phi) = \mathbb{E}_{q_\phi(z|o, a)} \left[ \| a_{t:t+k-1} - \hat{a}_{t:t+k-1} \|^2 \right] + \beta \cdot D_{\text{KL}} \left( q_\phi(z|o, a) \| \mathcal{N}(0, I) \right)
-\end{equation}
-
-针对模仿学习中存在的误差累积问题，如图\ref{fig:act_chunk}所示，ACT 采用了动作分块（Action Chunking）策略和时间集成（Temporal Ensembling）机制，解码器一次性并行预测出未来 $k$ 个时间步的完整动作序列，使得任务的有效决策视距强行降低了 $k$ 倍，从根本上遏制了协变量偏移在执行初期的爆炸性增长。
+\section{机械臂自主控制框架}
+\label{sec:robot_autonomous_control_framework}
+机械臂自主控制流程具有相对统一的结构，如图~\ref{fig:robot_control_flow}~所示，系统首先获取当前环境的观测条件，包括相机图像或语言指令等观测信息，以及必要的机器人状态信息。动作模型则根据这些输入生成面向任务执行的动作指令。在机械臂操作任务中，常见的动作形式包括末端增量动作与夹爪控制信号，其中末端增量动作通常用于描述末端执行器在任务空间中的平移和旋转变化，夹爪控制信号用于表示夹爪的开合状态。模型生成的动作还需要进一步经过运动学求解或控制器转换，得到机械臂可执行的关节角度或底层控制信号，再通过仿真环境接口或真实机器人控制接口驱动机械臂运动。机械臂完成动作后与环境发生交互，系统重新获取新的观测信息，并进入下一轮感知、推理与执行过程，从而形成闭环自主控制流程。
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.65\textwidth]{figures/content/action_chunk_and_temporal_ensemble.png}
-  \caption{动作分块与时间集成机制示意图\cite{zhao2023learning}}
-  \label{fig:act_chunk}
+  \includegraphics[width=0.75\linewidth]{figures/content/robot_control_flow.pdf}
+  \caption{机械臂自主控制流程示意图}
+  \label{fig:robot_control_flow}
 \end{figure}
 
-同时在任意物理运行时间步 $t$，系统内部会同时存在来自过去 $k$ 个不同时刻对当前时间步的动作预测值。设 $\hat{a}_t^{(t-i)}$ 表示系统在过去时刻 $t-i$ 处所生成的针对当前时刻 $t$ 的目标动作预测，动作集成机制通过指数加权移动平均的方式对这些预测值进行融合：
+\subsection{统一动作表示}
+\label{subsec:unified_action_representation}
 
+机械臂自主操作模型的输出动作需要同时服务于模型训练与机器人执行。不同机器人平台在关节数量和连杆结构以及底层控制接口上均存在差异，同一操作语义在不同机械臂上的关节角变化并不一致。如果直接以关节角度作为动作标签，模型学习到的往往是与特定机器人构型强相关的低层控制指令，当机器人型号或初始姿态或发生变化时，原有动作空间便难以直接复用。相比之下，机械臂操作任务的目标通常体现为末端执行器在任务空间中的运动，例如靠近目标物体、调整抓取姿态、拉开抽屉或释放物体。因此，将动作表示为末端执行器的相对位姿变化，更符合操作任务本身的语义。
+
+本文采用末端增量位姿作为统一动作表示，将单步动作写为：
 \begin{equation}
-  a_t = \frac{1}{Z_t} \sum_{i=0}^{k-1} w_i \cdot \hat{a}_t^{(t-i)}
+  \label{eq:unified_action_vector}
+  a_t = [\Delta x_t, \Delta y_t, \Delta z_t, \Delta r_{x,t}, \Delta r_{y,t}, \Delta r_{z,t}, g_t]^T
 \end{equation}
+其中，$\Delta x_t$、$\Delta y_t$、$\Delta z_t$ 表示末端执行器在笛卡尔空间中的平移增量，$\Delta r_{x,t}$、$\Delta r_{y,t}$、$\Delta r_{z,t}$ 表示末端执行器的姿态增量，$g_t$ 表示夹爪开合状态。前三维用于描述末端执行器向目标位置的移动方向和移动幅度，中间三维用于描述末端执行器姿态的局部调整，最后一维用于表示抓取或释放等末端执行器动作。通过这种形式，模型输出的不再是某一台机器人专属的关节命令，而是面向任务空间的末端运动指令。
 
-其中，权重系数服从指数衰减规律 $w_i = \exp(-m \cdot i)$，$m$ 为衰减因子，$Z_t$ 为归一化常数，这种加权组合机制赋予最新观测生成的预测最高权重，同时保留较早历史时刻的平滑预测成分，提升了动作执行的连贯性。
+设当前时刻末端执行器位姿为：
+\begin{equation}
+  \label{eq:ee_pose_matrix}
+  T_t =
+  \begin{bmatrix}
+    R_t & p_t \\
+    0 & 1
+  \end{bmatrix}
+\end{equation}
+其中，$p_t \in \mathbb{R}^3$ 为末端位置，$R_t \in SO(3)$ 为末端姿态。对于相邻两帧末端位姿 $T_t$ 与 $T_{t+1}$，平移增量可以直接由两帧位置相减得到：
+\begin{equation}
+  \label{eq:delta_position}
+  \Delta p_t = p_{t+1} - p_t
+\end{equation}
+其中，$\Delta p_t = [\Delta x_t, \Delta y_t, \Delta z_t]^T$。姿态增量则由相邻两帧之间的相对旋转得到：
+\begin{equation}
+  \label{eq:delta_rotation_matrix}
+  \Delta R_t = R_{t+1} R_t^{-1}
+\end{equation}
+随后，通过对数映射将相对旋转矩阵转换为三维旋转向量：
+\begin{equation}
+  \label{eq:delta_rotation_vector}
+  \Delta r_t = \mathrm{Log}(\Delta R_t)
+\end{equation}
+其中，$\Delta r_t = [\Delta r_{x,t}, \Delta r_{y,t}, \Delta r_{z,t}]^T$。由此，连续两帧末端位姿之间的空间变化便被转换为统一的六维末端增量，再与夹爪状态共同组成七维动作标签。
 
+在模型推理阶段，末端增量动作可以按照相反的过程转换为目标末端位姿。给定当前末端位姿 $T_t$ 和模型预测的动作 $a_t$，目标位置可表示为：
+\begin{equation}
+  p_{t+1}^{*} = p_t + \Delta p_t
+\end{equation}
+目标姿态可表示为：
+\begin{equation}
+  R_{t+1}^{*} = \mathrm{Exp}(\Delta r_t) R_t
+\end{equation}
+其中，$\mathrm{Exp}(\cdot)$ 表示从旋转向量到旋转矩阵的指数映射。由 $p_{t+1}^{*}$ 和 $R_{t+1}^{*}$ 可以得到下一时刻的目标末端位姿 $T_{t+1}^{*}$。由此可见，末端增量动作本质上描述的是末端执行器在任务空间中的相对运动，无论机械臂的自由度数量或连杆结构等结构变量如何变化，只要其末端执行器能够到达相应的目标位姿，该动作都可以表示为相同形式的空间位姿增量。因此，这种表示方式不依赖特定平台或特定机器人结构，能够在不同机械臂和不同实验环境之间保持一致的动作语义。
 
+基于上述特点，末端增量动作可以作为机械臂自主操作中的统一动作表示。一方面，它使模型学习的重点从具体关节变化转向任务空间中的末端运动，更符合抓取和拉动等操作行为的表达方式；另一方面，它为仿真训练和真实数据微调提供了统一的动作空间，使不同阶段的数据与控制流程能够在相同动作语义下进行衔接。
 
-尽管 ACT 算法在精细操作任务中成效显著，但其通过高斯先验强制规范隐变量的方式，在处理存在严苛物理接触约束的多模态分布时仍显吃力。相比之下，扩散策略算法（Diffusion Policy）\cite{chi2023diffusion} 将机械臂动作序列的生成过程重构为去噪扩散概率模型（Denoising Diffusion Probabilistic Models， DDPM）\cite{ho2020denoising}的条件去噪演化过程，通过多步去噪从噪声中逐步恢复出符合物理约束的动作路径。
+\subsection{仿真环境中的机械臂控制流程}
+\label{subsec:simulation_robot_control}
 
+仿真环境是机械臂自主操作算法训练与验证的重要平台。如图~\ref{fig:simulation_platforms}~所示，不同仿真平台在功能侧重点上存在差异，PyBullet 接口较为轻量，适合快速搭建机器人学习任务；Gazebo 常用于机器人系统联调；Isaac Sim 具有较强的视觉渲染和并行仿真能力，适合构建高保真感知场景；MuJoCo 在机械臂操作研究中应用广泛，围绕其形成了较完善的机器人模型和操作任务基准，能够较方便地支持桌面场景与家庭场景中的机械臂操作实验。因此，本文选用基于 MuJoCo 的仿真环境作为模型训练与验证平台。
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.8\textwidth]{figures/content/diffusion_process.png}
-  \caption{扩散策略的扩散过程示意图}
-  \label{fig:diffusion_process}
+  \subfloat[PyBullet]{\includegraphics[width=0.2\linewidth, height=0.221\linewidth, keepaspectratio=false]{figures/content/panda_pybullet}}\quad
+  \subfloat[Gazebo]{\includegraphics[width=0.2\linewidth, height=0.221\linewidth, keepaspectratio=false]{figures/content/panda_gazebo}}\quad
+  \subfloat[Isaac Sim]{\includegraphics[width=0.2\linewidth, height=0.221\linewidth, keepaspectratio=false]{figures/content/panda_issacsim}}\quad
+  \subfloat[MuJoCo]{\includegraphics[width=0.2\linewidth, height=0.221\linewidth, keepaspectratio=false]{figures/content/panda_mujoco}}
+  \caption{主流机械臂仿真平台示意图}
+  \label{fig:simulation_platforms}
 \end{figure}
 
-扩散策略的前向扩散过程是一个预设的马尔可夫链。如图\ref{fig:diffusion_process}所示，给定人类专家提供的干净示范动作序列 $A_t^0$，算法逐步向动作序列中注入方差随时间递增的高斯噪声。通过运用高斯分布的加法性质，可以直接得出从初始干净动作到任意第 $k$ 步带噪动作 $A_t^k$ 的闭式边缘分布：
 
+在 MuJoCo 生态中，Franka Panda 机械臂具有较好的模型支持和广泛的研究基础。MuJoCo Menagerie 提供了 Franka Emika Panda 的标准模型，相关机器人学习框架也通常在该模型基础上封装相机观测、机械臂状态、末端夹爪和任务物体等接口，使其能够用于抓取、放置、开关抽屉等桌面或家庭环境操作任务。基于这些模型与任务资产，Panda 机械臂能够较好地满足仿真环境下机械臂自主操作算法的训练与评估需求。
+
+如图~\ref{fig:mujoco_panda_control_interface}~所示，在MuJoCo仿真环境中，机械臂控制流程主要围绕模型文件、状态数据、控制器和执行器通道展开。MuJoCo使用MJCF文件描述机器人本体、执行器、相机和场景物体等仿真要素，并在加载后形成静态的模型数据结构。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\linewidth]{figures/content/mujoco_data_flow}
+  \caption{MuJoCo仿真环境中的机械臂控制接口示意图}
+  \label{fig:mujoco_panda_control_interface}
+\end{figure}
+
+仿真运行过程中的动态状态由\texttt{MjData}维护，其中包括机械臂关节位置、关节速度、末端执行器位姿、相机渲染结果以及物体状态等信息。每个控制周期开始时，仿真环境首先从\texttt{MjData}中读取当前机器人状态，并通过相机渲染接口生成图像观测。图像观测、语言指令和必要的机器人状态共同输入动作模型，模型输出的末端增量动作随后被送入仿真控制器。
+
+控制器封装层负责将模型输出转换为MuJoCo能够执行的控制量。控制器根据当前末端状态和目标末端状态之间的误差计算关节层面的控制输入；若采用逆运动学控制方式，控制器先求解目标末端位姿对应的目标关节角，再交由关节位置控制器生成执行器输入。
+
+无论采用哪种控制器形式，最终得到的控制量都需要写入MuJoCo的执行器控制数组。对于Panda机械臂，机械臂本体的控制量对应各关节执行器，夹爪控制量对应左右手指执行器。控制量写入完成后，仿真器调用渲染步推进仿真状态，机械臂状态和场景物体状态随之更新。随后，环境根据新的状态重新渲染相机图像，并进入下一轮模型推理与动作执行。
+\subsection{真实机械臂中的控制流程}
+\label{subsec:real_robot_control}
+
+真实机械臂控制系统需要将模型生成的高层动作转换为机器人控制器能够执行的轨迹指令。与仿真环境相比，真实系统还需要接入传感器、读取关节状态、维护坐标变换，并通过硬件驱动将轨迹发送给物理机械臂。本文采用ROS（Robot Operating System，ROS）作为真实机械臂控制系统的通信中间层，并基于MoveIt完成机器人运动学求解和轨迹执行等功能。MoveIt中的核心节点为\texttt{move\_group}，其接口关系如图~\ref{fig:ros_control_dataflow}~所示。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\linewidth]{figures/content/ros_control_dataflow.pdf}
+  \caption{基于ROS与MoveIt的真实机械臂控制接口关系示意图}
+  \label{fig:ros_control_dataflow}
+\end{figure}
+
+在系统启动阶段，ROS参数服务器首先向\texttt{move\_group}提供机器人模型与规划配置。URDF文件用于描述机械臂连杆和关节等结构，SRDF文件用于描述规划组=和自碰撞矩阵等信息，MoveIt配置文件则提供运动学求解器、规划器和控制器等参数。运行过程中，机械臂驱动读取真实控制器返回的关节角度，并通过关节角度话题发布当前关节状态；状态发布节点根据URDF模型和关节状态计算各连杆之间的TF坐标变换，并将机器人当前姿态发布到TF树中。MoveIt的\texttt{move\_group}节点监听关节角度和TF信息，由此获得当前机械臂状态。
+
+在感知侧，相机节点将工作空间图像发布为ROS图像话题，控制程序从图像话题读取当前观测，并与语言指令和必要的机器人状态共同送入动作模型。模型输出末端动作后，本地控制程序需要将其交给MoveIt进行运动学处理。可以通过程序访问\texttt{move\_group}提供的规划和执行接口，也可以通过RViz中的Motion Planning插件查看机器人模型和执行状态。
+
+控制程序接收到模型动作后，首先根据当前TF或MoveIt中的机器人状态得到末端执行器当前位姿，再结合模型输出计算目标末端位姿。随后，控制程序可以调用MoveIt的逆运动学接口求解目标位姿对应的关节角，也可以调用笛卡尔路径接口生成末端连续运动路径。若需要从当前关节状态直接得到末端位姿，则可以使用MoveIt提供的正运动学功能；若目标位姿需要转换为关节空间目标，则使用逆运动学功能；若希望末端沿若干中间位姿连续运动，则使用笛卡尔路径规划功能。这样，模型输出的末端动作会被转换为真实机械臂可执行的关节轨迹。
+
+完成运动学求解后，\texttt{move\_group}会根据规划结果生成关节轨迹，并通过控制器接口发送给机械臂控制器。MoveIt与真实机器人控制器之间通常通过关节角度动作接口通信，\texttt{move\_group}作为动作客户端发送规划后的关节轨迹，机器人侧的轨迹控制器作为动作服务端接收轨迹并驱动关节执行。
+
+轨迹执行完成后，机械臂控制器返回新的关节状态，状态发布节点再次更新关节角度和TF树，相机节点重新发布当前图像。控制程序据此获得新的观测输入，并进入下一轮模型推理、运动学求解和轨迹执行。通过上述流程，模型生成的末端动作能够被转换为真实机械臂的关节轨迹，并通过ROS与MoveIt的接口实现闭环控制，从而使机械臂能够根据模型输出在真实环境中执行相应的操作任务。
+
+\section{自主操作数据采集平台}
+\label{sec:autonomous_operation_data_platform}
+
+在机器人模仿学习中，高质量的数据是训练有效策略的前提。本文后续章节采用基于扩散模型的动作生成模型，传统的编程示教和拖动示教难以满足真实场景下对多样化操作轨迹的采集需求，而扩散模型需要学习具有多模态特性的动作分布。因此，本节采用遥操作作为真实场景数据采集的主要手段，使操作者能够通过自然的肢体运动直接驱动机械臂，所采集的轨迹天然覆盖多种可行操作路径，与扩散模型对多模态数据分布的建模需求相契合。
+
+\subsection{硬件构成}
+\label{subsec:data_platform_hardware}
+
+遥操作硬件设计的核心难点在于如何消除操作者与目标机械臂之间的运动学差异。为了实现关节空间的直接映射控制，遥操臂必须与目标机械臂具有相同的运动学结构。为此，本平台选用了GELLO开源框架，通过3D打印结构件与Dynamixel智能舵机，构建了与UR5e机械臂运动学等价的缩比遥操臂。由于遥操臂与目标机械臂共享相同的运动学结构，操作者在转动遥操臂时，目标机械臂的对应关节产生同步的角位移，操作者自身的运动便受到相同的关节限制约束，所采集的轨迹天然满足机械臂的运动学可行性要求。
+
+\begin{figure}[H]
+  \centering
+  \subfloat[UR5e机械臂]{\includegraphics[width=.2\textwidth]{figures/content/UR5e.jpg}}
+  \quad
+  \subfloat[RGB相机]{\includegraphics[width=.2\textwidth]{figures/content/camera_pic.png}}
+  \\
+  \subfloat[DH-AG95夹爪]{\includegraphics[width=.2\textwidth]{figures/content/dh-ag95.png}}
+  \quad
+  \subfloat[Dynamixel舵机]{\includegraphics[width=.2\textwidth]{figures/content/dynamixel.png}}
+  \caption{参与数据采集的核心机电设备}
+  \label{fig:hardware_components}
+\end{figure}
+
+参与数据采集的核心机电设备如图~\ref{fig:hardware_components}~所示。目标执行端采用UR5e六自由度协作机械臂，该机械臂具备5 kg的有效载荷与850 mm的最大工作半径，能够满足桌面级复杂操作任务的需求。末端执行器配备了大寰DH-AG95自适应平行夹爪，其最大开口宽度达到95 mm，满足多种物体的抓取需求。在感知端，系统部署了一个固定视角的RGB相机，用于捕获工作空间的图像信息。在控制端，GELLO遥操臂作为UR5e的缩比复制品，通过七个Dynamixel舵机实现对目标机械臂及末端夹爪的全状态控制。
+
+在具体的关节映射关系与通信拓扑上，如图~\ref{fig:gello_pic}~所示，GELLO遥操臂的六个主干舵机与UR5e机械臂的六个旋转关节保持严格的对应关系。此外，遥操臂末端额外配置了第七个舵机，专门用于映射DH-AG95夹爪的开合状态。这七个Dynamixel舵机通过菊花链方式连接至一个串口通信模块，随后该模块的输出与夹爪的串口通信线共同接入一个USB集线器，最终统一连接至上位机PC。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.6\linewidth]{figures/content/gello_pic.pdf}
+  \caption{GELLO遥操臂实物图}
+  \label{fig:gello_pic}
+\end{figure}
+
+\subsection{软件驱动}
+\label{subsec:data_platform_software_driver}
+
+硬件平台的搭建仅为遥操作提供了物理基础，要实现操作者意图向目标机械臂的可靠传递，还需要在软件层面解决设备间的通信协议差异与物理安装引入的固有误差。
+
+由于Dynamixel舵机的绝对编码器零点与UR5e机械臂的关节零点在物理安装时难以完全对齐，若直接将舵机读数作为控制指令，目标机械臂将产生不可预期的运动。因此，在启动遥操作之前，必须对各关节的初始偏差进行标定。标定时，操作者将遥操臂摆放至预先设定的参考位姿，系统在$-8\pi$至$8\pi$的范围内，以$\pi/2$为步长遍历搜索最优的偏差值。对于第$i$个关节，系统通过计算当前舵机读数与目标关节角之间的误差，选取使误差最小的偏差值$\Delta_i$作为该关节的标定结果。标定过程的优化目标为：
 \begin{equation}
-  q(A_t^k | A_t^0) = \mathcal{N}\left( A_t^k; \sqrt{\bar{\alpha}_k} A_t^0, (1 - \bar{\alpha}_k) \mathbf{I} \right)
+  \label{eq:offset_calibration}
+  \Delta_i = \arg\min_{\Delta \in S} \left| s_i \cdot (\theta_i - \Delta) - \theta_{i}^{\text{start}} \right|
+\end{equation}
+其中，$S$为遍历搜索的离散偏差集合，$s_i$为该关节的旋转方向符号，$\theta_i$为当前舵机的原始读数，$\theta_{i}^{\text{start}}$为预设的参考位姿角度。这些标定参数最终被写入配置文件中，在每次启动时自动加载，从而确保遥操臂的运动指令能够准确映射至目标机械臂的关节空间。
+
+为了实现高频、低延迟的真机跟随控制，本平台利用了UR5e机械臂提供的RTDE（Real-Time Data Exchange，RTDE）接口。结合GELLO软件配置中对更新率、步数限制与安全参数的设置方式，系统能够在关节空间内实现稳定的遥操作跟随控制。具体实现中，系统通过RTDE接口的伺服指令，将标定后的遥操臂关节角度下发至UR5e控制器。为了保证运动的平滑性与安全性，伺服指令的角速度与角加速度均被限制在0.5 rad/s及0.5 rad/s$^2$，同时设置了0.2 s的前瞻时间与100的比例增益。在该参数配置下，目标机械臂能够实现稳定的低延迟关节跟随，为后续遥操作数据采集提供可靠的控制基础。
+
+由于DH-AG95夹爪的控制接口接受的是0至1000的位置指令，这与其他旋转关节的弧度制指令完全不同，因此需要建立两者之间的映射关系。为了实现精确的开合控制，系统首先需要获取夹爪电机的物理边界。操作者通过手动按动遥操臂末端的夹爪电机，分别记录其在全开与全闭状态下的绝对角度值。在运行期间，系统实时读取该电机的当前角度，并根据记录的边界值将其线性归一化至0至1的区间，其中0代表完全张开，1代表完全闭合。随后，该归一化变量按下式转换为目标夹爪的位置指令：
+\begin{equation}
+  \label{eq:gripper_mapping}
+  p_{\text{gripper}} = (1 - v_{\text{norm}}) \times 1000
 \end{equation}
 
-其中 $\bar{\alpha}_k$ 为方差调度参数的累积乘积。逆向去噪过程则是模型需要学习的核心，模型利用参数化的深度神经网络构建一个噪声预测器 $\epsilon_\theta(A_t^k, O_t, k)$，在已知视觉观测特征 $O_t$ 的前提下逼近真实的逆向转移概率。其训练目标是最小化噪声匹配均方误差：
+其中，$v_{\text{norm}}$为遥操臂夹爪舵机的归一化关节角，$p_{\text{gripper}}$为目标夹爪的位置指令。为了抑制操作者手部微小抖动对夹爪控制的干扰，系统在桥接节点中引入了滑动窗口滤波机制。该节点维护一个0.1 s的时间窗口，取窗口内指令的中位数作为当前时刻的有效输出，并设定了最小变化阈值。只有当新指令与上一有效指令的差值超过该阈值时，系统才会向夹爪发送更新命令，从而避免因手部微小抖动引发的夹爪频繁动作。
 
+如图~\ref{fig:data_collection}~所示，操作者通过观察RGB相机实时回传的图像画面，转动GELLO遥操臂来控制UR5e机械臂执行相应的操作任务。在遥操作过程中，PC控制中枢运行采集主控程序，以30 Hz的频率同步记录相机的RGB图像帧以及机械臂当前的关节位置与夹爪状态。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.4\linewidth]{figures/content/data_collection.pdf}
+  \caption{基于GELLO的遥操作数据采集流程}
+  \label{fig:data_collection}
+\end{figure}
+
+\subsection{RLDS数据标准}
+\label{subsec:rlds_data_standard}
+
+\subsection{RLDS数据标准}
+\label{subsec:rlds_data_standard}
+
+真实场景遥操作采集得到的原始数据通常以轨迹文件的形式保存，每条轨迹对应一次完整的任务执行过程。原始轨迹中同步记录相机图像序列、机械臂关节角序列、夹爪状态序列以及对应的语言指令。为了使这些连续数据能够用于视觉语言动作模型训练，需要进一步将其整理为具有统一时间结构的数据样本。本文遵循RLDS（Robotics Learning Data System，RLDS）数据规范，将一次完整操作过程组织为一个集合，集合内部的每一帧构建为一步，使整条轨迹以时间顺序保存为连续的训练样本。
+
+对于一条长度为 $T$ 的遥操作轨迹，原始数据可以表示为：
 \begin{equation}
-  \mathcal{L}_{\text{Diffusion}}(\theta) = \mathbb{E}_{k, A_t^0, \epsilon} \left[ \left\| \epsilon - \epsilon_\theta(A_t^k, O_t, k) \right\|^2 \right]
+  \mathcal{D} = \{I_t, \theta_t, s_t, l\}_{t=0}^{T-1}
 \end{equation}
+其中，$I_t$ 表示第 $t$ 帧RGB图像，$\theta_t \in \mathbb{R}^6$ 表示UR5e机械臂在该时刻的六维关节角，$s_t$ 表示夹爪状态，$l$ 表示该条轨迹对应的语言指令。数据构建时，系统按照时间顺序遍历轨迹，将当前帧的图像与机器人状态作为当前时间步的观测信息，并将当前帧到下一帧之间的状态变化作为对应的动作监督信号。
 
-在模型推断阶段，扩散策略从随机采样的纯高斯噪声动作序列出发，按照随机朗之万动力学进行多步迭代优化。在每一次去噪迭代中，网络基于当前的带噪动作和视觉特征计算出噪声梯度，并依循以下公式对动作序列进行更新：
-
+对观测信息，每个时间步保存当前时刻的RGB图像和机器人本体状态。机器人本体状态由机械臂关节角和夹爪状态共同组成，可表示为：
 \begin{equation}
-  A_t^{k-1} = \frac{1}{\sqrt{\alpha_k}} \left( A_t^k - \frac{1 - \alpha_k}{\sqrt{1 - \bar{\alpha}_k}} \epsilon_\theta(A_t^k, O_t, k) \right) + \sigma_k z
+  o_t^{\text{prop}} = [\theta_t, s_t]
 \end{equation}
+其中，$o_t^{\text{prop}} \in \mathbb{R}^7$，前六维为UR5e机械臂关节角，最后一维为夹爪状态。语言指令在同一条轨迹内保持一致，并随每个时间步共同保存，使模型在训练时能够同时获得视觉观测、机器人状态和任务语义条件。
 
-其中 $z \sim \mathcal{N}(0, \mathbf{I})$ 为探索性高斯扰动项。这种迭代梯度下降寻优过程，使得扩散策略能够从复杂的动作分布超曲面上，精准地塌缩至最符合当前视觉条件的可行解。
+在构建动作标签时，系统读取相邻两帧的关节角 $\theta_t$ 和 $\theta_{t+1}$，利用式~\ref{eq:forward_kinematics}~中的UR5e正运动学模型计算末端法兰位姿，得到夹爪末端在基坐标系下的实际位姿。随后，根据式~\ref{eq:delta_position}、式~\ref{eq:delta_rotation_matrix}和式~\ref{eq:delta_rotation_vector}计算相邻两帧之间的末端平移增量与姿态增量，并结合下一帧夹爪状态 $s_{t+1}$，按照式~\ref{eq:unified_action_vector}构建七维动作标签。第 $t$ 个时间步中的观测信息对应当前状态，动作标签则对应从当前状态过渡到下一状态所需执行的末端动作。
 
-在闭环动作序列预测上，扩散策略将动作序列预测能力与滚动时域控制相结合，在时间步 $t$，以最近 $T_o$ 步的观察数据为输入，一次性预测 $T_p$ 步的动作序列，但仅将前 $T_a$ 步的动作直接执行在机械臂上。这种多步预测少步执行的设计，平衡了长期轨迹规划与对外界扰动的实时闭环响应。
+除观测信息和动作标签外，RLDS数据还需要保存轨迹边界标志。对于每条轨迹的起始时间步，系统设置起始标志以表明集合开始，对于轨迹末端，则设置结束标志和终止标志以表明该集合已经完成。通过这些边界信息，训练过程能够区分不同操作轨迹，避免将两条独立轨迹误认为连续序列。奖励信息则用于描述任务完成状态，在本文的数据构建中主要用于标记轨迹终止时的完成反馈。
 
+通过上述方式，原始遥操作数据被整理为以集合为单位、以步为基本时间单元的RLDS序列数据。每个时间步同时包含当前图像、机器人状态、语言指令、动作标签以及轨迹边界信息，既保留了真实操作过程中的时序连续性，也便于后续数据加载器按照统一规范读取训练样本。最终，真实场景采集得到的遥操作轨迹被转换为适用于视觉语言动作模型训练的数据集格式，为后续真实机器人微调与部署实验提供数据基础。
 
-
-\section{视觉语言动作模型}
-\label{sec:vla_models}
-
-\subsection{大语言模型与自回归生成}
-\label{subsec:llm_autoregressive}
-
-视觉语言动作模型是近年来具身智能领域发展出的一种新型策略架构。其核心思想是将大规模预训练模型中蕴含的语义知识与逻辑推理能力，迁移至物理世界的机器人底层控制任务中，为了实现这一目标，需要将视觉感知、语言理解与动作生成整合在统一的数学框架内。大语言模型是进行高层语义理解与决策推理的核心组件，其底层架构通常采用基于自注意力机制的解码器。在自然语言处理领域，模型通过在大量文本语料上进行无监督的下一个词预测训练，学习到了语言的语法结构、上下文依赖关系以及广泛的常识知识。
-
-从概率论视角来看，语言模型本质上是对离散序列的联合概率分布进行估计。给定一个由离散词元组成的序列 $X = (x_1, x_2, \dots, x_T)$，模型通过链式法则将其联合概率分解为各个词元在给定历史上下文条件下的条件概率乘积：
-
-\begin{equation}
-  P(X) = \prod_{t=1}^{T} P(x_t | x_1, x_2, \dots, x_{t-1})
-\end{equation}
-
-在推理阶段，模型采用自回归生成的方式进行序列输出。具体而言，模型根据当前已生成的序列内容，计算词表中所有候选词元的概率分布，并从中选取概率最大的词元作为下一个输出，随后将其加入上下文序列中，循环往复直至生成终止符。这种自回归机制使得模型能够处理变长的序列输入与输出，并保持生成内容在逻辑上的连贯性。视觉语言动作模型正是利用了这一机制，将机器人动作序列的生成问题，转化为与文本生成在数学形式上完全等价的条件概率推断过程。
-
-\subsection{多模态融合与动作序列生成}
-\label{subsec:multimodal_action_generation}
-
-在机器人操作任务中，仅有语言指令不足以指导具体的物理动作，系统必须具备对当前环境状态的视觉感知能力。为了应对非结构化环境中的复杂感知需求，而视觉语言动作模型通常采用多通道视觉编码器融合的策略，将高维的原始图像数据降维并提取为结构化的特征表示。一方面，系统利用对比语言图像预训练模型来提取语义对齐特征，这类模型在训练时通过最大化成对图像与文本描述的相似度，使得提取出的视觉特征能够与自然语言指令在同一嵌入空间中实现对齐，从而帮助机器人理解图像中物体的语义类别与属性。另一方面，系统引入自监督视觉模型来补充空间几何与物体结构信息，这类模型通过掩码图像预测等自监督任务，能够捕捉到图像中细粒度的边缘、深度以及物体的局部特征，这对于需要高精度物理接触的操作任务至关重要。
-
-设 $\mathbf{I}$ 为输入图像，$f_{\text{sem}}$ 与 $f_{\text{spa}}$ 分别表示语义对齐视觉编码器与空间几何视觉编码器，提取到的特征向量分别为 $\mathbf{v}_{\text{sem}} \in \mathbb{R}^{N_1 \times d_1}$ 与 $\mathbf{v}_{\text{spa}} \in \mathbb{R}^{N_2 \times d_2}$。多模态融合的关键在于将提取到的视觉特征映射到语言模型的输入空间中。具体而言，两种视觉特征在通道维度上进行拼接后，通过一个多层感知机投影网络 $W_{\text{proj}}$ 被转换为与语言词元维度 $d_{\text{llm}}$ 一致的视觉标记 $\mathbf{v}_{\text{proj}}$：
-
-\begin{equation}
-  \mathbf{v}_{\text{proj}} = W_{\text{proj}}\left( \text{Concat}(\mathbf{v}_{\text{sem}}, \mathbf{v}_{\text{spa}}) \right) \in \mathbb{R}^{N \times d_{\text{llm}}}
-\end{equation}
-
-随后，这些视觉标记 $\mathbf{v}_{\text{proj}}$ 与人类操作者提供的自然语言指令标记 $\mathbf{e}_L$ 在序列维度上进行拼接，构成一个统一的多模态上下文序列 $[\mathbf{v}_{\text{proj}}; \mathbf{e}_L]$，送入大语言模型的解码器中进行联合处理。
-
-为了将连续的物理动作空间与离散的自然语言空间统一在同一网络架构下，视觉语言动作模型普遍采用动作离散化策略。机械臂末端执行器的连续多自由度动作向量被独立地离散化。具体做法是将每个动作维度在训练数据分布内的有效区间划分为 $B$ 个均匀的离散区间。对于动作向量中的第 $i$ 个连续值 $a_i$，其对应的离散标记索引 $c_i \in \{0, 1, \dots, B-1\}$ 可通过下式计算：
-
-\begin{equation}
-  c_i = \text{round}\left( \frac{a_i - a_i^{\text{min}}}{a_i^{\text{max}} - a_i^{\text{min}}} \times (B - 1) \right)
-\end{equation}
-
-其中，$a_i^{\text{min}}$ 与 $a_i^{\text{max}}$ 通常取该动作维度在训练集中的第 1 百分位数与第 99 百分位数，以避免极端异常值对离散化精度的影响。每个区间被赋予一个唯一的整数索引，从而将连续的动作向量映射为与语言词表相同维度的离散动作标记。
-
-在完成动作离散化与多模态输入拼接后，机器人的操作任务被严格形式化为一个多模态条件序列生成问题。给定当前时刻的视觉观测图像 $\mathbf{I}$ 和自然语言指令 $\mathbf{L}$，模型的优化目标是最大化动作序列 $\mathbf{A}$ 的条件对数似然：
-
-\begin{equation}
-  \theta^* = \arg\max_\theta \mathbb{E}_{(\mathbf{I}, \mathbf{L}, \mathbf{A}) \sim \mathcal{D}} \left[ \log P_\theta(\mathbf{A} | \mathbf{I}, \mathbf{L}) \right]
-\end{equation}
-
-在实际生成过程中，模型基于历史上下文逐个预测出代表未来动作的离散标记，预测完成的离散标记序列最后通过反量化操作，即根据标记对应的索引查找其在连续空间中的中心值，还原为连续的物理控制信号，并下发至机械臂底层控制器执行。这种将动作生成视作特殊语言输出的机制，使得模型能够直接继承预训练模型在海量数据中学习到的推理能力。
 \section{本章小结}
-\label{sec:chapter2_summary}
-本章对机器人自主操作算法所以来的相关基础知识与算法背景做了一定的分析与推导。首先从机械臂运动学建模出发，结合机械臂正逆运动学的数学推导，分析了机械臂运动学的基本原理与求解方法，并介绍了机械臂轨迹规划与控制方法。随后介绍了模仿学习的核心理论框架，分析了 ACT 和扩散策略算法在解决误差累积问题上的创新机制，并就推理流程进行了详细阐述。最后从高级语义理解和多模态融合的角度，介绍了视觉语言动作模型的整体框架与核心思想以及离散化动作序列的生成方法。
+
+机械臂自主操作并不只是模型动作预测问题，还需要解决动作语义如何统一，模型输出如何落到机器人执行，以及真实操作数据如何组织为可训练样本等基础问题。围绕这些问题，本章从运动学建模出发，明确了关节空间与末端位姿之间的映射关系，为动作标签计算和控制转换提供了理论依据。在此基础上，本章将机械臂动作统一到末端增量位姿形式，使不同平台下的训练数据与执行过程能够在相同动作语义下衔接。针对模型动作到机器人执行之间的落地问题，本章进一步说明了高层动作经过运动学求解与控制接口转换后驱动机器人运动的基本方式。针对真实场景数据获取与训练格式不一致的问题，本章构建了基于遥操作的采集流程，并将原始操作轨迹整理为面向模型训练的序列数据。通过上述研究，本章形成了连接动作表示，控制执行和数据构建的技术基础，为后续扩散动作生成模型，时序缓存视觉语言动作模型以及真实机械臂实验提供支撑。
