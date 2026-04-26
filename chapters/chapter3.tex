@@ -98,7 +98,6 @@ DDIM 从时间步 $k$ 到时间步 $k-1$ 的更新公式被重新推导为：
   A_{k-1} = \sqrt{\bar{\alpha}_{k-1}} \underbrace{\left( \frac{A_k - \sqrt{1 - \bar{\alpha}_k} \hat{\epsilon}_\theta(A_k, k, \mathbf{z})}{\sqrt{\bar{\alpha}_k}} \right)}_{\text{预测的 } A_0} 
   + \sqrt{1 - \bar{\alpha}_{k-1} - \sigma_k^2}\, \hat{\epsilon}_\theta(A_k, k, \mathbf{z}) + \sigma_k \epsilon
 \end{equation}
-
 其中 $\epsilon \sim \mathcal{N}(0, \mathbf{I})$ 为随机噪声，$\sigma_k$ 为控制随机性的方差参数。该公式首先利用当前带噪序列 $A_k$ 和网络预测的噪声 $\hat{\epsilon}_\theta$ 估计出初始干净序列 $A_0$，再基于该估计值直接生成目标时间步的序列 $A_{k-1}$。
 
 当方差参数设为 $\sigma_k = 0$ 时，采样过程中的随机噪声项被完全消除，去噪轨迹变为确定性过程。此外，由于更新公式直接依赖于对 $A_0$ 的估计而不再受逐步马尔可夫转移的限制，采样过程支持跨时间步的跳步更新。具体而言，算法可以从训练阶段所定义的完整 $K=100$ 步扩散时间序列中选取一个长度较短的子序列 $\tau = [\tau_1, \tau_2, \ldots, \tau_S]$（其中 $\tau_S = K, \tau_1 = 0$），并直接计算从 $A_{\tau_i}$ 到 $A_{\tau_{i-1}}$ 的状态更新。由此，在推理阶段仅需执行少量 DDIM 去噪迭代，便可近似原本的完整逆扩散过程，从而显著降低动作生成的计算开销。不同 DDIM 采样步数对动作生成质量与任务成功率的影响，将在后续消融实验中进一步分析。
