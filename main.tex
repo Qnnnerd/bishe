@@ -1,15 +1,25 @@
 \documentclass[engineer,fontset=windows,nocolorlinks]{seumasterthesis}
 \raggedbottom
-\let\cleardoublepage\clearpage
+\makeatletter
+\renewcommand{\cleardoublepage}{%
+  \clearpage
+  \if@twoside
+    \ifodd\c@page
+    \else
+      \stepcounter{page}%
+    \fi
+  \fi
+}
+\makeatother
 \begin{document}
 
 %% ----------------------------------------------------------------------------
 %%                                 Meta Data
 %% ----------------------------------------------------------------------------
-\categorynumber{TP242.6}         % Chinese Library Classification
-\UDC{007.52}                    % Universal Decimal Classification
+\categorynumber{~}         % Chinese Library Classification
+\UDC{~}                    % Universal Decimal Classification
 \secretlevel{公开}                % Secret Level
-\studentid{233667}              % Student Number
+\studentid{~}              % Student Number
 
 %% ----------------------------------------------------------------------------
 %%                           Thesis Title and Spine
@@ -28,12 +38,12 @@
 %%                             Author and Advidor
 %% ----------------------------------------------------------------------------
 \author
-    {{\bfseries 刘立奥}}
-    {{\bfseries Liu Liao}}
+    {{\bfseries ~}}
+    {{\bfseries ~}}
 
 \advisor
-    {{\bfseries 秦文虎~~教授}}
-    {{\bfseries Qin Wenhu}}
+    {{\bfseries ~ }}
+    {{\bfseries  }}
     {Prof.}
 
 
@@ -47,10 +57,10 @@
 \majors{电子信息}
 \major{仪器仪表工程}                  % First-level Discipline Name
 \submajor{智能机器人}               % Second-level Discipline Name
-\defenddate{--}         % Defence Date
-\authorizedate{--}      % Degree Award Date
-\committeechair{--}             % Chairman of Defence Committee
-\reviewer{--}{--}             % Thesis Reviewer(s)
+\defenddate{}         % Defence Date
+\authorizedate{}      % Degree Award Date
+\committeechair{}             % Chairman of Defence Committee
+\reviewer{ }{ }             % Thesis Reviewer(s)
 \department                     % Faculty or Department
     {仪器科学与工程学院}
     {School of Instrumental Science and Engineering}
