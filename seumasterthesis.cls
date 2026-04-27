@@ -321,6 +321,11 @@
     \renewcommand{\@majorlen}{#1}
     \renewcommand{\@major}{#2}
 }
+\newcommand{\@majors}{}
+\newcommand{\majors}[2][8em]{
+    \renewcommand{\@majorlen}{#1}
+    \renewcommand{\@majors}{#2}
+}
 \newcommand{\@department}{}
 \newcommand{\@departmenteng}{}
 \newcommand{\department}[2]{
@@ -781,7 +786,7 @@
                 \makebox[3.5cm][s]{\xiaoerhao\heiti\mainmajorpre:  } &
                 \underline{
                     \makebox[6cm][s] {
-                        \xiaoerhao\songti\textbf{\@major}
+                        \xiaoerhao\songti\textbf{\@majors}
                     }
                 } \\
                 \makebox[3.5cm][s]{\xiaoerhao\heiti\authorpre:  } &
