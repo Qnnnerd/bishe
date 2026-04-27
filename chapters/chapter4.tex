@@ -177,9 +177,7 @@ TemporalCacheVLA提出了一种基于双通道时序缓存的解决方案，其�
 
 TemporalCacheVLA在LIBERO四个子集上的实验结果如图~\ref{fig:libero_results}~所示，图中每一行对应一个完整的动作执行过程，下方的中文为该动作语言指令的翻译。每行的前四张图片展示了该次动作的均匀采样帧，图中标注的轨迹线表示机械臂末端执行器从当前轨迹起点运动到终点的路径，每行的最后一张图片则展示了该次动作的完整轨迹。
 
-为了验证有效性，本文将与当前领域内的主流视觉语言动作模型进行了对比，各方法在LIBERO四个子集上的成功率对比结果如表~\ref{tab:libero_results}~所示，表中加粗部分表示该方法在相应子集上的最佳表现。
-
-从表~\ref{tab:libero_results} 的结果可以看出，TemporalCacheVLA 在四个子集上整体表现稳定，并在 Goal 与 LIBERO-100 两个更强调任务阶段切换与长时序依赖的子集上取得了最优结果。具体而言，在 Spatial 子集上，TemporalCacheVLA 取得了0.970的成功率，略低于 CogACT\cite{liang2024cogact} 的 0.972。由于该子集中的任务多为短序列空间关系操作，模型主要依赖当前观测完成局部空间推理，因此显式历史上下文建模带来的增益相对有限。在 Object 子集上，TemporalCacheVLA 取得了0.981的成功率，略低于 $\pi_0$\cite{black2024pi} 的0.988。这说明在以细粒度物体外观识别与抓取泛化为主的任务中，本文方法虽能保持较高性能，但其优势尚未被充分释放。
+为了验证有效性，本文将与当前领域内的主流视觉语言动作模型进行了对比，各方法在LIBERO四个子集上的成功率对比结果如表~\ref{tab:libero_results}~所示，表中加粗部分表示该方法在相应子集上的最佳表现，从表中的结果可以看出，TemporalCacheVLA 在四个子集上整体表现稳定，并在 Goal 与 LIBERO-100 两个更强调任务阶段切换与长时序依赖的子集上取得了最优结果。具体而言，在 Spatial 子集上，TemporalCacheVLA 取得了0.970的成功率，略低于 CogACT\cite{liang2024cogact} 的 0.972。由于该子集中的任务多为短序列空间关系操作，模型主要依赖当前观测完成局部空间推理，因此显式历史上下文建模带来的增益相对有限。在 Object 子集上，TemporalCacheVLA 取得了0.981的成功率，略低于 $\pi_0$\cite{black2024pi} 的0.988。这说明在以细粒度物体外观识别与抓取泛化为主的任务中，本文方法虽能保持较高性能，但其优势尚未被充分释放。
 
 \begin{figure}[H]
   \centering
@@ -242,13 +240,13 @@ TemporalCacheVLA在LIBERO四个子集上的实验结果如图~\ref{fig:libero_re
   \centering
   \caption{不同缓存类型对模型性能的影响}
   \label{tab:ablation_cache_type}
-  \begin{tabular}{c c c c c}  % 多加空白列，表格更宽
+  \begin{tabular}{c c c c c c c}  % 多加空白列，表格更宽
     \toprule
-    感知缓存 &  & 语义缓存 &  & 平均成功率 \\
+     & 感知缓存 &  & 语义缓存 &  & 平均成功率 & \\
     \midrule
-    \checkmark &  &            &  & 0.852 \\
-               &  & \checkmark &  & 0.837 \\
-    \checkmark &  & \checkmark &  & \textbf{0.949} \\
+     & \checkmark &  &            &  & 0.852 & \\
+     &           &  & \checkmark &  & 0.837 & \\
+     & \checkmark &  & \checkmark &  & \textbf{0.949} & \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -288,13 +286,13 @@ TemporalCacheVLA在LIBERO四个子集上的实验结果如图~\ref{fig:libero_re
   \centering
   \caption{不同缓存存储长度对模型性能的影响}
   \label{tab:ablation_cache_length}
-  \begin{tabular}{cccccc}  % 中间空 3 列，整体更宽
+  \begin{tabular}{cccccccc}  % 中间空 3 列，整体更宽
     \toprule
-    存储长度 &  &  &  &  & 平均成功率 \\
+     & 存储长度 &  &  &  &  & 平均成功率 & \\
     \midrule
-    4        &  &  &  &  & 0.893 \\
-    16       &  &  &  &  & \textbf{0.949} \\
-    64       &  &  &  &  & 0.923 \\
+     & 4        &  &  &  &  & 0.893 & \\
+     & 16       &  &  &  &  & \textbf{0.949} & \\
+     & 64       &  &  &  &  & 0.923 & \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -315,15 +313,15 @@ TemporalCacheVLA在LIBERO四个子集上的实验结果如图~\ref{fig:libero_re
   \centering
   \caption{不同引导强度系数对模型性能的影响}
   \label{tab:ablation_cfg}
-  \begin{tabular}{cccccc}  % 中间空3列
+  \begin{tabular}{cccccccc}  % 中间空3列
     \toprule
-     $w$ &  &  &  &  & 平均成功率 \\
+      & $w$ &  &  &  &  & 平均成功率 &  \\
     \midrule
-    0.1 &  &  &  &  & 0.915 \\
-    0.5 &  &  &  &  & 0.911 \\
-    1.5 &  &  &  &  & \textbf{0.949} \\
-    2.0 &  &  &  &  & 0.936 \\
-    5.0 &  &  &  &  & 0.921 \\
+     & 0.1 &  &  &  &  & 0.915 & \\
+     & 0.5 &  &  &  &  & 0.911 & \\
+     & 1.5 &  &  &  &  & \textbf{0.949} & \\
+     & 2.0 &  &  &  &  & 0.936 & \\
+     & 5.0 &  &  &  &  & 0.921 & \\
     \bottomrule
   \end{tabular}
 \end{table}
