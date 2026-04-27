@@ -219,13 +219,13 @@ RoboMimic是一个包含多种操作任务的机器人示教数据集，用于�
 Can 和 Lift 均为简单的单目标抓放任务，从表~\ref{tab:comparative_results_ph}和表~\ref{tab:comparative_results_mh}中可以看出两种方法均以1.000的成功率完成，图~\ref{fig:robomimic_comparation_short}~中两条轨迹的整体形态也较为相近。在 Can 任务中可以看出，Diffusion Policy 的轨迹在接近目标容器时有小幅折返，本文方法的轨迹相对平滑，这与 EfficientViT 对目标位置的感知相对较好有关，使末端执行器在接近阶段无需过多修正。
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.95\linewidth]{figures/content/robomimic_comparation_short}
+  \includegraphics[width=0.85\linewidth]{figures/content/robomimic_comparation_short}
   \caption{Can 和 Lift 任务上的轨迹对比图}
   \label{fig:robomimic_comparation_short}
 \end{figure}
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.95\linewidth]{figures/content/robomimic_comparation_long}
+  \includegraphics[width=0.85\linewidth]{figures/content/robomimic_comparation_long}
   \caption{Square 和 Tool Hang 任务上的轨迹对比图}
   \label{fig:robomimic_comparation_long}
 \end{figure}
@@ -263,7 +263,7 @@ Square 任务要求末端执行器将螺母精确对准并插入方形柱，整�
 从表~\ref{tab:ch3_ablation_modules}~的数据可以看出，本文引入的各个模块在多数任务上均对最终性能具有正向贡献。当使用 ResNet 替换 EfficientViT 后，模型在 Transport mh 任务上的成功率由 ~0.801~ 下降至 ~0.746~，在 Tool Hang ph 任务上由 ~0.791~ 下降至 ~0.764~。这一结果表明，相较于常规卷积视觉编码器，面向多步视觉输入的高效多尺度特征建模方式更有利于长时序机器人操作任务中的目标感知与动作生成。
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.95\linewidth]{figures/content/robomimic_ablation_square}
+  \includegraphics[width=0.85\linewidth]{figures/content/robomimic_ablation_square}
   \caption{Square 任务消融实验轨迹对比图}
   \label{fig:ablation_comparation_square}
 \end{figure}
@@ -278,7 +278,7 @@ Square 任务要求末端执行器将螺母精确对准并插入方形柱，整�
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.95\linewidth]{figures/content/robomimic_ablation_toolhang}
+  \includegraphics[width=0.85\linewidth]{figures/content/robomimic_ablation_toolhang}
   \caption{Tool Hang 任务消融实验轨迹对比图}
   \label{fig:ablation_comparation_toolhang}
 \end{figure}
