@@ -1,25 +1,25 @@
 \documentclass[engineer,fontset=windows,nocolorlinks]{seumasterthesis}
 \raggedbottom
-\makeatletter
-\renewcommand{\cleardoublepage}{%
-  \clearpage
-  \if@twoside
-    \ifodd\c@page
-    \else
-      \stepcounter{page}%
-    \fi
-  \fi
-}
-\makeatother
+% \makeatletter    盲审稿设置
+% \renewcommand{\cleardoublepage}{%
+%   \clearpage
+%   \if@twoside
+%     \ifodd\c@page
+%     \else
+%       \stepcounter{page}%
+%     \fi
+%   \fi
+% }
+% \makeatother
 \begin{document}
 
 %% ----------------------------------------------------------------------------
 %%                                 Meta Data
 %% ----------------------------------------------------------------------------
-\categorynumber{~}         % Chinese Library Classification
-\UDC{~}                    % Universal Decimal Classification
+\categorynumber{TP242.6}         % Chinese Library Classification
+\UDC{007.52}                    % Universal Decimal Classification
 \secretlevel{公开}                % Secret Level
-\studentid{~}              % Student Number
+\studentid{233667}              % Student Number
 
 %% ----------------------------------------------------------------------------
 %%                           Thesis Title and Spine
@@ -38,12 +38,12 @@
 %%                             Author and Advidor
 %% ----------------------------------------------------------------------------
 \author
-    {{\bfseries ~}}
-    {{\bfseries ~}}
+    {{\bfseries 刘立奥}}
+    {{\bfseries Liu Liao}}
 
 \advisor
-    {{\bfseries ~ }}
-    {{\bfseries  }}
+    {{\bfseries 秦文虎~~教授 }}
+    {{\bfseries Qin Wenhhu }}
     {Prof.}
 
 
@@ -94,7 +94,7 @@
 %% ----------------------------------------------------------------------------
 %%            Acknowledgement, Appendix, Bibliography and Resume
 %% ----------------------------------------------------------------------------
-% \input{chapters/acknowledgement}
+\input{chapters/acknowledgement}
 \thesisbib{seumasterthesis}
 %\input{chapters/appendix}
 \input{chapters/resume}
