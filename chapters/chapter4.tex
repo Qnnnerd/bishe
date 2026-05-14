@@ -44,7 +44,7 @@ TemporalCacheVLA提出了一种基于双通道时序缓存的解决方案，其�
 该向量综合编码了当前场景的语义信息与任务意图。
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.6\linewidth]{figures/content/se}
+  \includegraphics[width=0.75\linewidth]{figures/content/se}
   \caption{SE模块示意图}
   \label{fig:se}
 \end{figure}
@@ -60,7 +60,7 @@ TemporalCacheVLA提出了一种基于双通道时序缓存的解决方案，其�
 在长时序机器人操作任务中，单一时间步的观测往往无法提供完整的状态信息，模型需要依赖历史上下文来消除状态混淆。然而直接拼接多帧历史图像或特征会导致计算复杂度显著增长，且相邻帧之间存在冗余信息，给长时序上下文记忆带来了较大的计算与显存压力。此外，感知向量与语义向量在特征维度和表达内容上存在明显差异，若将二者混合存储，容易削弱感知细节在后续检索与融合过程中的作用。
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.5\linewidth]{figures/content/cache_retrieval}
+  \includegraphics[width=0.65\linewidth]{figures/content/cache_retrieval}
   \caption{缓存检索模块示意图}
   \label{fig:cache_retrieval}
 \end{figure}
