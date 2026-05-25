@@ -49,9 +49,6 @@
   \label{fig:real_tasks_overview}
 \end{figure}
 
-
-
-
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.9\linewidth]{figures/content/real_traj_correction}
@@ -81,23 +78,33 @@
 
 长时序任务融合了上述两类操作，要求机械臂先打开抽屉，再将水果放入其中。如图~\ref{fig:long_curves}~所示，机械臂在前期需要翻转手腕以操作抽屉，随后需要再次翻转手腕恢复至抓取姿态，最后执行水果的夹取与放置。这种复合操作在动作曲线上表现为两次明显的旋转峰值与多段平移活跃区间，动作分布最为多样，对模型的时序上下文理解能力要求最高。
 
+与标准专家轨迹相比，纠错轨迹在平移和旋转维度上通常包含更明显的方向切换与局部波动，该类轨迹能够为模型提供偏离状态下的恢复样本，使模型不仅学习理想执行路径，也能够学习从非理想状态回到任务轨迹的动作调整方式。
+
 真实场景采集的数据与仿真环境数据在动作分布上同样存在差异。如图~\ref{fig:action_dist_long_vs_libero}~所示，自建长时序任务数据集与 LIBERO 仿真数据集在平移与旋转幅值分布上存在明显差异，图中的平移量与旋转量均为标准化后的结果。在采集真实数据时，出于对机器人安全性的考虑，操作者倾向于以较小的步幅控制机械臂运动，因此真实数据的平移与旋转幅值分布在0附近更为密集；而 LIBERO 仿真环境无需这一层安全约束，仿真模型可以按照任务要求执行幅度更大的动作，因此其动作分布相对更为均匀。
 
 \begin{figure}[H]
   \centering
-  \subfloat[平移曲线]{\includegraphics[width=0.4\linewidth]{figures/content/plot_long_task_delta_xyz_curve.png}\label{fig:long_xyz_curve}}\quad
-  \subfloat[旋转曲线]{\includegraphics[width=0.4\linewidth]{figures/content/plot_long_task_delta_rpy_curve.png}\label{fig:long_rpy_curve}}
+  \subfloat[平移曲线]{\includegraphics[width=0.38\linewidth]{figures/content/plot_long_task_delta_xyz_curve.png}\label{fig:long_xyz_curve}}\quad
+  \subfloat[旋转曲线]{\includegraphics[width=0.38\linewidth]{figures/content/plot_long_task_delta_rpy_curve.png}\label{fig:long_rpy_curve}}
   \caption{长时序任务动作曲线}
   \label{fig:long_curves}
 \end{figure}
-
 \begin{figure}[H]
   \centering
-  \subfloat[平移幅值分布对比]{\includegraphics[width=0.4\linewidth]{figures/content/translation_norm_hist.png}\label{fig:action_dist_long_vs_libero_trans}}\quad
-  \subfloat[旋转幅值分布对比]{\includegraphics[width=0.4\linewidth]{figures/content/rotation_norm_hist.png}\label{fig:action_dist_long_vs_libero_rot}}
+  \subfloat[平移曲线]{\includegraphics[width=0.38\linewidth]{figures/content/jiucuo_xyz.png}\label{fig:correction_xyz_curve}}\quad
+  \subfloat[旋转曲线]{\includegraphics[width=0.38\linewidth]{figures/content/jiucuo_rpy.png}\label{fig:correction_rpy_curve}}
+  \caption{纠错轨迹动作曲线}
+  \label{fig:correction_curves}
+\end{figure}
+\begin{figure}[H]
+  \centering
+  \subfloat[平移幅值分布对比]{\includegraphics[width=0.38\linewidth]{figures/content/translation_norm_hist.png}\label{fig:action_dist_long_vs_libero_trans}}\quad
+  \subfloat[旋转幅值分布对比]{\includegraphics[width=0.38\linewidth]{figures/content/rotation_norm_hist.png}\label{fig:action_dist_long_vs_libero_rot}}
   \caption{长时序任务真实场景与仿真环境动作幅值分布对比}
   \label{fig:action_dist_long_vs_libero}
 \end{figure}
+
+
 
 \section{基于ROS的真机控制系统}
 \label{sec:ros_real_robot_control_system}
@@ -169,9 +176,9 @@
   \label{fig:inference_drawer_curves}
 \end{figure}
 
-在长时序任务中，如图~\ref{fig:inference_long_curves}~所示，动作序列在不同阶段出现了多次姿态调整与平移活跃区间，依次对应打开抽屉、调整抓取姿态并夹取物体以及最终放置等操作步骤。对比实验的具体成功率如表~\ref{tab:real_world_results}~所示。从结果可以看出，在简单抓取任务中，两者的成功率差距相对较小，这说明在无需历史上下文维护的简单任务中，OpenVLA 本身也能够取得较好的动作表现。然而，随着任务复杂度提升，尤其是在需要跨阶段状态记忆的长时序组合任务中，OpenVLA 的成功率下降至0.10，而 TemporalCacheVLA 在该任务上的成功率为0.40，较基线模型有明显提升。这一差异表明，时序缓存机制在真实长时序任务中同样能够发挥作用。
+在长时序任务中，如图~\ref{fig:inference_long_curves}~所示，动作序列在不同阶段出现了多次姿态调整与平移活跃区间，依次对应打开抽屉、调整抓取姿态并夹取物体以及最终放置等操作步骤。对比实验的具体成功率如表~\ref{tab:real_world_results}~所示。从结果可以看出，在简单抓取任务中，两者的成功率差距相对较小，这说明在无需历史上下文维护的简单任务中，OpenVLA 本身也能够取得较好的动作表现。然而，随着任务复杂度提升，尤其是在需要跨阶段状态记忆的长时序组合任务中，OpenVLA 的成功率下降至0.10，而 TemporalCacheVLA 在该任务上的成功率为0.40，较基线模型有明显提升。这一差异表明，时序缓存机制在真实长时序任务中同样能够发挥作用。此外根据长时序任务的失败发生阶段与主要原因，可将失败案例划分为抽屉操作失败、目标抓取失败、阶段切换失败以及运动执行异常四类，具体统计结果如表~\ref{tab:real_long_failure_analysis}~所示。
 
-但是需要指出的是，模型在真实场景下的平均成功率仍显著低于仿真环境中的表现。每次推理时相机视角的细微偏移等现实原因都会干扰视觉特征提取，导致视觉语言动作模型在真实部署中产生动作误差。在简单抓取任务中，这类误差通常表现为深度感知不准引起的定位偏差，或是夹爪闭合时机过早，从而无法完整包覆目标物体；在长时序组合任务中，由于真实环境中存在更复杂的视觉干扰，模型更容易在阶段切换的关键时刻暂时丢失稳定的视觉特征，从而失去上下文指引并出现指令遗忘。除上述视觉与规划误差外，另有一部分失败来源于逆运动学反解在真实部署中的异常。
+需要指出的是，模型在真实场景下的平均成功率仍显著低于仿真环境中的表现。每次推理时相机视角的偏移与光照变化等现实原因都会干扰视觉特征提取，导致视觉语言动作模型在真实部署中产生动作误差。在简单抓取任务中，这类误差通常表现为深度感知不准引起的定位偏差，或是夹爪闭合时机过早，从而无法完整包覆目标物体；在长时序组合任务中，由于真实环境中存在更复杂的视觉干扰，模型更容易在阶段切换的关键时刻暂时丢失稳定的视觉特征，从而失去上下文指引并出现指令遗忘。除上述视觉与规划误差外，另有一部分失败来源于逆运动学反解在真实部署中的异常。
 \begin{figure}[H]
   \centering
   \subfloat[平移曲线]{\includegraphics[width=0.4\linewidth]{figures/content/plot_inference_long_delta_xyz_curve.png}\label{fig:inference_long_xyz_curve}}\quad
@@ -194,6 +201,21 @@ TemporalCacheVLA（本文） & \textbf{0.85} & \textbf{0.65} & \textbf{0.40} & \
 \end{tabular}
 \end{table}
 
+\begin{table}[H]
+\centering
+\caption{长时序任务失败案例分类}
+\label{tab:real_long_failure_analysis}
+\begin{tabular}{cccccc}
+\toprule
+& 失败类型 &   & 次数 & 占失败次数比例 & \\
+\midrule
+& 抽屉操作失败 &   & 2 & 0.167 & \\
+& 目标抓取失败 &   & 3 & 0.250 & \\
+& 阶段切换失败 &   & 3 & 0.250 & \\
+& 运动执行异常 &   & 4 & 0.333 & \\
+\bottomrule
+\end{tabular}
+\end{table}
 在抽屉操作等需要大幅调整姿态的任务中，系统首先根据模型输出的动作增量计算末端期望位姿，再通过逆运动学求解器将其转换为关节角指令。与预训练阶段常见的 Franka 七自由度机械臂平台相比，本实验平台 UR5e 为六自由度机械臂，其逆运动学通常存在多组解析解，但缺少冗余自由度对姿态进行进一步优化。如图~\ref{fig:real_failure_ik}~所示，在靠近抽屉的过程中，动作被解算为末端持续向内翻转，最终触发机器人的关节限位保护，导致任务被强制终止。
 
 \begin{figure}[H]
@@ -204,6 +226,8 @@ TemporalCacheVLA（本文） & \textbf{0.85} & \textbf{0.65} & \textbf{0.40} & \
 \end{figure}
 
 真实推理输出的动作序列在旋转维度上存在较明显的波动，这一特性也会加剧上述逆运动学反解问题。如前文图~\ref{fig:inference_drawer_curves}~所示，在真实推理过程中，由于采集数据的动作幅值分布不均，模型输出的旋转动作中夹杂较大的噪声。旋转输出中的噪声会使末端期望位姿在相邻时间步之间发生突变，导致逆运动学求解器在多组解析解之间频繁切换，进而选取不连续且偏离当前姿态的关节角解，最终触发关节限位保护。
+
+综合长时序任务的失败情况来看，如表~\ref{tab:real_long_failure_analysis}~所示，运动执行异常占比最高，且多发生在开抽屉前的接近与姿态调整阶段，说明该阶段的大幅姿态变化对模型动作输出连续性和逆运动学求解稳定性提出了更高要求。目标抓取失败则主要与真实场景中的定位误差和夹爪闭合时机偏差有关，阶段切换失败则反映出模型在长时序任务中对任务进度和历史上下文的判断仍存在不足。因此，后续可从视觉定位稳定性、跨阶段状态识别以及底层轨迹连续性约束等方面进一步提升真实部署性能。
 
 \section{本章小结}
 \label{sec:chap5_summary}
