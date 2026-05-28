@@ -585,10 +585,10 @@
         \end{center}
     \end{minipage}
 
-    %% Date
-    % \vfill
-    % \hspace*{20.5cm}
-    % {\songti\sihao\centerline{\todaychn} \par}
+    % Date
+    \vfill
+    \hspace*{20.5cm}
+    {\songti\sihao\centerline{\todaychn} \par}
 
     \eject
     \pdfpagewidth=210mm
@@ -750,11 +750,11 @@
         \end{tabular}
     \end{center}
 
-    %% Date
-    % \vfill
-    % \setcounter{page}{1} {
-    %     \songti\sihao\centerline{\todaychn} \par
-    % }
+    % Date
+    \vfill
+    \setcounter{page}{1} {
+        \songti\sihao\centerline{\todaychn} \par
+    }
 
     %% Blanck page
     \clearpage
