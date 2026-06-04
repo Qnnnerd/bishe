@@ -242,3 +242,9 @@ TSWLatexianTemp*
 .DS_Store
 
 main.pdf
+
+## Local/generated tooling artifacts
+node_modules/
+package.json
+package-lock.json
+fine_operations_occurrences.md

@@ -235,6 +235,12 @@
     \fancyhead[CE]{\xiaowuhao\universityname{}\@thesistype}
     \fancyfoot[CO,CE]{\thepage}
 }
+\fancypagestyle{plain} {
+    \fancyhf{}
+    \fancyhead[CO]{\xiaowuhao\leftmark}
+    \fancyhead[CE]{\xiaowuhao\universityname{}\@thesistype}
+    \fancyfoot[CO,CE]{\thepage}
+}
 \pagestyle{seustyle}
 \fancypagestyle{nom} {
     \fancyhf{}
@@ -899,6 +905,7 @@
     \phantomsection
     \addcontentsline{toc}{chapter}{\@abstracttoc}
     \chapter*{\@abstracttitle}
+    \markboth{\@abstracttitle}{\@abstracttitle}
     \setcounter{page}{1}
 }
 {
@@ -922,6 +929,7 @@
         chapter/titleformat=\large\bfseries
     }
     \chapter*{\@engabstracttitle}
+    \markboth{\@engabstracttitle}{\@engabstracttitle}
     \ctexset{
         chapter/nameformat=\large\heiti,
         chapter/titleformat=\large\heiti
@@ -990,6 +998,7 @@
     \phantomsection
     \addcontentsline{toc}{chapter}{\@acktoc}
     \chapter*{\@acktitle}
+    \markboth{\@acktitle}{\@acktitle}
 }
 
 %% ----------------------------------------------------------------------------
@@ -1013,5 +1022,6 @@
     \phantomsection
     \addcontentsline{toc}{chapter}{#1}
     \chapter*{#1}
+    \markboth{#1}{#1}
 }
 \endinput
